@@ -28,9 +28,9 @@ const getQuestions = ({
     const slices = qn.topic_name.split(">>");
 
     if (
-      slices[0].trim() === decodeURI(chapter) &&
-      slices[1].trim() === decodeURI(topic) &&
-      slices[2].trim() === decodeURI(part)
+      slices[0].trim() === decodeURIComponent(chapter) &&
+      slices[1].trim() === decodeURIComponent(topic) &&
+      slices[2].trim() === decodeURIComponent(part)
     ) {
       questions.push(qn);
     }

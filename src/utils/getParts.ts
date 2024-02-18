@@ -19,15 +19,15 @@ const getParts = ({
       ? (chemistry as Question[])
       : (physics as Question[]);
   const onlyMcq = data.filter((qn) => qn.quiz_type === "mcq");
-
+    
   const partsMap = new Map<string, number>();
 
   for (const qn of onlyMcq) {
     const slices = qn.topic_name.split(">>");
 
     if (
-      slices[0].trim() === decodeURI(chapter) &&
-      slices[1].trim() === decodeURI(topic)
+        slices[0].trim() === decodeURIComponent(chapter) &&
+      slices[1].trim() === decodeURIComponent(topic)
     ) {
       const name = slices[2].trim();
       partsMap.set(name, (partsMap.get(name) || 0) + 1);

@@ -23,7 +23,7 @@ const getTopics = ({
   for (const qn of onlyMcq) {
     const slices = qn.topic_name.split(">>");
 
-    if (slices[0].trim() === decodeURI(chapter)) {
+    if (slices[0].trim() === decodeURIComponent(chapter)) {
       const name = slices[1].trim();
       topicsMap.set(name, (topicsMap.get(name) || 0) + 1);
     }

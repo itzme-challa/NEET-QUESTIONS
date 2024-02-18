@@ -4,6 +4,16 @@ import * as React from "react";
 
 import { Question } from "../../type";
 import { Button } from "./ui/button";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 export function Mcq({
   question,
@@ -61,17 +71,35 @@ export function Mcq({
           />
         ) : null}
       </div>
-      <Button
-        onClick={() => {
-          if (selected) {
-            setIsSubmitted(true);
-          }
-        }}
-        disabled={selected && !isSubmitted ? false : true}
-        className="w-full"
-      >
-        Submit
-      </Button>
+      <div className="space-y-2">
+        <Button
+          onClick={() => {
+            if (selected) {
+              setIsSubmitted(true);
+            }
+          }}
+          disabled={selected && !isSubmitted ? false : true}
+          className="w-full"
+        >
+          Submit
+        </Button>
+        <Drawer>
+          <DrawerTrigger className="w-full" disabled={!isSubmitted}>
+            <Button disabled={!isSubmitted} className="w-full">Show Explanation</Button>
+          </DrawerTrigger>
+          <DrawerContent className="mx-auto w-full max-w-2xl p-4">
+            <DrawerHeader>
+              <DrawerTitle>Explanation:</DrawerTitle>
+            </DrawerHeader>
+            <p className="p-4">{question.explanation}</p>
+            <DrawerFooter>
+              <DrawerClose>
+                <Button variant="outline">Close</Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      </div>
     </div>
   );
 }
@@ -95,15 +123,15 @@ const Option = ({
       className={`${
         isSubmitted
           ? option !== answer && active
-            ? "bg-red-500"
+            ? "bg-red-400 dark:bg-red-500"
             : option === answer
-            ? "bg-green-500"
+            ? "bg-green-400 dark:bg-green-500"
             : "bg-accent"
           : active
           ? "bg-primary text-primary-foreground"
           : "bg-accent hover:text-accent-foreground"
       }
-     p-2 hover:outline hover:outline-input rounded`}
+     px-4 py-3 hover:outline hover:outline-input rounded`}
     >
       {option}
     </div>

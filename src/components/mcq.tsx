@@ -32,9 +32,9 @@ export function Mcq({
         </div>{" "}
         {question.question.includes("Assertion") && question.question.includes("Reason") ? 
       <p>
-      {question.question.split("Reason")[0]}
+      <span className="font-extrabold underline">Assertion</span>{question.question.split("Reason")[0].replace("Assertion", "")}
       <div className="p-1"/>
-      Reason{question.question.split("Reason")[1]}
+      <span className="font-extrabold underline">Reason</span>{question.question.split("Reason")[1]}
       </p>
       : question.question
       }

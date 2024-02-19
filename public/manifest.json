@@ -1,7 +1,7 @@
 {
     "theme_color": "transparent",
     "background_color": "transparent",
-    "display": "Stadalone",
+    "display": "standalone",
     "scope": "/",
     "start_url": "/",
     "name": "NeetPrep",

@@ -19,23 +19,27 @@ const getParts = ({
       ? (chemistry as Question[])
       : (physics as Question[]);
   const onlyMcq = data.filter((qn) => qn.quiz_type === "mcq");
-    
-  const partsMap = new Map<string, number>();
+
+  const partsMap = new Map<string, { total: number; ids: string[] }>();
 
   for (const qn of onlyMcq) {
     const slices = qn.topic_name.split(">>");
 
     if (
-        slices[0].trim() === decodeURIComponent(chapter) &&
+      slices[0].trim() === decodeURIComponent(chapter) &&
       slices[1].trim() === decodeURIComponent(topic)
     ) {
       const name = slices[2].trim();
-      partsMap.set(name, (partsMap.get(name) || 0) + 1);
+      const currentIds = partsMap.get(name)?.ids || [];
+      partsMap.set(name, {
+        total: (partsMap.get(name)?.total || 0) + 1,
+        ids: [...currentIds, qn.unique_id],
+      });
     }
   }
 
-  return [...partsMap].map(([name, total]) => {
-    return { name, total };
+  return [...partsMap].map(([name, value]) => {
+    return { name, total: value.total, ids: value.ids };
   });
 };
 

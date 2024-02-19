@@ -16,17 +16,20 @@ const getChapters = ({
       : (physics as Question[]);
 
   const onlyMcq = data.filter((qn) => qn.quiz_type === "mcq");
-  const chaptersMap = new Map<string, number>();
+  const chaptersMap = new Map<string, { total: number; ids: string[] }>();
 
   for (const qn of onlyMcq) {
     const slices = qn.topic_name.split(">>");
-
     const name = slices[0].trim();
-    chaptersMap.set(name, (chaptersMap.get(name) || 0) + 1);
+    const currentIds = chaptersMap.get(name)?.ids || [];
+    chaptersMap.set(name, {
+      total: (chaptersMap.get(name)?.total || 0) + 1,
+      ids: [...currentIds, qn.unique_id],
+    });
   }
 
-  return [...chaptersMap].map(([name, total]) => {
-    return { name, total };
+  return [...chaptersMap].map(([name, value]) => {
+    return { name, total: value.total, ids: value.ids };
   });
 };
 

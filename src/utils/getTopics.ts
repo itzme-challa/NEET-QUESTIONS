@@ -18,19 +18,23 @@ const getTopics = ({
       : (physics as Question[]);
   const onlyMcq = data.filter((qn) => qn.quiz_type === "mcq");
 
-  const topicsMap = new Map<string, number>();
+  const topicsMap = new Map<string, { total: number; ids: string[] }>();
 
   for (const qn of onlyMcq) {
     const slices = qn.topic_name.split(">>");
 
     if (slices[0].trim() === decodeURIComponent(chapter)) {
       const name = slices[1].trim();
-      topicsMap.set(name, (topicsMap.get(name) || 0) + 1);
+      const currentIds = topicsMap.get(name)?.ids || [];
+      topicsMap.set(name, {
+        total: (topicsMap.get(name)?.total || 0) + 1,
+        ids: [...currentIds, qn.unique_id],
+      });
     }
   }
 
-  return [...topicsMap].map(([name, total]) => {
-    return { name, total };
+  return [...topicsMap].map(([name, value]) => {
+    return { name, total: value.total, ids: value.ids };
   });
 };
 

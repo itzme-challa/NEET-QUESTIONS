@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/site-header";
+import NextTopLoader from 'nextjs-toploader';
 
 export const fontSans = FontSans({
   subsets: ["latin"],
@@ -34,9 +35,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <NextTopLoader showSpinner={false}/>
           <SiteHeader></SiteHeader>
           <main>{children}</main>
-          
         </ThemeProvider>
       </body>
     </html>

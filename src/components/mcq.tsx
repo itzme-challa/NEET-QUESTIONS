@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-
 import { Question } from "../../type";
 import { Button } from "./ui/button";
 import {
@@ -24,14 +23,24 @@ export function Mcq({
 }) {
   const [selected, setSelected] = React.useState<string>("");
   const [isSubmitted, setIsSubmitted] = React.useState<boolean>(false);
-
+  
   return (
     <div className="space-y-8 w-full">
       <div className="grid grid-cols-[auto_1fr] items-center gap-2 font-semibold">
         <div className="w-8 h-8 grid place-items-center bg-primary text-primary-foreground rounded-full">
           {index + 1}
         </div>{" "}
-        {question.question}
+        {question.question.includes("Assertion") && question.question.includes("Reason") ? 
+      <p>
+      {question.question.split("Reason")[0]}
+      <div className="p-1"/>
+      Reason{question.question.split("Reason")[1]}
+      </p>
+      : question.question
+      }
+      </div>
+      <div className="grid place-items-center">
+      {question.image ? <img className="w-64 h-auto" src={question.image}/> : null}
       </div>
       <div className="space-y-2">
         {question.option_a ? (

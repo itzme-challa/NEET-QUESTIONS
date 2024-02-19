@@ -32,6 +32,30 @@ const getQuestions = ({
       slices[1].trim() === decodeURIComponent(topic) &&
       slices[2].trim() === decodeURIComponent(part)
     ) {
+      const bracketRegx = "/(([^)]+))/gm";
+      const textsUnderBracket = qn.question.match(/\(.*?\)/gm);
+      //console.log(textsUnderBracket);
+
+      if (
+        textsUnderBracket &&
+        textsUnderBracket.length >= 1 &&
+        !isNaN(
+          parseFloat(
+            textsUnderBracket[textsUnderBracket.length - 1].substring(1)
+          )
+        )
+      ) {
+        qn.image = `${
+          subject === "biology"
+            ? "https://firebasestorage.googleapis.com/v0/b/memoneet-5498.appspot.com/o/biology_temporary%2F"
+            : subject === "chemistry"
+            ? "https://firebasestorage.googleapis.com/v0/b/memoneet-5498.appspot.com/o/chemistry_images%2F"
+            : "https://firebasestorage.googleapis.com/v0/b/memoneet-5498.appspot.com/o/physics_images%2F"
+        }${textsUnderBracket[textsUnderBracket?.length - 1]
+          .replace("(", "")
+          .replace(")", "")}.jpg?alt=media`;
+      }
+
       questions.push(qn);
     }
   }

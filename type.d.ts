@@ -15,4 +15,5 @@ export interface Question {
     "Chapter Name"?: string;
     ncert22_page: string;
     ncert23_page: string;
+    image?: string;
   }

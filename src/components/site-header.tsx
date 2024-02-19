@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { auth } from "@/lib/auth";
 
 import { cn } from "@/lib/utils";
@@ -14,7 +15,7 @@ export async function SiteHeader() {
       <div className="container grid grid-cols-[auto_1fr] h-14 max-w-screen-2xl items-center ">
         <div>
           <Link href="/" className="text-xl font-bold">
-            NeetPrep
+            <Image className="h-10 w-auto" src="/logo.png" alt="NeetPrep Logo" height={192} width={52} style={{objectFit:"cover"}}/>
           </Link>
         </div>
         <div className="flex justify-end gap-3">

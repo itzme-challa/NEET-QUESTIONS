@@ -14,17 +14,18 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="px-4 container grid grid-cols-[auto_1fr] h-14 max-w-screen-2xl items-center ">
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-end items-center center gap-3">
           <BackBtn />
           <Link href="/" className="text-xl font-bold">
-            <Image
+            {/* <Image
               className="h-10 w-auto"
               src="/logo.png"
               alt="NeetPrep Logo"
               height={192}
               width={52}
               style={{ objectFit: "cover" }}
-            />
+            /> */}
+            NEETPREP
           </Link>
         </div>
         <div className="flex justify-end gap-3">

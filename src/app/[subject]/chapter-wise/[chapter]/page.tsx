@@ -4,17 +4,21 @@ import getChapters from "@/utils/getChapters";
 
 type Params = { subject: "biology" | "physics" | "chemistry"; chapter: string };
 
-// export const dynamicParams = false;
-// export async function generateStaticParams({ params }: { params: Params }) {
-//   const { subject, chapter } = params;
-//   const chapters = getChapters({ subject });
-//   return chapters.map((chapter) => {
-//     return {
-//       subject: "biology",
-//       chapter: chapter.name,
-//     };
-//   });
-// }
+
+export const dynamicParams = false;
+export async function generateStaticParams() {
+  const subjects = ['biology', 'chemistry', 'physics'] as const
+  
+  const routes:Params[] = []
+  subjects.forEach(subject => {
+    const chapters = getChapters({ subject });
+    chapters.forEach(chapter => routes.push({
+      subject,
+      chapter: encodeURIComponent(chapter.name)
+    }))
+  })  
+  return routes
+}
 
 export default async function Home({ params }: { params: Params }) {
   const { subject, chapter } = params;

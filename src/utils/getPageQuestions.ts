@@ -23,14 +23,13 @@ const getQuestions = ({
   const questions: Question[] = [];
 
   for (const qn of onlyMcq) {
-    if (classYear.split("-")[1] == "22") {
+    if (qn.ncert22_page?.length > 0 && classYear.split("-")[1] == "22") {
       if (
         qn.ncert22_page.split("-")[0] == classYear.split("-")[0] &&
-        qn.ncert22_page.split("-")[1] == page
+        parseInt(qn.ncert22_page.split("-")[1]).toString() == page
       ) {
         const bracketRegx = "/(([^)]+))/gm";
         const textsUnderBracket = qn.question.match(/\(.*?\)/gm);
-        //console.log(textsUnderBracket);
 
         if (
           textsUnderBracket &&
@@ -54,14 +53,13 @@ const getQuestions = ({
         questions.push(qn);
       }
     }
-    if (classYear.split("-")[1] == "23") {
+    if (qn.ncert23_page?.length > 0 && classYear.split("-")[1] == "23") {
       if (
         qn.ncert23_page.split("-")[0] == classYear.split("-")[0] &&
-        qn.ncert23_page.split("-")[1] == page
+        parseInt(qn.ncert23_page.split("-")[1]).toString() == page
       ) {
         const bracketRegx = "/(([^)]+))/gm";
         const textsUnderBracket = qn.question.match(/\(.*?\)/gm);
-        //console.log(textsUnderBracket);
 
         if (
           textsUnderBracket &&

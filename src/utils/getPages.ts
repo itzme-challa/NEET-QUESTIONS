@@ -17,7 +17,9 @@ const getPages = ({
       ? (chemistry as Question[])
       : (physics as Question[]);
 
-  const onlyMcq = data.filter((qn) => qn.ncert22_page &&qn.quiz_type === "mcq");
+  const onlyMcq = data.filter(
+    (qn) => qn.quiz_type === "mcq"
+  );
   const pagesMap = new Map<string, { total: number; ids: string[] }>();
 
   for (const qn of onlyMcq) {

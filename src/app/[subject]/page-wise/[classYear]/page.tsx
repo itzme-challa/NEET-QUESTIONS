@@ -4,17 +4,20 @@ import getPages from "@/utils/getPages";
 
 type Params = { subject: "biology" | "physics" | "chemistry"; classYear: string };
 
-// export const dynamicParams = false;
-// export async function generateStaticParams({ params }: { params: Params }) {
-//   const { subject, class } = params;
-//   const classs = getPages({ subject });
-//   return classs.map((class) => {
-//     return {
-//       subject: "biology",
-//       class: class.name,
-//     };
-//   });
-// }
+export const dynamicParams = false;
+export async function generateStaticParams() {
+  const subjects = ['biology', 'chemistry', 'physics'] as const
+  const classYears = ['11-22', '11-23', '12-22', '12-23']
+  const routes:Params[] = []
+  subjects.forEach(subject => {
+    classYears.forEach(classYear => routes.push({
+      subject,
+      classYear
+    }))
+  })  
+  return routes
+}
+
 
 export default async function Home({ params }: { params: Params }) {
   const { subject, classYear } = params;

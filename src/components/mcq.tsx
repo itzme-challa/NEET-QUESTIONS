@@ -25,7 +25,7 @@ export function Mcq({
   const [isSubmitted, setIsSubmitted] = React.useState<boolean>(false);
   
   return (
-    <div className="space-y-8 w-full">
+    <div className="space-y-4 w-full">
       <div className="grid grid-cols-[auto_1fr] items-center gap-2 font-semibold">
         <div className="w-8 h-8 grid place-items-center bg-primary text-primary-foreground rounded-full">
           {index + 1}
@@ -80,6 +80,7 @@ export function Mcq({
           />
         ) : null}
       </div>
+      <br/>
       <div className="space-y-2">
         <Button
           onClick={() => {

@@ -95,7 +95,8 @@ export function Questions({ questions }: { questions: Question[] }) {
         <CarouselPrevious />
         <CarouselNext />
       </Carousel>
-      <div className="fixed bottom-0 left-0 min-w-full px-4 py-2 bg-secondary flex justify-between items-center">
+      <div className="h-14"></div>
+      <div className="select-none fixed bottom-0 left-0 min-w-full px-4 py-2 bg-secondary flex justify-between items-center">
         <Button onClick={() => api?.scrollPrev()} variant="outline">
           Prev
         </Button>
@@ -122,7 +123,7 @@ export function Questions({ questions }: { questions: Question[] }) {
         </Button>
       </div>
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
-        <DrawerContent className="mx-auto w-full max-w-2xl p-4">
+        <DrawerContent className="select-none mx-auto w-full max-w-2xl p-4">
           <div className="flex flex-wrap gap-4 py-6">
             {questions.map((qn, index) => (
               <div

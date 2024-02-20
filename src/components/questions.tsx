@@ -100,23 +100,30 @@ export function Questions({ questions }: { questions: Question[] }) {
         <Button onClick={() => api?.scrollPrev()} variant="outline">
           Prev
         </Button>
-        <div onClick={() => setIsOpen(true)} className="flex gap-1 ">
+        <div onClick={() => setIsOpen(true)} className="flex items-center gap-1 ">
           {current > 3 ? <div>...</div> : null}
           {paginationQnNums.map((qnNum, index) => {
             return (
               <div
                 key={qnNum}
-                className={`font-semibold w-10 h-10 grid place-items-center rounded-full border border-dotted ${
+                className={`font-semibold w-12 h-12 grid place-items-center rounded-full border border-dotted ${
                   qnNum === current
                     ? "bg-primary text-primary-foreground"
+                    : completedQns[questions[qnNum - 1].unique_id] === true
+                    ? "bg-green-500"
+                    : completedQns[questions[qnNum - 1].unique_id] === false
+                    ? "bg-red-500"
                     : "bg-primary-foreground"
-                }`}
+                } ${qnNum === current && completedQns[questions[qnNum - 1].unique_id] === true
+                  ? "outline outline-green-500"
+                  : qnNum === current && completedQns[questions[qnNum - 1].unique_id] === false
+                  ? "outline outline-red-500" : ""}`}
               >
                 {qnNum}
               </div>
             );
           })}
-          {count - current >= 3 ? <div>...</div> : null}
+          {count - current >= 3 ? <div className="pb-2">...</div> : null}
         </div>
         <Button onClick={() => api?.scrollNext()} variant="outline">
           Next
@@ -136,11 +143,14 @@ export function Questions({ questions }: { questions: Question[] }) {
                   index + 1 === current
                     ? "bg-primary text-primary-foreground"
                     : completedQns[qn.unique_id] === true
-                    ? "bg-green-500 border-green-500"
+                    ? "bg-green-500"
                     : completedQns[qn.unique_id] === false
-                    ? "bg-red-500 border-red-500"
+                    ? "bg-red-500"
                     : "bg-primary-foreground"
-                }`}
+                } ${index + 1 === current && completedQns[qn.unique_id] === true
+                  ? "outline outline-green-500"
+                  : index + 1 === current && completedQns[qn.unique_id] === false
+                  ? "outline outline-red-500" : ""}`}
               >
                 {index + 1}
               </div>

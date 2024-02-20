@@ -35,25 +35,6 @@ export function Questions({ questions }: { questions: Question[] }) {
     [kek: string]: boolean;
   }>("completedQn", {});
 
-  React.useEffect(() => {
-    if (!api) {
-      return;
-    }
-
-    setCount(api.scrollSnapList().length);
-    setCurrent(api.selectedScrollSnap() + 1);
-    setPaginationQnNums(
-      getPaginationQnNums(api.selectedScrollSnap() + 1) || []
-    );
-
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap() + 1);
-      setPaginationQnNums(
-        getPaginationQnNums(api.selectedScrollSnap() + 1) || []
-      );
-    });
-  }, [api]);
-
   const getPaginationQnNums = (current: number) => {
     const qns: number[] = [];
     for (
@@ -67,6 +48,24 @@ export function Questions({ questions }: { questions: Question[] }) {
     }
     return qns;
   };
+
+  React.useEffect(() => {
+    if (!api) {
+      return;
+    }
+    setCount(api.scrollSnapList().length);
+    setCurrent(api.selectedScrollSnap() + 1);
+    setPaginationQnNums(
+      getPaginationQnNums(api.selectedScrollSnap() + 1) || []
+    );
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap() + 1);
+      setPaginationQnNums(
+        getPaginationQnNums(api.selectedScrollSnap() + 1) || []
+      );
+    });
+  }, [api]);
 
   return (
     <div className="mx-auto w-full max-w-2xl p-4">
@@ -105,6 +104,7 @@ export function Questions({ questions }: { questions: Question[] }) {
           {paginationQnNums.map((qnNum, index) => {
             return (
               <div
+                key={qnNum}
                 className={`font-semibold w-10 h-10 grid place-items-center rounded-full border border-dotted ${
                   qnNum === current
                     ? "bg-primary text-primary-foreground"
@@ -126,13 +126,18 @@ export function Questions({ questions }: { questions: Question[] }) {
           <div className="flex flex-wrap gap-4 py-6">
             {questions.map((qn, index) => (
               <div
+                key={qn.unique_id}
                 onClick={() => {
-                  api?.scrollTo(index)
-                  setIsOpen(false)
+                  api?.scrollTo(index);
+                  setIsOpen(false);
                 }}
                 className={`font-semibold w-12 h-12 grid place-items-center rounded-full border border-dotted ${
                   index + 1 === current
-                    ? "bg-primary text-primary-foreground" : completedQns[qn.unique_id] === true ? "bg-green-500 border-green-500" : completedQns[qn.unique_id] === false ? "bg-red-500 border-red-500"
+                    ? "bg-primary text-primary-foreground"
+                    : completedQns[qn.unique_id] === true
+                    ? "bg-green-500 border-green-500"
+                    : completedQns[qn.unique_id] === false
+                    ? "bg-red-500 border-red-500"
                     : "bg-primary-foreground"
                 }`}
               >

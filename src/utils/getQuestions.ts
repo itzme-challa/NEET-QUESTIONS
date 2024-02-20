@@ -28,9 +28,9 @@ const getQuestions = ({
     const slices = qn.topic_name.split(">>");
 
     if (
-      slices[0].trim() === decodeURIComponent(chapter) &&
-      slices[1].trim() === decodeURIComponent(topic) &&
-      slices[2].trim() === decodeURIComponent(part)
+      slices[0].trim().toLowerCase() === decodeURIComponent(chapter) &&
+      slices[1].trim().toLowerCase() === decodeURIComponent(topic) &&
+      slices[2].trim().toLowerCase() === decodeURIComponent(part)
     ) {
       const bracketRegx = "/(([^)]+))/gm";
       const textsUnderBracket = qn.question.match(/\(.*?\)/gm);

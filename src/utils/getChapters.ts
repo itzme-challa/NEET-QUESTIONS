@@ -20,7 +20,7 @@ const getChapters = ({
 
   for (const qn of onlyMcq) {
     const slices = qn.topic_name.split(">>");
-    const name = slices[0].trim();
+    const name = slices[0].trim().toLowerCase();
     const currentIds = chaptersMap.get(name)?.ids || [];
     chaptersMap.set(name, {
       total: (chaptersMap.get(name)?.total || 0) + 1,

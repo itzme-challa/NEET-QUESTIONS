@@ -22,9 +22,9 @@ const getTopics = ({
 
   for (const qn of onlyMcq) {
     const slices = qn.topic_name.split(">>");
-
-    if (slices[0].trim() === decodeURIComponent(chapter)) {
-      const name = slices[1].trim();
+    
+    if (slices[0].trim().toLowerCase() === decodeURIComponent(chapter)) {
+      const name = slices[1].trim().toLowerCase();
       const currentIds = topicsMap.get(name)?.ids || [];
       topicsMap.set(name, {
         total: (topicsMap.get(name)?.total || 0) + 1,

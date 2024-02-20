@@ -26,10 +26,10 @@ const getParts = ({
     const slices = qn.topic_name.split(">>");
 
     if (
-      slices[0].trim() === decodeURIComponent(chapter) &&
-      slices[1].trim() === decodeURIComponent(topic)
+      slices[0].trim().toLowerCase() === decodeURIComponent(chapter) &&
+      slices[1].trim().toLowerCase() === decodeURIComponent(topic)
     ) {
-      const name = slices[2].trim();
+      const name = slices[2].trim().toLowerCase();
       const currentIds = partsMap.get(name)?.ids || [];
       partsMap.set(name, {
         total: (partsMap.get(name)?.total || 0) + 1,

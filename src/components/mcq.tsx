@@ -12,6 +12,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import useLocalStorage from "use-local-storage";
 
 export function Mcq({
   question,
@@ -22,24 +23,32 @@ export function Mcq({
 }) {
   const [selected, setSelected] = React.useState<string>("");
   const [isSubmitted, setIsSubmitted] = React.useState<boolean>(false);
-  
+  const [completedQns, setCompletedQns] = useLocalStorage<{
+    [kek: string]: boolean;
+  }>("completedQn", {});
   return (
     <div className="space-y-4 w-full">
       <div className="grid grid-cols-[auto_1fr] items-center gap-2 font-semibold">
         <div className="w-8 h-8 grid place-items-center bg-primary text-primary-foreground rounded-full">
           {index + 1}
         </div>{" "}
-        {question.question.includes("Assertion") && question.question.includes("Reason") ? 
-      <p>
-      <span className="font-extrabold underline">Assertion</span>{question.question.split("Reason")[0].replace("Assertion", "")}
-      <div className="p-1"/>
-      <span className="font-extrabold underline">Reason</span>{question.question.split("Reason")[1]}
-      </p>
-      : question.question
-      }
+        {question.question.includes("Assertion") &&
+        question.question.includes("Reason") ? (
+          <p>
+            <span className="font-extrabold underline">Assertion</span>
+            {question.question.split("Reason")[0].replace("Assertion", "")}
+            <div className="p-1" />
+            <span className="font-extrabold underline">Reason</span>
+            {question.question.split("Reason")[1]}
+          </p>
+        ) : (
+          question.question
+        )}
       </div>
       <div className="grid place-items-center">
-      {question.image ? <img className="w-64 h-auto" src={question.image}/> : null}
+        {question.image ? (
+          <img className="w-64 h-auto" src={question.image} />
+        ) : null}
       </div>
       <div className="space-y-2">
         {question.option_a ? (
@@ -79,12 +88,16 @@ export function Mcq({
           />
         ) : null}
       </div>
-      <br/>
+      <br />
       <div className="space-y-2">
         <Button
           onClick={() => {
             if (selected) {
               setIsSubmitted(true);
+              setCompletedQns({
+                ...completedQns,
+                [question.unique_id]: selected === question.answer,
+              });
             }
           }}
           disabled={selected && !isSubmitted ? false : true}
@@ -94,7 +107,9 @@ export function Mcq({
         </Button>
         <Drawer>
           <DrawerTrigger className="w-full" disabled={!isSubmitted}>
-            <Button disabled={!isSubmitted} className="w-full">Show Explanation</Button>
+            <Button disabled={!isSubmitted} className="w-full">
+              Show Explanation
+            </Button>
           </DrawerTrigger>
           <DrawerContent className="mx-auto w-full max-w-2xl p-4">
             <DrawerHeader>

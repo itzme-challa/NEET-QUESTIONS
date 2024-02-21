@@ -68,7 +68,8 @@ export function Card({ data, href }: { data: CardData; href: string }) {
               Do you want to undo all questions?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This will set all quistions of this section at it't initial state.
+              This will set all questions of this section at it&apos;s initial
+              state.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

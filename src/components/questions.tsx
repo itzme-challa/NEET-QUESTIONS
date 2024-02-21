@@ -35,9 +35,8 @@ export function Questions({ questions }: { questions: Question[] }) {
   const [completedQns, setCompletedQns] = useLocalStorage<{
     [kek: string]: boolean;
   }>("completedQn", {});
-  const questionIds:string[] = questions.map((qn) => qn.unique_id)
-  console.log(questionIds);
-  
+  const questionIds: string[] = questions.map((qn) => qn.unique_id);
+
   const getPaginationQnNums = (current: number) => {
     const qns: number[] = [];
     for (
@@ -74,7 +73,7 @@ export function Questions({ questions }: { questions: Question[] }) {
     <div className="mx-auto w-full max-w-2xl p-4">
       <div>
         <div className="">
-          <QnProgress className="mb-4" questionIds={questionIds}/>
+          <QnProgress className="mb-4" questionIds={questionIds} />
         </div>
       </div>
 
@@ -105,7 +104,10 @@ export function Questions({ questions }: { questions: Question[] }) {
         <Button onClick={() => api?.scrollPrev()} variant="outline">
           Prev
         </Button>
-        <div onClick={() => setIsOpen(true)} className="flex items-center gap-1 ">
+        <div
+          onClick={() => setIsOpen(true)}
+          className="flex items-center gap-1 "
+        >
           {current > 3 ? <div>...</div> : null}
           {paginationQnNums.map((qnNum, index) => {
             return (
@@ -119,10 +121,15 @@ export function Questions({ questions }: { questions: Question[] }) {
                     : completedQns[questions[qnNum - 1].unique_id] === false
                     ? "bg-red-500"
                     : "bg-primary-foreground"
-                } ${qnNum === current && completedQns[questions[qnNum - 1].unique_id] === true
-                  ? "outline outline-green-500"
-                  : qnNum === current && completedQns[questions[qnNum - 1].unique_id] === false
-                  ? "outline outline-red-500" : ""}`}
+                } ${
+                  qnNum === current &&
+                  completedQns[questions[qnNum - 1].unique_id] === true
+                    ? "outline outline-green-500"
+                    : qnNum === current &&
+                      completedQns[questions[qnNum - 1].unique_id] === false
+                    ? "outline outline-red-500"
+                    : ""
+                }`}
               >
                 {qnNum}
               </div>
@@ -152,10 +159,14 @@ export function Questions({ questions }: { questions: Question[] }) {
                     : completedQns[qn.unique_id] === false
                     ? "bg-red-500"
                     : "bg-primary-foreground"
-                } ${index + 1 === current && completedQns[qn.unique_id] === true
-                  ? "outline outline-green-500"
-                  : index + 1 === current && completedQns[qn.unique_id] === false
-                  ? "outline outline-red-500" : ""}`}
+                } ${
+                  index + 1 === current && completedQns[qn.unique_id] === true
+                    ? "outline outline-green-500"
+                    : index + 1 === current &&
+                      completedQns[qn.unique_id] === false
+                    ? "outline outline-red-500"
+                    : ""
+                }`}
               >
                 {index + 1}
               </div>

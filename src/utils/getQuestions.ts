@@ -38,12 +38,7 @@ const getQuestions = ({
 
       if (
         textsUnderBracket &&
-        textsUnderBracket.length >= 1 &&
-        !isNaN(
-          parseFloat(
-            textsUnderBracket[textsUnderBracket.length - 1].substring(1)
-          )
-        )
+        textsUnderBracket.length >= 1
       ) {
         qn.image = `${
           subject === "biology"

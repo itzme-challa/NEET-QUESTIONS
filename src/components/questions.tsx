@@ -131,7 +131,7 @@ export function Questions({ questions }: { questions: Question[] }) {
       </div>
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerContent className="select-none mx-auto w-full max-w-2xl p-4">
-          <div className="flex flex-wrap gap-4 py-6">
+          <div className="flex flex-wrap justify-between max-h-[50vh] overflow-y-auto gap-4 my-6">
             {questions.map((qn, index) => (
               <div
                 key={qn.unique_id}

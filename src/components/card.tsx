@@ -47,7 +47,7 @@ export function Card({ data, href }: { data: CardData; href: string }) {
           <QnProgress questionIds={data.ids} />
           <Progress
             value={(completed / data.ids.length) * 100}
-            className="border"
+            className="border border-slate-200 dark:border-slate-700"
           />
         </div>
       </Link>

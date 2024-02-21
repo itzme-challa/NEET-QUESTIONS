@@ -23,10 +23,10 @@ const getPages = ({
   const pagesMap = new Map<string, { total: number; ids: string[] }>();
 
   for (const qn of onlyMcq) {
-    if (qn.ncert23_page?.length > 0 && classYear.split("-")[1] == "22") {
+    if (qn.ncert22_page?.length > 0 && classYear.split("-")[1] == "22") {
       const page = qn.ncert22_page.split("-")[1];
       if (page && qn.ncert22_page.split("-")[0] == classYear.split("-")[0]) {
-        const currentIds = pagesMap.get(qn.unique_id)?.ids || [];
+        const currentIds = pagesMap.get(page)?.ids || [];
         pagesMap.set(page, {
           total: (pagesMap.get(page)?.total || 0) + 1,
           ids: [...currentIds, qn.unique_id],
@@ -36,7 +36,7 @@ const getPages = ({
     if (qn.ncert23_page?.length > 0 && classYear.split("-")[1] == "23") {
       const page = qn.ncert23_page.split("-")[1];
       if (page && qn.ncert23_page.split("-")[0] == classYear.split("-")[0]) {
-        const currentIds = pagesMap.get(qn.unique_id)?.ids || [];
+        const currentIds = pagesMap.get(page)?.ids || [];
         pagesMap.set(page, {
           total: (pagesMap.get(page)?.total || 0) + 1,
           ids: [...currentIds, qn.unique_id],

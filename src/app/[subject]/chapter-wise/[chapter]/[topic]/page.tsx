@@ -1,27 +1,33 @@
-import Link from "next/link";
 import getTopics from "@/utils/getTopics";
 import getChapters from "@/utils/getChapters";
 import getParts from "@/utils/getParts";
+import { Card } from "@/components/card";
 
-type Params = { subject: "biology" | "physics" | "chemistry"; chapter: string; topic: string };
+type Params = {
+  subject: "biology" | "physics" | "chemistry";
+  chapter: string;
+  topic: string;
+};
 
 export const dynamicParams = false;
 export async function generateStaticParams() {
-  const subjects = ['biology', 'chemistry', 'physics'] as const
-  
-  const routes:Params[] = []
-  subjects.forEach(subject => {
+  const subjects = ["biology", "chemistry", "physics"] as const;
+
+  const routes: Params[] = [];
+  subjects.forEach((subject) => {
     const chapters = getChapters({ subject });
-    chapters.forEach(chapter => {
-      const topics = getTopics({subject, chapter: chapter.name})
-      topics.forEach(topic => routes.push({
-        subject,
-        chapter: encodeURIComponent(chapter.name),
-        topic: encodeURIComponent(topic.name),
-      }))
-    })
-  })  
-  return routes
+    chapters.forEach((chapter) => {
+      const topics = getTopics({ subject, chapter: chapter.name });
+      topics.forEach((topic) =>
+        routes.push({
+          subject,
+          chapter: encodeURIComponent(chapter.name),
+          topic: encodeURIComponent(topic.name),
+        })
+      );
+    });
+  });
+  return routes;
 }
 
 export default async function Home({ params }: { params: Params }) {
@@ -31,17 +37,16 @@ export default async function Home({ params }: { params: Params }) {
   return (
     <div className="mx-auto w-full max-w-2xl p-4">
       <div className="grid gap-3">
-      {parts.map(({ name, total }) => {
-        return (
-          <Link key={name} href={`/${subject}/chapter-wise/${chapter}/${topic}/${name}`}>
-             <div className="w-full space-y-2 p-4 rounded capitalize bg-accent hover:outline hover:outline-slate-400 ">
-                <p className="text-lg">{name}</p>
-                <p className="text-sm">Total: {total}</p>
-              </div>
-          </Link>
-        );
-      })}
-    </div>
+        {parts.map((part) => {
+          return (
+            <Card
+              key={part.name}
+              href={`/${subject}/chapter-wise/${chapter}/${topic}/${part.name}`}
+              data={part}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

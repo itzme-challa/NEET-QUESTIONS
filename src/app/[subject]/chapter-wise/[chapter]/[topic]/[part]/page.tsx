@@ -41,7 +41,7 @@ export default async function Home({ params }: { params: Params }) {
   const questions = getQuestions({ subject, chapter, topic, part });
 
   return (
-    <div className="mx-auto w-full max-w-2xl p-4">
+    <div className="mx-auto w-full max-w-2xl p-2">
       {sesion?.user ? (
         <Questions questions={questions} />
       ) : (

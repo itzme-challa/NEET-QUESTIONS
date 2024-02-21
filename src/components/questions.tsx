@@ -24,6 +24,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import useLocalStorage from "use-local-storage";
+import { QnProgress } from "./qn-progress";
 
 export function Questions({ questions }: { questions: Question[] }) {
   const [api, setApi] = React.useState<CarouselApi>();
@@ -34,7 +35,9 @@ export function Questions({ questions }: { questions: Question[] }) {
   const [completedQns, setCompletedQns] = useLocalStorage<{
     [kek: string]: boolean;
   }>("completedQn", {});
-
+  const questionIds:string[] = questions.map((qn) => qn.unique_id)
+  console.log(questionIds);
+  
   const getPaginationQnNums = (current: number) => {
     const qns: number[] = [];
     for (
@@ -70,7 +73,9 @@ export function Questions({ questions }: { questions: Question[] }) {
   return (
     <div className="mx-auto w-full max-w-2xl p-4">
       <div>
-        <div className="">{}</div>
+        <div className="">
+          <QnProgress className="mb-4" questionIds={questionIds}/>
+        </div>
       </div>
 
       <Carousel
@@ -131,7 +136,7 @@ export function Questions({ questions }: { questions: Question[] }) {
       </div>
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerContent className="select-none mx-auto w-full max-w-2xl p-4">
-          <div className="flex flex-wrap justify-between max-h-[50vh] overflow-y-auto gap-4 my-6">
+          <div className="flex flex-wrap justify-center max-h-[50vh] overflow-y-auto gap-4 my-6">
             {questions.map((qn, index) => (
               <div
                 key={qn.unique_id}

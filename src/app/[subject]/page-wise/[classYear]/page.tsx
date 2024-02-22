@@ -1,8 +1,5 @@
 import getPages from "@/utils/getPages";
 import { Card } from "@/components/card";
-import { useRef } from 'react';
-import { ViewportList } from 'react-viewport-list';
-import CardList from "@/components/card-list";
 
 type Params = {
   subject: "biology" | "physics" | "chemistry";
@@ -31,13 +28,17 @@ export default async function Home({ params }: { params: Params }) {
 
   return (
     <div className="mx-auto w-full max-w-2xl p-4">
-        <CardList lists={pages.map(page => {
-          return {
-          ...page,
-          href: `/${subject}/page-wise/${classYear}/${page.name}`
-        }
-      })}/>
-
+      <div className="grid gap-3">
+        {pages.map((page) => {
+          return (
+            <Card
+              key={page.name}
+              href={`/${subject}/page-wise/${classYear}/${page.name}`}
+              data={page}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

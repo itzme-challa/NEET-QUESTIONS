@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { QnProgress } from "./qn-progress";
 import { Progress } from "@/components/ui/progress";
 import useLocalStorage from "use-local-storage";
@@ -30,11 +30,13 @@ export function Card({ data, href }: { data: CardData; href: string }) {
     [kek: string]: boolean;
   }>("completedQn", {});
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
-
-  let completed = 0;
-  for (let index = 0; index < data.ids.length; index++) {
-    if (completedQns[data.ids[index]] !== undefined) completed++;
-  }
+  const completed = useMemo(() => {
+    let completed = 0;
+    for (let index = 0; index < data.ids.length; index++) {
+      if (completedQns[data.ids[index]] !== undefined) completed++;
+    }
+    return completed;
+  }, [completedQns]);
 
   return (
     <div className="relative">

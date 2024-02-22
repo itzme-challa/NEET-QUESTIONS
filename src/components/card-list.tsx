@@ -11,7 +11,7 @@ type ListItem = {
   href: string;
 };
 
-export default async function CardList({ lists }: { lists: ListItem[] }) {
+export function CardList({ lists }: { lists: ListItem[] }) {
   const ref = useRef<HTMLDivElement | null>(
     null,
   );

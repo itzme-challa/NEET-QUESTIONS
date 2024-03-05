@@ -36,7 +36,7 @@ export function Card({ data, href }: { data: CardData; href: string }) {
       if (completedQns[data.ids[index]] !== undefined) completed++;
     }
     return completed;
-  }, [completedQns]);
+  }, [completedQns, data]);
 
   return (
     <div className="relative">

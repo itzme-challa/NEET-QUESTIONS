@@ -147,7 +147,7 @@ const Option = ({
       className={`${
         isSubmitted
           ? option !== answer && active
-            ? "bg-red-400 dark:bg-red-500"
+            ? "bg-[red] dark:bg-[red]"
             : option === answer
             ? "bg-green-400 dark:bg-green-500"
             : "bg-accent"

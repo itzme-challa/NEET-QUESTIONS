@@ -119,7 +119,7 @@ export function Questions({ questions }: { questions: Question[] }) {
                     : completedQns[questions[qnNum - 1].unique_id] === true
                     ? "bg-green-500"
                     : completedQns[questions[qnNum - 1].unique_id] === false
-                    ? "bg-red-500"
+                    ? "bg-[red]"
                     : "bg-primary-foreground"
                 } ${
                   qnNum === current &&
@@ -157,7 +157,7 @@ export function Questions({ questions }: { questions: Question[] }) {
                     : completedQns[qn.unique_id] === true
                     ? "bg-green-500"
                     : completedQns[qn.unique_id] === false
-                    ? "bg-red-500"
+                    ? "bg-[red]"
                     : "bg-primary-foreground"
                 } ${
                   index + 1 === current && completedQns[qn.unique_id] === true

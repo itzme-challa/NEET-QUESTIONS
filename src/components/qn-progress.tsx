@@ -15,7 +15,6 @@ export function QnProgress({
   }>("completedQn", {});
 
   const progress = useMemo(() => {
-    const total = questionIds.length;
     let right = 0;
     let wrong = 0;
     let completed = 0;
@@ -29,7 +28,7 @@ export function QnProgress({
       wrong,
       completed,
     };
-  }, [completedQns]);
+  }, [completedQns, questionIds]);
 
   // const total = questionIds.length;
   // let right = 0;

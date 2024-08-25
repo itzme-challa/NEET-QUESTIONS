@@ -43,6 +43,7 @@ export default function RootLayout({
           <main>{children}</main>
         </ThemeProvider>
         <Script src="https://umami.coolify.akashdeep.pro/script.js" data-website-id="689bb58a-6b31-44a9-b3bf-1f7756af6c42" />
+        <Script data-domain="neet-prep.vercel.app" src="https://plausible.io/js/script.js" />
       </body>
     </html>
   );

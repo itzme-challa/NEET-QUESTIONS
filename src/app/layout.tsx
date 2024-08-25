@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/site-header";
 import NextTopLoader from 'nextjs-toploader';
+import Script from 'next/script'
 
 export const fontSans = FontSans({
   subsets: ["latin"],
@@ -41,6 +42,7 @@ export default function RootLayout({
           <SiteHeader></SiteHeader>
           <main>{children}</main>
         </ThemeProvider>
+        <Script src="https://umami.coolify.akashdeep.pro/script.js" data-website-id="689bb58a-6b31-44a9-b3bf-1f7756af6c42" />
       </body>
     </html>
   );

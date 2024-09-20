@@ -27,7 +27,7 @@ export default async function Home({ params }: { params: Params }) {
 
   return (
     <div className="mx-auto w-full max-w-2xl p-4">
-      <div className="grid gap-3">
+      <div className="grid gap-3 md:grid-2 xl:grid-3">
         {topics.map((topic) => {
           return (
             <Card

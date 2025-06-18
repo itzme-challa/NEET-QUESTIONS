@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import CardList from './components/CardList';
 import QuizBox from './components/QuizBox';
+import Breadcrumb from './components/Breadcrumb';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
@@ -11,22 +13,17 @@ const subjectUrls = {
 };
 
 const App = () => {
+  const { subject, chapter, unit, topic, quizType } = useParams();
+  const navigate = useNavigate();
+  const questionId = window.location.hash ? parseInt(window.location.hash.slice(1)) - 1 : 0;
+
   const [fullData, setFullData] = useState([]);
   const [currentQuestions, setCurrentQuestions] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [currentSelection, setCurrentSelection] = useState({
-    subject: '',
-    chapter: '',
-    unit: '',
-    topic: '',
-    quizType: '',
-  });
   const [error, setError] = useState('');
-  const [view, setView] = useState('subjects');
 
   useEffect(() => {
-    if (currentSelection.subject) {
-      fetch(subjectUrls[currentSelection.subject])
+    if (subject) {
+      fetch(subjectUrls[subject.toLowerCase()])
         .then((res) => {
           if (!res.ok) throw new Error('Failed to fetch data');
           return res.json();
@@ -39,7 +36,20 @@ const App = () => {
           setError('Error loading data. Please try again.');
         });
     }
-  }, [currentSelection.subject]);
+  }, [subject]);
+
+  useEffect(() => {
+    if (subject && chapter && unit && topic && quizType) {
+      const questions = fullData.filter(
+        (q) =>
+          getChapterName(q) === chapter &&
+          getUnitName(q) === unit &&
+          getTopicName(q) === topic &&
+          q.quiz_type.toLowerCase() === quizType.toLowerCase()
+      );
+      setCurrentQuestions(questions);
+    }
+  }, [fullData, subject, chapter, unit, topic, quizType]);
 
   const getChapterName = (q) =>
     q['Chapter Name'] ||
@@ -59,7 +69,7 @@ const App = () => {
       return [
         ...new Set(
           fullData
-            .filter((q) => getChapterName(q) === currentSelection.chapter)
+            .filter((q) => getChapterName(q) === chapter)
             .map(getUnitName)
         ),
       ]
@@ -70,9 +80,7 @@ const App = () => {
         ...new Set(
           fullData
             .filter(
-              (q) =>
-                getChapterName(q) === currentSelection.chapter &&
-                getUnitName(q) === currentSelection.unit
+              (q) => getChapterName(q) === chapter && getUnitName(q) === unit
             )
             .map(getTopicName)
         ),
@@ -85,9 +93,9 @@ const App = () => {
           fullData
             .filter(
               (q) =>
-                getChapterName(q) === currentSelection.chapter &&
-                getUnitName(q) === currentSelection.unit &&
-                getTopicName(q) === currentSelection.topic
+                getChapterName(q) === chapter &&
+                getUnitName(q) === unit &&
+                getTopicName(q) === topic
             )
             .map((q) => q.quiz_type)
         ),
@@ -98,69 +106,52 @@ const App = () => {
   };
 
   const handleSelect = (type, value) => {
-    setCurrentSelection((prev) => ({
-      ...prev,
-      [type]: value,
-    }));
-    setView(
-      type === 'subject'
-        ? 'chapters'
-        : type === 'chapter'
-        ? 'units'
-        : type === 'unit'
-        ? 'topics'
-        : type === 'topic'
-        ? 'quizTypes'
-        : 'quiz'
-    );
-    if (type === 'quizType') {
-      const questions = fullData.filter(
-        (q) =>
-          getChapterName(q) === currentSelection.chapter &&
-          getUnitName(q) === currentSelection.unit &&
-          getTopicName(q) === currentSelection.topic &&
-          (!value || q.quiz_type === value)
-      );
-      setCurrentQuestions(questions);
-      setCurrentIndex(0);
-    }
+    const cleanValue = value.replace(/\s+/g, '_');
+    if (type === 'subject') navigate(`/${cleanValue}`);
+    else if (type === 'chapter') navigate(`/${subject}/${cleanValue}`);
+    else if (type === 'unit') navigate(`/${subject}/${chapter}/${cleanValue}`);
+    else if (type === 'topic')
+      navigate(`/${subject}/${chapter}/${unit}/${cleanValue}`);
+    else if (type === 'quizType')
+      navigate(`/${subject}/${chapter}/${unit}/${topic}/${cleanValue}/#1`);
   };
 
   const handleBack = () => {
-    if (view === 'quiz') {
-      setView('quizTypes');
-      setCurrentQuestions([]);
-    } else if (view === 'quizTypes') {
-      setView('topics');
-      setCurrentSelection((prev) => ({ ...prev, quizType: '' }));
-    } else if (view === 'topics') {
-      setView('units');
-      setCurrentSelection((prev) => ({ ...prev, topic: '' }));
-    } else if (view === 'units') {
-      setView('chapters');
-      setCurrentSelection((prev) => ({ ...prev, unit: '' }));
-    } else if (view === 'chapters') {
-      setView('subjects');
-      setCurrentSelection((prev) => ({ ...prev, subject: '', chapter: '' }));
-      setFullData([]);
-    }
+    if (quizType) navigate(`/${subject}/${chapter}/${unit}/${topic}`);
+    else if (topic) navigate(`/${subject}/${chapter}/${unit}`);
+    else if (unit) navigate(`/${subject}/${chapter}`);
+    else if (chapter) navigate(`/${subject}`);
+    else navigate('/');
   };
 
   const handleNext = () => {
-    if (currentIndex < currentQuestions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+    if (questionId < currentQuestions.length - 1) {
+      navigate(
+        `/${subject}/${chapter}/${unit}/${topic}/${quizType}/#${questionId + 2}`
+      );
     } else {
-      setView('quizTypes');
-      setCurrentQuestions([]);
+      navigate(`/${subject}/${chapter}/${unit}/${topic}`);
     }
   };
+
+  const currentView = quizType
+    ? 'quiz'
+    : topic
+    ? 'quizTypes'
+    : unit
+    ? 'topics'
+    : chapter
+    ? 'units'
+    : subject
+    ? 'chapters'
+    : 'subjects';
 
   return (
     <div className="container mx-auto p-6 bg-white rounded-2xl shadow-2xl min-h-screen">
       <h2 className="text-3xl font-bold text-center text-blue-900 mb-6">
         NEET Topic-Wise Quiz Explorer
       </h2>
-      {view !== 'subjects' && (
+      {currentView !== 'subjects' && (
         <button
           onClick={handleBack}
           className="bg-gray-500 text-white px-4 py-2 rounded-lg mb-6 hover:bg-gray-600 transition duration-300"
@@ -168,51 +159,63 @@ const App = () => {
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" /> Back
         </button>
       )}
+      <Breadcrumb
+        subject={subject}
+        chapter={chapter}
+        unit={unit}
+        topic={topic}
+        quizType={quizType}
+        questionId={questionId + 1}
+      />
       {error && <p className="text-red-600 text-center">{error}</p>}
-      {view === 'subjects' && (
+      {currentView === 'subjects' && (
         <CardList
-          items={getListItems('subjects').map((s) => s.charAt(0).toUpperCase() + s.slice(1))}
+          items={getListItems('subjects').map(
+            (s) => s.charAt(0).toUpperCase() + s.slice(1)
+          )}
           onSelect={(item) => handleSelect('subject', item.toLowerCase())}
           title="Subjects"
         />
       )}
-      {view === 'chapters' && (
+      {currentView === 'chapters' && (
         <CardList
           items={getListItems('chapters')}
           onSelect={(item) => handleSelect('chapter', item)}
           title="Chapters"
         />
       )}
-      {view === 'units' && (
+      {currentView === 'units' && (
         <CardList
           items={getListItems('units')}
           onSelect={(item) => handleSelect('unit', item)}
           title="Units"
         />
       )}
-      {view === 'topics' && (
+      {currentView === 'topics' && (
         <CardList
           items={getListItems('topics')}
           onSelect={(item) => handleSelect('topic', item)}
           title="Topics"
         />
       )}
-      {view === 'quizTypes' && (
+      {currentView === 'quizTypes' && (
         <CardList
-          items={getListItems('quizTypes').map((t) => t.charAt(0).toUpperCase() + t.slice(1))}
+          items={getListItems('quizTypes').map(
+            (t) => t.charAt(0).toUpperCase() + t.slice(1)
+          )}
           onSelect={(item) => handleSelect('quizType', item.toLowerCase())}
           title="Quiz Types"
         />
       )}
-      {view === 'quiz' && currentQuestions.length > 0 && (
+      {currentView === 'quiz' && currentQuestions.length > 0 && (
         <QuizBox
-          question={currentQuestions[currentIndex]}
-          questionNumber={currentIndex + 1}
+          question={currentQuestions[questionId] || currentQuestions[0]}
+          questionNumber={questionId + 1}
           totalQuestions={currentQuestions.length}
           onNext={handleNext}
         />
       )}
-      {view === 'quiz' && currentQuestions.length === 0 && (
+      {currentView === 'quiz' && currentQuestions.length === 0 && (
         <p className="text-red-600 text-center">No questions found for selected filters.</p>
       )}
     </div>

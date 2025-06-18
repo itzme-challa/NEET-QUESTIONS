@@ -36,8 +36,6 @@ const QuizBox = ({ question, questionNumber, totalQuestions, onNext }) => {
     ));
   };
 
-  if (!question) return <p className="text-red-600 text-center">Question not found.</p>;
-
   return (
     <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">

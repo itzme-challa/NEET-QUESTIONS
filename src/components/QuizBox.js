@@ -36,6 +36,8 @@ const QuizBox = ({ question, questionNumber, totalQuestions, onNext }) => {
     ));
   };
 
+  if (!question) return null;
+
   return (
     <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">

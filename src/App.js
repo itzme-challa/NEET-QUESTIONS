@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import CardList from '../components/CardList';
-import QuizBox from '../components/QuizBox';
+import CardList from './components/CardList';
+import QuizBox from './components/QuizBox';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 

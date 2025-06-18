@@ -42,77 +42,58 @@ const App = () => {
   }, [currentSelection.subject]);
 
   const getChapterName = (q) =>
-    (q['Chapter Name'] ||
-     q['chapter name'] ||
-     q['Unique Chapter Name'] ||
-     q.topic_name.split('>>')[0]?.trim() ||
-     '').toLowerCase();
+    q['Chapter Name'] ||
+    q['chapter name'] ||
+    q['Unique Chapter Name'] ||
+    q.topic_name.split('>>')[0]?.trim() ||
+    '';
 
-  const getUnitName = (q) => {
-    const parts = q.topic_name.split('>>');
-    return parts[1]?.trim() || q.unit_name || '';
-  };
-
-  const getTopicName = (q) => {
-    const parts = q.topic_name.split('>>');
-    return parts[2]?.trim() || q.topic || '';
-  };
+  const getUnitName = (q) => q.topic_name.split('>>')[1]?.trim() || '';
+  const getTopicName = (q) => q.topic_name.split('>>')[2]?.trim() || '';
 
   const getListItems = (type) => {
     if (type === 'subjects') return Object.keys(subjectUrls);
-    if (type === 'chapters') {
-      const chapters = [...new Set(fullData.map(getChapterName))].filter(Boolean).sort();
-      if (!chapters.length) setError(`No chapters found for ${currentSelection.subject}.`);
-      return chapters;
-    }
-    if (type === 'units') {
-      const units = [
+    if (type === 'chapters')
+      return [...new Set(fullData.map(getChapterName))].filter(Boolean).sort();
+    if (type === 'units')
+      return [
         ...new Set(
           fullData
-            .filter((q) => getChapterName(q) === currentSelection.chapter.toLowerCase())
+            .filter((q) => getChapterName(q) === currentSelection.chapter)
             .map(getUnitName)
         ),
-      ].filter(Boolean).sort();
-      if (!units.length) {
-        setError(`No units found for chapter ${currentSelection.chapter} in ${currentSelection.subject}.`);
-      }
-      return units;
-    }
-    if (type === 'topics') {
-      const topics = [
+      ]
+        .filter(Boolean)
+        .sort();
+    if (type === 'topics')
+      return [
         ...new Set(
           fullData
             .filter(
               (q) =>
-                getChapterName(q) === currentSelection.chapter.toLowerCase() &&
-                getUnitName(q).toLowerCase() === currentSelection.unit.toLowerCase()
+                getChapterName(q) === currentSelection.chapter &&
+                getUnitName(q) === currentSelection.unit
             )
             .map(getTopicName)
         ),
-      ].filter(Boolean).sort();
-      if (!topics.length) {
-        setError(`No topics found for unit ${currentSelection.unit} in chapter ${currentSelection.chapter}.`);
-      }
-      return topics;
-    }
-    if (type === 'quizTypes') {
-      const quizTypes = [
+      ]
+        .filter(Boolean)
+        .sort();
+    if (type === 'quizTypes')
+      return [
         ...new Set(
           fullData
             .filter(
               (q) =>
-                getChapterName(q) === currentSelection.chapter.toLowerCase() &&
-                getUnitName(q).toLowerCase() === currentSelection.unit.toLowerCase() &&
-                getTopicName(q).toLowerCase() === currentSelection.topic.toLowerCase()
+                getChapterName(q) === currentSelection.chapter &&
+                getUnitName(q) === currentSelection.unit &&
+                getTopicName(q) === currentSelection.topic
             )
             .map((q) => q.quiz_type)
         ),
-      ].filter(Boolean).sort();
-      if (!quizTypes.length) {
-        setError(`No quiz types found for topic ${currentSelection.topic}.`);
-      }
-      return quizTypes;
-    }
+      ]
+        .filter(Boolean)
+        .sort();
     return [];
   };
 
@@ -121,7 +102,6 @@ const App = () => {
       ...prev,
       [type]: value,
     }));
-    setError('');
     setView(
       type === 'subject'
         ? 'chapters'
@@ -136,21 +116,17 @@ const App = () => {
     if (type === 'quizType') {
       const questions = fullData.filter(
         (q) =>
-          getChapterName(q) === currentSelection.chapter.toLowerCase() &&
-          getUnitName(q).toLowerCase() === currentSelection.unit.toLowerCase() &&
-          getTopicName(q).toLowerCase() === currentSelection.topic.toLowerCase() &&
-          (!value || q.quiz_type.toLowerCase() === value.toLowerCase())
+          getChapterName(q) === currentSelection.chapter &&
+          getUnitName(q) === currentSelection.unit &&
+          getTopicName(q) === currentSelection.topic &&
+          (!value || q.quiz_type === value)
       );
       setCurrentQuestions(questions);
       setCurrentIndex(0);
-      if (!questions.length) {
-        setError(`No questions found for ${value} in ${currentSelection.topic}.`);
-      }
     }
   };
 
   const handleBack = () => {
-    setError('');
     if (view === 'quiz') {
       setView('quizTypes');
       setCurrentQuestions([]);
@@ -176,7 +152,6 @@ const App = () => {
     } else {
       setView('quizTypes');
       setCurrentQuestions([]);
-      setCurrentIndex(0);
     }
   };
 
@@ -238,7 +213,7 @@ const App = () => {
         />
       )}
       {view === 'quiz' && currentQuestions.length === 0 && (
-        <p className="text-red-600 text-center">No questions found for selected filters.</ supplies
+        <p className="text-red-600 text-center">No questions found for selected filters.</p>
       )}
     </div>
   );

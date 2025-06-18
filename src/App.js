@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import CardList from './components/CardList';
 import QuizBox from './components/QuizBox';
+import Breadcrumb from './components/Breadcrumb';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
@@ -12,333 +13,278 @@ const subjectUrls = {
 };
 
 const App = () => {
+  const { subject, chapter, unit, topic, quizType } = useParams();
+  const navigate = useNavigate();
+  const questionId = window.location.hash ? parseInt(window.location.hash.slice(1)) - 1 : 0;
+
   const [fullData, setFullData] = useState([]);
   const [currentQuestions, setCurrentQuestions] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [loading, setLoading] = useState(false);
 
+  // Normalize strings for case-insensitive comparison
+  const normalizeString = (str) => (str || '').toLowerCase().trim();
+
+  // Fetch data when subject changes
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const id = params.get('id');
-    if (location.pathname === '/play' && id) {
-      const subject = Object.keys(subjectUrls).find((s) =>
-        fullData.some((q) => q.id === id && subjectUrls[s].includes(q.subject))
-      );
-      if (subject && !fullData.length) {
-        fetch(subjectUrls[subject])
-          .then((res) => {
-            if (!res.ok) throw new Error('Failed to fetch data');
-            return res.json();
-          })
-          .then((data) => {
-            setFullData(data);
-            const question = data.find((q) => q.id === id);
-            if (question) {
-              setCurrentQuestions([question]);
-              setCurrentIndex(0);
-            } else {
-              setError('Question not found.');
-            }
-          })
-          .catch(() => {
-            setError('Error loading data. Please try again.');
-          });
-      }
+    if (subject && subjectUrls[normalizeString(subject)]) {
+      setLoading(true);
+      setError('');
+      fetch(subjectUrls[normalizeString(subject)])
+        .then((res) => {
+          if (!res.ok) throw new Error(`Failed to fetch ${subject} data`);
+          return res.json();
+        })
+        .then((data) => {
+          setFullData(data);
+          setLoading(false);
+          console.log(`Fetched ${subject} data:`, data.slice(0, 5)); // Debug: Log first 5 entries
+        })
+        .catch((err) => {
+          setError(err.message);
+          setLoading(false);
+          setFullData([]);
+        });
+    } else if (subject && !subjectUrls[normalizeString(subject)]) {
+      setError('Invalid subject');
+      setFullData([]);
+      setCurrentQuestions([]);
+    } else {
+      setFullData([]);
+      setCurrentQuestions([]);
+      setLoading(false);
+      setError('');
     }
-  }, [location, fullData]);
+  }, [subject]);
+
+  // Filter questions when all parameters are present
+  useEffect(() => {
+    if (subject && chapter && unit && topic && quizType && fullData.length > 0) {
+      const decodedChapter = chapter.replace(/_/g, ' ');
+      const decodedUnit = unit.replace(/_/g, ' ');
+      const decodedTopic = topic.replace(/_/g, ' ');
+      const questions = fullData.filter((q) => {
+        const match =
+          normalizeString(getChapterName(q)) === normalizeString(decodedChapter) &&
+          normalizeString(getUnitName(q)) === normalizeString(decodedUnit) &&
+          normalizeString(getTopicName(q)) === normalizeString(decodedTopic) &&
+          normalizeString(q.quiz_type) === normalizeString(quizType);
+        return match;
+      });
+      setCurrentQuestions(questions);
+      console.log(`Filtered questions for ${subject}/${chapter}/${unit}/${topic}/${quizType}:`, questions.length); // Debug
+      if (questions.length === 0) {
+        setError('No questions found for the selected filters.');
+      }
+      if (questions.length > 0 && (questionId >= questions.length || questionId < 0)) {
+        navigate(`/${subject}/${chapter}/${unit}/${topic}/${quizType}/#1`);
+      }
+    } else {
+      setCurrentQuestions([]);
+    }
+  }, [fullData, subject, chapter, unit, topic, quizType, questionId, navigate]);
 
   const getChapterName = (q) =>
     q['Chapter Name'] ||
     q['chapter name'] ||
     q['Unique Chapter Name'] ||
-    q.topic_name.split('>>')[0]?.trim() ||
+    q['chapter'] || // Fallback to other possible fields
+    q.topic_name?.split('>>')[0]?.trim() ||
     '';
 
-  const getUnitName = (q) => q.topic_name.split('>>')[1]?.trim() || '';
-  const getTopicName = (q) => q.topic_name.split('>>')[2]?.trim() || '';
+  const getUnitName = (q) =>
+    q.topic_name?.split('>>')[1]?.trim() ||
+    q.unit_name || // Fallback to other possible fields
+    q.unit ||
+    '';
 
-  const getListItems = (type, params = {}) => {
-    if (type === 'subjects') return Object.keys(subjectUrls);
-    if (type === 'chapters' && params.subject) {
-      if (!fullData.length) {
-        fetch(subjectUrls[params.subject])
-          .then((res) => {
-            if (!res.ok) throw new Error('Failed to fetch data');
-            return res.json();
-          })
-          .then((data) => {
-            setFullData(data);
-            setError('');
-          })
-          .catch(() => {
-            setError(`Error loading ${params.subject} data. Please try again.`);
-          });
-      }
+  const getTopicName = (q) =>
+    q.topic_name?.split('>>')[2]?.trim() ||
+    q.topic || // Fallback to other possible fields
+    q.topic_name?.split('>>')[1]?.trim() || // Fallback to unit if no topic
+    '';
+
+  const getListItems = (type) => {
+    if (type === 'subjects') {
+      return Object.keys(subjectUrls);
+    }
+    if (!fullData.length) return [];
+
+    if (type === 'chapters') {
       const chapters = [...new Set(fullData.map(getChapterName))].filter(Boolean).sort();
-      if (!chapters.length) setError(`No chapters found for ${params.subject}.`);
+      console.log(`Chapters for ${subject}:`, chapters); // Debug
+      if (!chapters.length) setError(`No chapters found for ${subject}.`);
       return chapters;
     }
-    if (type === 'units' && params.subject && params.chapter) {
+    if (type === 'units' && chapter) {
+      const decodedChapter = chapter.replace(/_/g, ' ');
       const units = [
         ...new Set(
           fullData
-            .filter((q) => getChapterName(q) === params.chapter)
+            .filter((q) => normalizeString(getChapterName(q)) === normalizeString(decodedChapter))
             .map(getUnitName)
         ),
       ].filter(Boolean).sort();
-      if (!units.length) setError(`No units found for chapter ${params.chapter} in ${params.subject}.`);
+      console.log(`Units for ${subject}/${chapter}:`, units); // Debug
+      if (!units.length) setError(`No units found for chapter ${decodedChapter} in ${subject}.`);
       return units;
     }
-    if (type === 'topics' && params.subject && params.chapter && params.unit) {
+    if (type === 'topics' && chapter && unit) {
+      const decodedChapter = chapter.replace(/_/g, ' ');
+      const decodedUnit = unit.replace(/_/g, ' ');
       const topics = [
         ...new Set(
           fullData
             .filter(
               (q) =>
-                getChapterName(q) === params.chapter &&
-                getUnitName(q) === params.unit
+                normalizeString(getChapterName(q)) === normalizeString(decodedChapter) &&
+                normalizeString(getUnitName(q)) === normalizeString(decodedUnit)
             )
             .map(getTopicName)
         ),
       ].filter(Boolean).sort();
-      if (!topics.length) setError(`No topics found for unit ${params.unit} in chapter ${params.chapter}.`);
+      console.log(`Topics for ${subject}/${chapter}/${unit}:`, topics); // Debug
+      if (!topics.length) setError(`No topics found for unit ${decodedUnit} in ${subject}/${decodedChapter}.`);
       return topics;
     }
-    if (type === 'quizTypes' && params.subject && params.chapter && params.unit && params.topic) {
+    if (type === 'quizTypes' && chapter && unit && topic) {
+      const decodedChapter = chapter.replace(/_/g, ' ');
+      const decodedUnit = unit.replace(/_/g, ' ');
+      const decodedTopic = topic.replace(/_/g, ' ');
       const quizTypes = [
         ...new Set(
           fullData
             .filter(
               (q) =>
-                getChapterName(q) === params.chapter &&
-                getUnitName(q) === params.unit &&
-                getTopicName(q) === params.topic
+                normalizeString(getChapterName(q)) === normalizeString(decodedChapter) &&
+                normalizeString(getUnitName(q)) === normalizeString(decodedUnit) &&
+                normalizeString(getTopicName(q)) === normalizeString(decodedTopic)
             )
             .map((q) => q.quiz_type)
         ),
       ].filter(Boolean).sort();
-      if (!quizTypes.length) setError(`No quiz types found for topic ${params.topic}.`);
+      console.log(`Quiz types for ${subject}/${chapter}/${unit}/${topic}:`, quizTypes); // Debug
+      if (!quizTypes.length) setError(`No quiz types found for topic ${decodedTopic}.`);
       return quizTypes;
     }
     return [];
   };
 
-  const handleSelect = (type, value, currentParams) => {
-    const newParams = { ...currentParams, [type]: value };
-    if (type === 'subject') navigate(`/${value}/chapters`);
-    if (type === 'chapter') navigate(`/${currentParams.subject}/${encodeURIComponent(value)}/units`);
-    if (type === 'unit') navigate(`/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/${encodeURIComponent(value)}/topics`);
-    if (type === 'topic')
-      navigate(`/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/${encodeURIComponent(currentParams.unit)}/${encodeURIComponent(value)}/quizTypes`);
-    if (type === 'quizType') {
-      const questions = fullData.filter(
-        (q) =>
-          getChapterName(q) === currentParams.chapter &&
-          getUnitName(q) === currentParams.unit &&
-          getTopicName(q) === currentParams.topic &&
-          (!value || q.quiz_type === value)
-      );
-      setCurrentQuestions(questions);
-      setCurrentIndex(0);
-      navigate(
-        `/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/${encodeURIComponent(currentParams.unit)}/${encodeURIComponent(currentParams.topic)}/${encodeURIComponent(value)}`
-      );
-    }
+  const handleSelect = (type, value) => {
+    const cleanValue = value.replace(/\s+/g, '_');
+    if (type === 'subject') navigate(`/${cleanValue}`);
+    else if (type === 'chapter') navigate(`/${subject}/${cleanValue}`);
+    else if (type === 'unit') navigate(`/${subject}/${chapter}/${cleanValue}`);
+    else if (type === 'topic')
+      navigate(`/${subject}/${chapter}/${unit}/${cleanValue}`);
+    else if (type === 'quizType')
+      navigate(`/${subject}/${chapter}/${unit}/${topic}/${cleanValue}/#1`);
   };
 
-  const handleBack = (currentParams, view) => {
-    if (view === 'quiz') {
-      navigate(`/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/${encodeURIComponent(currentParams.unit)}/${encodeURIComponent(currentParams.topic)}/quizTypes`);
-      setCurrentQuestions([]);
-    } else if (view === 'quizTypes') {
-      navigate(`/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/${encodeURIComponent(currentParams.unit)}/topics`);
-    } else if (view === 'topics') {
-      navigate(`/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/units`);
-    } else if (view === 'units') {
-      navigate(`/${currentParams.subject}/chapters`);
-    } else if (view === 'chapters') {
-      navigate('/');
-      setFullData([]);
-    }
+  const handleBack = () => {
+    if (quizType) navigate(`/${subject}/${chapter}/${unit}/${topic}`);
+    else if (topic) navigate(`/${subject}/${chapter}/${unit}`);
+    else if (unit) navigate(`/${subject}/${chapter}`);
+    else if (chapter) navigate(`/${subject}`);
+    else navigate('/');
   };
 
   const handleNext = () => {
-    if (currentIndex < currentQuestions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+    if (questionId < currentQuestions.length - 1) {
+      navigate(
+        `/${subject}/${chapter}/${unit}/${topic}/${quizType}/#${questionId + 2}`
+      );
     } else {
-      const params = new URLSearchParams(location.search);
-      const id = params.get('id');
-      if (id) {
-        navigate('/');
-      } else {
-        const { subject, chapter, unit, topic } = location.pathname
-          .split('/')
-          .reduce(
-            (acc, part, i) => {
-              if (i === 1) acc.subject = decodeURIComponent(part);
-              if (i === 3) acc.chapter = decodeURIComponent(part);
-              if (i === 5) acc.unit = decodeURIComponent(part);
-              if (i === 7) acc.topic = decodeURIComponent(part);
-              return acc;
-            },
-            {}
-          );
-        navigate(`/${subject}/${encodeURIComponent(chapter)}/${encodeURIComponent(unit)}/${encodeURIComponent(topic)}/quizTypes`);
-        setCurrentQuestions([]);
-      }
+      navigate(`/${subject}/${chapter}/${unit}/${topic}`);
     }
   };
 
-  const SelectionPage = ({ type }) => {
-    const params = useParams();
-    const decodedParams = {
-      subject: params.subject,
-      chapter: params.chapter ? decodeURIComponent(params.chapter) : undefined,
-      unit: params.unit ? decodeURIComponent(params.unit) : undefined,
-      topic: params.topic ? decodeURIComponent(params.topic) : undefined,
-    };
-    const items =
-      type === 'subjects'
-        ? getListItems('subjects')
-        : type === 'chapters'
-        ? getListItems('chapters', { subject: decodedParams.subject })
-        : type === 'units'
-        ? getListItems('units', { subject: decodedParams.subject, chapter: decodedParams.chapter })
-        : type === 'topics'
-        ? getListItems('topics', {
-            subject: decodedParams.subject,
-            chapter: decodedParams.chapter,
-            unit: decodedParams.unit,
-          })
-        : getListItems('quizTypes', {
-            subject: decodedParams.subject,
-            chapter: decodedParams.chapter,
-            unit: decodedParams.unit,
-            topic: decodedParams.topic,
-          });
-    return (
-      <div className="container mx-auto p-6 bg-white rounded-2xl shadow-2xl min-h-screen">
-        <h2 className="text-3xl font-bold text-center text-blue-900 mb-6">
-          NEET Topic-Wise Quiz Explorer
-        </h2>
-        {type !== 'subjects' && (
-          <button
-            onClick={() => handleBack(decodedParams, type)}
-            className="bg-gray-500 text-white px-4 py-2 rounded-lg mb-6 hover:bg-gray-600 transition duration-300"
-          >
-            <FontAwesomeIcon icon={faArrowLeft} className="mr-2" /> Back
-          </button>
-        )}
-        {error && <p className="text-red-600 text-center">{error}</p>}
-        {items.length > 0 ? (
-          <CardList
-            items={items.map((s) => s.charAt(0).toUpperCase() + s.slice(1))}
-            onSelect={(item) => handleSelect(type.slice(0, -1), item.toLowerCase(), decodedParams)}
-            title={type.charAt(0).toUpperCase() + type.slice(1)}
-          />
-        ) : (
-          <p className="text-red-600 text-center">No {type} available.</p>
-        )}
-      </div>
-    );
-  };
-
-  const QuizPage = () => {
-    const params = useParams();
-    const decodedParams = {
-      subject: params.subject,
-      chapter: decodeURIComponent(params.chapter),
-      unit: decodeURIComponent(params.unit),
-      topic: decodeURIComponent(params.topic),
-      quizType: decodeURIComponent(params.quizType),
-    };
-    useEffect(() => {
-      if (!currentQuestions.length && decodedParams.quizType) {
-        const questions = fullData.filter(
-          (q) =>
-            getChapterName(q) === decodedParams.chapter &&
-            getUnitName(q) === decodedParams.unit &&
-            getTopicName(q) === decodedParams.topic &&
-            q.quiz_type === decodedParams.quizType
-        );
-        setCurrentQuestions(questions);
-        setCurrentIndex(0);
-        if (!questions.length) {
-          setError(`No questions found for ${decodedParams.quizType} in ${decodedParams.topic}.`);
-        }
-      }
-    }, [decodedParams]);
-    return (
-      <div className="container mx-auto p-6 bg-white rounded-2xl shadow-2xl min-h-screen">
-        <h2 className="text-3xl font-bold text-center text-blue-900 mb-6">
-          NEET Topic-Wise Quiz Explorer
-        </h2>
-        <button
-          onClick={() => handleBack(decodedParams, 'quiz')}
-          className="bg-gray-500 text-white px-4 py-2 rounded-lg mb-6 hover:bg-gray-600 transition duration-300"
-        >
-          <FontAwesomeIcon icon={faArrowLeft} className="mr-2" /> Back
-        </button>
-        {error && <p className="text-red-600 text-center">{error}</p>}
-        {currentQuestions.length > 0 ? (
-          <QuizBox
-            question={currentQuestions[currentIndex]}
-            questionNumber={currentIndex + 1}
-            totalQuestions={currentQuestions.length}
-            onNext={handleNext}
-          />
-        ) : (
-          <p className="text-red-600 text-center">No questions found for selected filters.</p>
-        )}
-      </div>
-    );
-  };
-
-  const PlayPage = () => {
-    return (
-      <div className="container mx-auto p-6 bg-white rounded-2xl shadow-2xl min-h-screen">
-        <h2 className="text-3xl font-bold text-center text-blue-900 mb-6">
-          NEET Topic-Wise Quiz Explorer
-        </h2>
-        <button
-          onClick={() => navigate('/')}
-          className="bg-gray-500 text-white px-4 py-2 rounded-lg mb-6 hover:bg-gray-600 transition duration-300"
-        >
-          <FontAwesomeIcon icon={faArrowLeft} className="mr-2" /> Back
-        </button>
-        {error && <p className="text-red-600 text-center">{error}</p>}
-        {currentQuestions.length > 0 ? (
-          <QuizBox
-            question={currentQuestions[currentIndex]}
-            questionNumber={currentIndex + 1}
-            totalQuestions={currentQuestions.length}
-            onNext={handleNext}
-          />
-        ) : (
-          <p className="text-red-600 text-center">Loading question...</p>
-        )}
-      </div>
-    );
-  };
+  const currentView = quizType
+    ? 'quiz'
+    : topic
+    ? 'quizTypes'
+    : unit
+    ? 'topics'
+    : chapter
+    ? 'units'
+    : subject
+    ? 'chapters'
+    : 'subjects';
 
   return (
-    <Routes>
-      <Route path="/" element={<SelectionPage type="subjects" />} />
-      <Route path="/:subject/chapters" element={<SelectionPage type="chapters" />} />
-      <Route path="/:subject/:chapter/units" element={<SelectionPage type="units" />} />
-      <Route path="/:subject/:chapter/:unit/topics" element={<SelectionPage type="topics" />} />
-      <Route
-        path="/:subject/:chapter/:unit/:topic/quizTypes"
-        element={<SelectionPage type="quizTypes" />}
+    <div className="container mx-auto p-6 bg-white rounded-2xl shadow-2xl min-h-screen">
+      <h2 className="text-3xl font-bold text-center text-blue-900 mb-6">
+        NEET Topic-Wise Quiz Explorer
+      </h2>
+      {currentView !== 'subjects' && (
+        <button
+          onClick={handleBack}
+          className="bg-gray-500 text-white px-4 py-2 rounded-lg mb-6 hover:bg-gray-600 transition duration-300"
+        >
+          <FontAwesomeIcon icon={faArrowLeft} className="mr-2" /> Back
+        </button>
+      )}
+      <Breadcrumb
+        subject={subject}
+        chapter={chapter?.replace(/_/g, ' ')}
+        unit={unit?.replace(/_/g, ' ')}
+        topic={topic?.replace(/_/g, ' ')}
+        quizType={quizType}
+        questionId={questionId + 1}
       />
-      <Route
-        path="/:subject/:chapter/:unit/:topic/:quizType"
-        element={<QuizPage />}
-      />
-      <Route path="/play" element={<PlayPage />} />
-    </Routes>
+      {error && <p className="text-red-600 text-center">{error}</p>}
+      {loading && <p className="text-gray-600 text-center">Loading...</p>}
+      {!loading && currentView === 'subjects' && (
+        <CardList
+          items={getListItems('subjects').map(
+            (s) => s.charAt(0).toUpperCase() + s.slice(1)
+          )}
+          onSelect={(item) => handleSelect('subject', item.toLowerCase())}
+          title="Subjects"
+        />
+      )}
+      {!loading && currentView === 'chapters' && (
+        <CardList
+          items={getListItems('chapters')}
+          onSelect={(item) => handleSelect('chapter', item)}
+          title="Chapters"
+        />
+      )}
+      {!loading && currentView === 'units' && (
+        <CardList
+          items={getListItems('units')}
+          onSelect={(item) => handleSelect('unit', item)}
+          title="Units"
+        />
+      )}
+      {!loading && currentView === 'topics' && (
+        <CardList
+          items={getListItems('topics')}
+          onSelect={(item) => handleSelect('topic', item)}
+          title="Topics"
+        />
+      )}
+      {!loading && currentView === 'quizTypes' && (
+        <CardList
+          items={getListItems('quizTypes').map(
+            (t) => t.charAt(0).toUpperCase() + t.slice(1)
+          )}
+          onSelect={(item) => handleSelect('quizType', item.toLowerCase())}
+          title="Quiz Types"
+        />
+      )}
+      {!loading && currentView === 'quiz' && currentQuestions.length > 0 && (
+        <QuizBox
+          question={currentQuestions[questionId] || currentQuestions[0]}
+          questionNumber={questionId + 1}
+          totalQuestions={currentQuestions.length}
+          onNext={handleNext}
+        />
+      )}
+      {!loading && currentView === 'quiz' && currentQuestions.length === 0 && (
+        <p className="text-red-600 text-center">No questions found for selected filters.</p>
+      )}
+    </div>
   );
 };
 

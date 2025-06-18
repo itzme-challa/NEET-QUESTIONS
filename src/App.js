@@ -20,9 +20,11 @@ const App = () => {
   const [fullData, setFullData] = useState([]);
   const [currentQuestions, setCurrentQuestions] = useState([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (subject) {
+    if (subject && subjectUrls[subject.toLowerCase()]) {
+      setLoading(true);
       fetch(subjectUrls[subject.toLowerCase()])
         .then((res) => {
           if (!res.ok) throw new Error('Failed to fetch data');
@@ -31,25 +33,35 @@ const App = () => {
         .then((data) => {
           setFullData(data);
           setError('');
+          setLoading(false);
         })
         .catch(() => {
           setError('Error loading data. Please try again.');
+          setLoading(false);
         });
+    } else {
+      setFullData([]);
+      setCurrentQuestions([]);
     }
   }, [subject]);
 
   useEffect(() => {
-    if (subject && chapter && unit && topic && quizType) {
+    if (subject && chapter && unit && topic && quizType && fullData.length > 0) {
       const questions = fullData.filter(
         (q) =>
-          getChapterName(q) === chapter &&
-          getUnitName(q) === unit &&
-          getTopicName(q) === topic &&
+          getChapterName(q) === chapter.replace(/_/g, ' ') &&
+          getUnitName(q) === unit.replace(/_/g, ' ') &&
+          getTopicName(q) === topic.replace(/_/g, ' ') &&
           q.quiz_type.toLowerCase() === quizType.toLowerCase()
       );
       setCurrentQuestions(questions);
+      if (questionId >= questions.length || questionId < 0) {
+        navigate(`/${subject}/${chapter}/${unit}/${topic}/${quizType}/#1`);
+      }
+    } else {
+      setCurrentQuestions([]);
     }
-  }, [fullData, subject, chapter, unit, topic, quizType]);
+  }, [fullData, subject, chapter, unit, topic, quizType, questionId, navigate]);
 
   const getChapterName = (q) =>
     q['Chapter Name'] ||
@@ -63,39 +75,41 @@ const App = () => {
 
   const getListItems = (type) => {
     if (type === 'subjects') return Object.keys(subjectUrls);
-    if (type === 'chapters')
+    if (type === 'chapters' && fullData.length > 0)
       return [...new Set(fullData.map(getChapterName))].filter(Boolean).sort();
-    if (type === 'units')
+    if (type === 'units' && fullData.length > 0)
       return [
         ...new Set(
           fullData
-            .filter((q) => getChapterName(q) === chapter)
+            .filter((q) => getChapterName(q) === chapter.replace(/_/g, ' '))
             .map(getUnitName)
         ),
       ]
         .filter(Boolean)
         .sort();
-    if (type === 'topics')
+    if (type === 'topics' && fullData.length > 0)
       return [
         ...new Set(
           fullData
             .filter(
-              (q) => getChapterName(q) === chapter && getUnitName(q) === unit
+              (q) =>
+                getChapterName(q) === chapter.replace(/_/g, ' ') &&
+                getUnitName(q) === unit.replace(/_/g, ' ')
             )
             .map(getTopicName)
         ),
       ]
         .filter(Boolean)
         .sort();
-    if (type === 'quizTypes')
+    if (type === 'quizTypes' && fullData.length > 0)
       return [
         ...new Set(
           fullData
             .filter(
               (q) =>
-                getChapterName(q) === chapter &&
-                getUnitName(q) === unit &&
-                getTopicName(q) === topic
+                getChapterName(q) === chapter.replace(/_/g, ' ') &&
+                getUnitName(q) === unit.replace(/_/g, ' ') &&
+                getTopicName(q) === topic.replace(/_/g, ' ')
             )
             .map((q) => q.quiz_type)
         ),
@@ -168,6 +182,7 @@ const App = () => {
         questionId={questionId + 1}
       />
       {error && <p className="text-red-600 text-center">{error}</p>}
+      {loading && <p className="text-gray-600 text-center">Loading...</p>}
       {currentView === 'subjects' && (
         <CardList
           items={getListItems('subjects').map(
@@ -177,28 +192,28 @@ const App = () => {
           title="Subjects"
         />
       )}
-      {currentView === 'chapters' && (
+      {currentView === 'chapters' && !loading && (
         <CardList
           items={getListItems('chapters')}
           onSelect={(item) => handleSelect('chapter', item)}
           title="Chapters"
         />
       )}
-      {currentView === 'units' && (
+      {currentView === 'units' && !loading && (
         <CardList
           items={getListItems('units')}
           onSelect={(item) => handleSelect('unit', item)}
           title="Units"
         />
       )}
-      {currentView === 'topics' && (
+      {currentView === 'topics' && !loading && (
         <CardList
           items={getListItems('topics')}
           onSelect={(item) => handleSelect('topic', item)}
           title="Topics"
         />
       )}
-      {currentView === 'quizTypes' && (
+      {currentView === 'quizTypes' && !loading && (
         <CardList
           items={getListItems('quizTypes').map(
             (t) => t.charAt(0).toUpperCase() + t.slice(1)
@@ -207,7 +222,7 @@ const App = () => {
           title="Quiz Types"
         />
       )}
-      {currentView === 'quiz' && currentQuestions.length > 0 && (
+      {currentView === 'quiz' && !loading && currentQuestions.length > 0 && (
         <QuizBox
           question={currentQuestions[questionId] || currentQuestions[0]}
           questionNumber={questionId + 1}
@@ -215,7 +230,7 @@ const App = () => {
           onNext={handleNext}
         />
       )}
-      {currentView === 'quiz' && currentQuestions.length === 0 && (
+      {currentView === 'quiz' && !loading && currentQuestions.length === 0 && (
         <p className="text-red-600 text-center">No questions found for selected filters.</p>
       )}
     </div>

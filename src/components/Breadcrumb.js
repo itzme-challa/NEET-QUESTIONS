@@ -19,7 +19,7 @@ const Breadcrumb = ({ subject, chapter, unit, topic, quizType, questionId }) => 
       label: quizType.replace(/_/g, ' '),
       path: `/${subject}/${chapter}/${unit}/${topic}/${quizType}`,
     });
-  if (questionId)
+  if (questionId && quizType)
     items.push({ label: `Question ${questionId}`, path: null });
 
   return (

@@ -23,7 +23,6 @@ const App = () => {
     const params = new URLSearchParams(location.search);
     const id = params.get('id');
     if (location.pathname === '/play' && id) {
-      // For /play?id=... route, find the question by ID
       const subject = Object.keys(subjectUrls).find((s) =>
         fullData.some((q) => q.id === id && subjectUrls[s].includes(q.subject))
       );
@@ -74,23 +73,26 @@ const App = () => {
             setError('');
           })
           .catch(() => {
-            setError('Error loading data. Please try again.');
+            setError(`Error loading ${params.subject} data. Please try again.`);
           });
       }
-      return [...new Set(fullData.map(getChapterName))].filter(Boolean).sort();
+      const chapters = [...new Set(fullData.map(getChapterName))].filter(Boolean).sort();
+      if (!chapters.length) setError(`No chapters found for ${params.subject}.`);
+      return chapters;
     }
-    if (type === 'units' && params.chapter)
-      return [
+    if (type === 'units' && params.subject && params.chapter) {
+      const units = [
         ...new Set(
           fullData
             .filter((q) => getChapterName(q) === params.chapter)
             .map(getUnitName)
         ),
-      ]
-        .filter(Boolean)
-        .sort();
-    if (type === 'topics' && params.chapter && params.unit)
-      return [
+      ].filter(Boolean).sort();
+      if (!units.length) setError(`No units found for chapter ${params.chapter} in ${params.subject}.`);
+      return units;
+    }
+    if (type === 'topics' && params.subject && params.chapter && params.unit) {
+      const topics = [
         ...new Set(
           fullData
             .filter(
@@ -100,11 +102,12 @@ const App = () => {
             )
             .map(getTopicName)
         ),
-      ]
-        .filter(Boolean)
-        .sort();
-    if (type === 'quizTypes' && params.chapter && params.unit && params.topic)
-      return [
+      ].filter(Boolean).sort();
+      if (!topics.length) setError(`No topics found for unit ${params.unit} in chapter ${params.chapter}.`);
+      return topics;
+    }
+    if (type === 'quizTypes' && params.subject && params.chapter && params.unit && params.topic) {
+      const quizTypes = [
         ...new Set(
           fullData
             .filter(
@@ -115,19 +118,20 @@ const App = () => {
             )
             .map((q) => q.quiz_type)
         ),
-      ]
-        .filter(Boolean)
-        .sort();
+      ].filter(Boolean).sort();
+      if (!quizTypes.length) setError(`No quiz types found for topic ${params.topic}.`);
+      return quizTypes;
+    }
     return [];
   };
 
   const handleSelect = (type, value, currentParams) => {
     const newParams = { ...currentParams, [type]: value };
     if (type === 'subject') navigate(`/${value}/chapters`);
-    if (type === 'chapter') navigate(`/${currentParams.subject}/${value}/units`);
-    if (type === 'unit') navigate(`/${currentParams.subject}/${currentParams.chapter}/${value}/topics`);
+    if (type === 'chapter') navigate(`/${currentParams.subject}/${encodeURIComponent(value)}/units`);
+    if (type === 'unit') navigate(`/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/${encodeURIComponent(value)}/topics`);
     if (type === 'topic')
-      navigate(`/${currentParams.subject}/${currentParams.chapter}/${currentParams.unit}/${value}/quizTypes`);
+      navigate(`/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/${encodeURIComponent(currentParams.unit)}/${encodeURIComponent(value)}/quizTypes`);
     if (type === 'quizType') {
       const questions = fullData.filter(
         (q) =>
@@ -139,19 +143,19 @@ const App = () => {
       setCurrentQuestions(questions);
       setCurrentIndex(0);
       navigate(
-        `/${currentParams.subject}/${currentParams.chapter}/${currentParams.unit}/${currentParams.topic}/${value}`
+        `/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/${encodeURIComponent(currentParams.unit)}/${encodeURIComponent(currentParams.topic)}/${encodeURIComponent(value)}`
       );
     }
   };
 
   const handleBack = (currentParams, view) => {
     if (view === 'quiz') {
-      navigate(`/${currentParams.subject}/${currentParams.chapter}/${currentParams.unit}/${currentParams.topic}/quizTypes`);
+      navigate(`/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/${encodeURIComponent(currentParams.unit)}/${encodeURIComponent(currentParams.topic)}/quizTypes`);
       setCurrentQuestions([]);
     } else if (view === 'quizTypes') {
-      navigate(`/${currentParams.subject}/${currentParams.chapter}/${currentParams.unit}/topics`);
+      navigate(`/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/${encodeURIComponent(currentParams.unit)}/topics`);
     } else if (view === 'topics') {
-      navigate(`/${currentParams.subject}/${currentParams.chapter}/units`);
+      navigate(`/${currentParams.subject}/${encodeURIComponent(currentParams.chapter)}/units`);
     } else if (view === 'units') {
       navigate(`/${currentParams.subject}/chapters`);
     } else if (view === 'chapters') {
@@ -173,15 +177,15 @@ const App = () => {
           .split('/')
           .reduce(
             (acc, part, i) => {
-              if (i === 1) acc.subject = part;
-              if (i === 3) acc.chapter = part;
-              if (i === 5) acc.unit = part;
-              if (i === 7) acc.topic = part;
+              if (i === 1) acc.subject = decodeURIComponent(part);
+              if (i === 3) acc.chapter = decodeURIComponent(part);
+              if (i === 5) acc.unit = decodeURIComponent(part);
+              if (i === 7) acc.topic = decodeURIComponent(part);
               return acc;
             },
             {}
           );
-        navigate(`/${subject}/${chapter}/${unit}/${topic}/quizTypes`);
+        navigate(`/${subject}/${encodeURIComponent(chapter)}/${encodeURIComponent(unit)}/${encodeURIComponent(topic)}/quizTypes`);
         setCurrentQuestions([]);
       }
     }
@@ -189,24 +193,30 @@ const App = () => {
 
   const SelectionPage = ({ type }) => {
     const params = useParams();
+    const decodedParams = {
+      subject: params.subject,
+      chapter: params.chapter ? decodeURIComponent(params.chapter) : undefined,
+      unit: params.unit ? decodeURIComponent(params.unit) : undefined,
+      topic: params.topic ? decodeURIComponent(params.topic) : undefined,
+    };
     const items =
       type === 'subjects'
         ? getListItems('subjects')
         : type === 'chapters'
-        ? getListItems('chapters', { subject: params.subject })
+        ? getListItems('chapters', { subject: decodedParams.subject })
         : type === 'units'
-        ? getListItems('units', { subject: params.subject, chapter: params.chapter })
+        ? getListItems('units', { subject: decodedParams.subject, chapter: decodedParams.chapter })
         : type === 'topics'
         ? getListItems('topics', {
-            subject: params.subject,
-            chapter: params.chapter,
-            unit: params.unit,
+            subject: decodedParams.subject,
+            chapter: decodedParams.chapter,
+            unit: decodedParams.unit,
           })
         : getListItems('quizTypes', {
-            subject: params.subject,
-            chapter: params.chapter,
-            unit: params.unit,
-            topic: params.topic,
+            subject: decodedParams.subject,
+            chapter: decodedParams.chapter,
+            unit: decodedParams.unit,
+            topic: decodedParams.topic,
           });
     return (
       <div className="container mx-auto p-6 bg-white rounded-2xl shadow-2xl min-h-screen">
@@ -215,44 +225,58 @@ const App = () => {
         </h2>
         {type !== 'subjects' && (
           <button
-            onClick={() => handleBack(params, type)}
+            onClick={() => handleBack(decodedParams, type)}
             className="bg-gray-500 text-white px-4 py-2 rounded-lg mb-6 hover:bg-gray-600 transition duration-300"
           >
             <FontAwesomeIcon icon={faArrowLeft} className="mr-2" /> Back
           </button>
         )}
         {error && <p className="text-red-600 text-center">{error}</p>}
-        <CardList
-          items={items.map((s) => s.charAt(0).toUpperCase() + s.slice(1))}
-          onSelect={(item) => handleSelect(type.slice(0, -1), item.toLowerCase(), params)}
-          title={type.charAt(0).toUpperCase() + type.slice(1)}
-        />
+        {items.length > 0 ? (
+          <CardList
+            items={items.map((s) => s.charAt(0).toUpperCase() + s.slice(1))}
+            onSelect={(item) => handleSelect(type.slice(0, -1), item.toLowerCase(), decodedParams)}
+            title={type.charAt(0).toUpperCase() + type.slice(1)}
+          />
+        ) : (
+          <p className="text-red-600 text-center">No {type} available.</p>
+        )}
       </div>
     );
   };
 
   const QuizPage = () => {
     const params = useParams();
+    const decodedParams = {
+      subject: params.subject,
+      chapter: decodeURIComponent(params.chapter),
+      unit: decodeURIComponent(params.unit),
+      topic: decodeURIComponent(params.topic),
+      quizType: decodeURIComponent(params.quizType),
+    };
     useEffect(() => {
-      if (!currentQuestions.length && params.quizType) {
+      if (!currentQuestions.length && decodedParams.quizType) {
         const questions = fullData.filter(
           (q) =>
-            getChapterName(q) === params.chapter &&
-            getUnitName(q) === params.unit &&
-            getTopicName(q) === params.topic &&
-            q.quiz_type === params.quizType
+            getChapterName(q) === decodedParams.chapter &&
+            getUnitName(q) === decodedParams.unit &&
+            getTopicName(q) === decodedParams.topic &&
+            q.quiz_type === decodedParams.quizType
         );
         setCurrentQuestions(questions);
         setCurrentIndex(0);
+        if (!questions.length) {
+          setError(`No questions found for ${decodedParams.quizType} in ${decodedParams.topic}.`);
+        }
       }
-    }, [params]);
+    }, [decodedParams]);
     return (
       <div className="container mx-auto p-6 bg-white rounded-2xl shadow-2xl min-h-screen">
         <h2 className="text-3xl font-bold text-center text-blue-900 mb-6">
           NEET Topic-Wise Quiz Explorer
         </h2>
         <button
-          onClick={() => handleBack(params, 'quiz')}
+          onClick={() => handleBack(decodedParams, 'quiz')}
           className="bg-gray-500 text-white px-4 py-2 rounded-lg mb-6 hover:bg-gray-600 transition duration-300"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" /> Back

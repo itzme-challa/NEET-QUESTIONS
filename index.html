@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>NEET Quiz Explorer</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     :root {
       --primary-color: #4361ee;
@@ -39,306 +40,6 @@
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       min-height: 100vh;
-    }
-
-    #app {
-      max-width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .header {
-      background-color: white;
-      padding: 1rem;
-      box-shadow: var(--shadow-sm);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-weight: 600;
-      color: var(--primary-dark);
-    }
-
-    .logo-icon {
-      font-size: 1.5rem;
-      color: var(--primary-color);
-    }
-
-    .nav-buttons {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .btn {
-      padding: 0.5rem 1rem;
-      border-radius: var(--radius-sm);
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      border: none;
-    }
-
-    .btn-primary {
-      background-color: var(--primary-color);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background-color: var(--primary-dark);
-    }
-
-    .btn-outline {
-      background-color: transparent;
-      border: 1px solid var(--border-color);
-      color: var(--text-medium);
-    }
-
-    .btn-outline:hover {
-      background-color: var(--bg-light);
-    }
-
-    .btn-icon {
-      padding: 0.5rem;
-      border-radius: 50%;
-      width: 2.5rem;
-      height: 2.5rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .main-content {
-      flex: 1;
-      padding: 1.5rem;
-      max-width: 800px;
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    .card {
-      background-color: white;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-      margin-bottom: 1.5rem;
-      transition: opacity 0.3s ease, height 0.3s ease;
-    }
-
-    .card.hidden {
-      opacity: 0;
-      height: 0;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-    }
-
-    .card-header {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .card-title {
-      font-weight: 600;
-      font-size: 1.25rem;
-    }
-
-    .card-body {
-      padding: 1.5rem;
-    }
-
-    .list-group {
-      list-style: none;
-    }
-
-    .list-item {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--border-color);
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .list-item:last-child {
-      border-bottom: none;
-    }
-
-    .list-item:hover {
-      background-color: var(--bg-light);
-    }
-
-    .list-item.active {
-      background-color: #e0e7ff;
-    }
-
-    .list-item-icon {
-      color: var(--text-light);
-    }
-
-    .quiz-container {
-      display: none;
-    }
-
-    .quiz-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .quiz-progress {
-      font-size: 0.875rem;
-      color: var(--text-medium);
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: var(--bg-light);
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      margin-bottom: 1rem;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--primary-color);
-      transition: width 0.3s ease;
-    }
-
-    .score-timer {
-      display: flex;
-      gap: 1rem;
-      font-size: 0.875rem;
-      color: var(--text-medium);
-    }
-
-    .quiz-question {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      line-height: 1.4;
-    }
-
-    .quiz-options {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .option-btn {
-      padding: 1rem 1.5rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      background-color: white;
-      text-align: left;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .option-btn:hover {
-      background-color: var(--bg-light);
-    }
-
-    .option-btn.correct {
-      background-color: #dcfce7;
-      border-color: #86efac;
-      color: #166534;
-      animation: correctAnswer 0.3s ease;
-    }
-
-    .option-btn.incorrect {
-      background-color: #fee2e2;
-      border-color: #fca5a5;
-      color: #991b1b;
-      animation: wrongAnswer 0.3s ease;
-    }
-
-    @keyframes correctAnswer {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-
-    @keyframes wrongAnswer {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      50% { transform: translateX(5px); }
-      75% { transform: translateX(-5px); }
-      100% { transform: translateX(0); }
-    }
-
-    .quiz-explanation {
-      padding: 1.5rem;
-      background-color: var(--bg-light);
-      border-radius: var(--radius-sm);
-      margin-top: 1.5rem;
-      display: none;
-    }
-
-    .quiz-explanation-title {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    .quiz-actions {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 1.5rem;
-    }
-
-    .quiz-video {
-      width: 100%;
-      aspect-ratio: 16/9;
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      margin-bottom: 1.5rem;
-    }
-
-    .quiz-video iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-    .quiz-result {
-      text-align: center;
-      padding: 2rem;
-    }
-
-    .quiz-result-icon {
-      font-size: 3rem;
-      color: var(--primary-color);
-      margin-bottom: 1rem;
-    }
-
-    .quiz-result-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    .quiz-result-score {
-      font-size: 1.25rem;
-      color: var(--text-medium);
-      margin-bottom: 1.5rem;
     }
 
     .backdrop {
@@ -388,295 +89,54 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-
-    .badge {
-      display: inline-block;
-      padding: 0.25rem 0.5rem;
-      border-radius: var(--radius-sm);
-      font-size: 0.75rem;
-      font-weight: 500;
-      background-color: var(--bg-light);
-      color: var(--text-medium);
-    }
-
-    .badge-primary {
-      background-color: #e0e7ff;
-      color: var(--primary-dark);
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 2rem;
-      color: var(--text-medium);
-    }
-
-    .empty-state-icon {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      color: var(--text-light);
-    }
-
-    .fillup-input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      font-size: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .fillup-input.correct {
-      border-color: #86efac;
-      background-color: #dcfce7;
-    }
-
-    .fillup-input.incorrect {
-      border-color: #fca5a5;
-      background-color: #fee2e2;
-    }
-
-    .match-container {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .match-column {
-      flex: 1;
-    }
-
-    .match-item {
-      padding: 0.75rem;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      margin-bottom: 0.5rem;
-      cursor: pointer;
-      background-color: white;
-    }
-
-    .match-item.selected {
-      background-color: #e0e7ff;
-    }
-
-    .match-item.correct {
-      border-color: #86efac;
-      background-color: #dcfce7;
-    }
-
-    .match-item.incorrect {
-      border-color: #fca5a5;
-      background-color: #fee2e2;
-    }
-
-    @media (max-width: 640px) {
-      .main-content {
-        padding: 1rem;
-      }
-      
-      .card-body {
-        padding: 1rem;
-      }
-      
-      .list-item {
-        padding: 0.75rem 1rem;
-      }
-      
-      .quiz-question {
-        font-size: 1.1rem;
-      }
-      
-      .option-btn {
-        padding: 0.75rem 1rem;
-      }
-
-      .score-timer {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-
-      .match-container {
-        flex-direction: column;
-      }
-    }
   </style>
 </head>
 <body>
-  <div id="app">
-    <header class="header">
-      <div class="logo">
-        <i class="fas fa-atom logo-icon"></i>
-        <span>NEET Quiz Explorer</span>
+  <div id="app" class="min-h-screen flex flex-col">
+    <header class="bg-white shadow-sm sticky top-0 z-10 px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <i class="fas fa-atom text-2xl text-blue-500"></i>
+        <span class="font-semibold text-xl text-gray-800">NEET Quiz Explorer</span>
       </div>
-      <div class="nav-buttons">
-        <button id="resetBtn" class="btn btn-outline" style="display: none;">
-          <i class="fas fa-home"></i>
-        </button>
-        <button id="statsBtn" class="btn btn-icon btn-outline">
-          <i class="fas fa-chart-bar"></i>
-        </button>
+      <div class="flex gap-2">
+        <button id="dppBtn" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">DPP</button>
+        <button id="testsBtn" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Tests</button>
+        <button id="profileBtn" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Profile</button>
+        <button id="authBtn" class="btn bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Login</button>
+        <button id="logoutBtn" class="btn bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 hidden">Logout</button>
       </div>
     </header>
 
-    <main class="main-content">
+    <main class="flex-1 p-6 max-w-4xl mx-auto w-full">
       <div id="subjectScreen">
-        <div class="card" id="subjectCard">
-          <div class="card-header">
-            <h2 class="card-title">Select Subject</h2>
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+          <div class="border-b border-gray-200 p-4 flex justify-between items-center">
+            <h2 class="text-xl font-semibold">Select Subject</h2>
           </div>
-          <div class="card-body">
-            <ul class="list-group">
-              <li class="list-item" data-subject="biology">
+          <div class="p-6">
+            <ul class="list-none">
+              <li class="list-item p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 flex justify-between items-center" data-subject="biology">
                 <div>
-                  <div>Biology</div>
-                  <small class="text-muted">Study of living organisms and life processes</small>
+                  <div class="font-medium">Biology</div>
+                  <small class="text-gray-500">Study of living organisms and life processes</small>
                 </div>
-                <i class="fas fa-chevron-right list-item-icon"></i>
+                <i class="fas fa-chevron-right text-gray-400"></i>
               </li>
-              <li class="list-item" data-subject="chemistry">
+              <li class="list-item p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 flex justify-between items-center" data-subject="chemistry">
                 <div>
-                  <div>Chemistry</div>
-                  <small class="text-muted">Study of matter and its transformations</small>
+                  <div class="font-medium">Chemistry</div>
+                  <small class="text-gray-500">Study of matter and its transformations</small>
                 </div>
-                <i class="fas fa-chevron-right list-item-icon"></i>
+                <i class="fas fa-chevron-right text-gray-400"></i>
               </li>
-              <li class="list-item" data-subject="physics">
+              <li class="list-item p-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center" data-subject="physics">
                 <div>
-                  <div>Physics</div>
-                  <small class="text-muted">Study of matter, energy, and their interactions</small>
+                  <div class="font-medium">Physics</div>
+                  <small class="text-gray-500">Study of matter, energy, and their interactions</small>
                 </div>
-                <i class="fas fa-chevron-right list-item-icon"></i>
+                <i class="fas fa-chevron-right text-gray-400"></i>
               </li>
             </ul>
-          </div>
-        </div>
-      </div>
-
-      <div id="chapterScreen" style="display: none;">
-        <div class="card" id="chapterCard">
-          <div class="card-header">
-            <button id="backToSubjects" class="btn btn-icon btn-outline">
-              <i class="fas fa-arrow-left"></i>
-            </button>
-            <h2 class="card-title">Select Chapter</h2>
-          </div>
-          <div class="card-body">
-            <div id="chapterList" class="list-group"></div>
-          </div>
-        </div>
-      </div>
-
-      <div id="unitScreen" style="display: none;">
-        <div class="card" id="unitCard">
-          <div class="card-header">
-            <button id="backToChapters" class="btn btn-icon btn-outline">
-              <i class="fas fa-arrow-left"></i>
-            </button>
-            <h2 class="card-title">Select Unit</h2>
-          </div>
-          <div class="card-body">
-            <div id="unitList" class="list-group"></div>
-          </div>
-        </div>
-      </div>
-
-      <div id="topicScreen" style="display: none;">
-        <div class="card" id="topicCard">
-          <div class="card-header">
-            <button id="backToUnits" class="btn btn-icon btn-outline">
-              <i class="fas fa-arrow-left"></i>
-            </button>
-            <h2 class="card-title">Select Topic</h2>
-          </div>
-          <div class="card-body">
-            <div id="topicList" class="list-group"></div>
-          </div>
-        </div>
-      </div>
-
-      <div id="quizTypeScreen" style="display: none;">
-        <div class="card" id="quizTypeCard">
-          <div class="card-header">
-            <button id="backToTopics" class="btn btn-icon btn-outline">
-              <i class="fas fa-arrow-left"></i>
-            </button>
-            <h2 class="card-title">Select Quiz Type</h2>
-          </div>
-          <div class="card-body">
-            <div id="quizTypeList" class="list-group"></div>
-          </div>
-        </div>
-        <button id="startQuizBtn" class="btn btn-primary" style="width: 100%; display: none;">Start Quiz</button>
-      </div>
-
-      <div id="quizScreen" class="quiz-container">
-        <div class="card">
-          <div class="card-header">
-            <div class="quiz-progress">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">0</span></div>
-            <div class="score-timer">
-              <span id="scoreDisplay">Score: 0/0</span>
-              <span id="timerDisplay">Time: 60s</span>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="progress-bar">
-              <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div id="quizContent">
-              <div class="quiz-question" id="questionText"></div>
-              
-              <div id="mcqContent" style="display: none;">
-                <div class="quiz-options" id="optionsContainer"></div>
-              </div>
-              
-              <div id="fillupContent" style="display: none;">
-                <input type="text" id="fillupInput" class="fillup-input" placeholder="Type your answer...">
-                <button id="submitFillupBtn" class="btn btn-primary">Submit</button>
-              </div>
-              
-              <div id="flashcardContent" style="display: none;">
-                <button id="revealAnswerBtn" class="btn btn-primary">Reveal Answer</button>
-                <div class="quiz-answer" id="flashcardAnswer" style="display: none;"></div>
-              </div>
-              
-              <div id="matchContent" style="display: none;">
-                <div class="match-container" id="matchContainer"></div>
-                <button id="submitMatchBtn" class="btn btn-primary">Submit</button>
-              </div>
-              
-              <div id="videoContent" style="display: none;">
-                <div class="quiz-video">
-                  <iframe id="videoFrame" allowfullscreen></iframe>
-                </div>
-              </div>
-              
-              <div class="quiz-explanation" id="explanationContainer">
-                <div class="quiz-explanation-title">Explanation</div>
-                <div id="explanationText"></div>
-              </div>
-              
-              <div class="quiz-actions">
-                <button id="prevBtn" class="btn btn-outline" disabled>
-                  <i class="fas fa-arrow-left"></i> Previous
-                </button>
-                <button id="nextQuestionBtn" class="btn btn-primary">
-                  Next <i class="fas fa-arrow-right"></i>
-                </button>
-              </div>
-            </div>
-            
-            <div id="quizResults" style="display: none;">
-              <div class="quiz-result">
-                <i class="fas fa-trophy quiz-result-icon"></i>
-                <h3 class="quiz-result-title">Quiz Completed!</h3>
-                <div class="quiz-result-score">You scored <span id="scoreValue">0</span> out of <span id="totalScore">0</span></div>
-                <button id="restartQuizBtn" class="btn btn-primary">
-                  <i class="fas fa-redo"></i> Restart Quiz
-                </button>
-                <button id="newQuizBtn" class="btn btn-outline" style="margin-top: 0.5rem;">
-                  <i class="fas fa-book"></i> New Quiz
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -690,846 +150,217 @@
       </div>
     </div>
 
-    <div class="backdrop" id="statsModal">
+    <div class="backdrop" id="authModal">
       <div class="modal">
-        <div class="card-header">
-          <h2 class="card-title">Your Progress</h2>
-          <button id="closeStats" class="btn btn-icon btn-outline">
-            <i class="fas fa-times"></i>
-          </button>
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+          <h2 class="text-xl font-semibold" id="authTitle">Login</h2>
+          <button id="closeAuth" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
         </div>
-        <div class="card-body">
-          <div id="statsContent">
-            <div style="margin-bottom: 1.5rem;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                <span>Total Quizzes Taken</span>
-                <span id="totalQuizzes">0</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                <span>Average Score</span>
-                <span id="averageScore">0%</span>
-              </div>
-              <div style="display: flex; justify-content: space-between;">
-                <span>Last Quiz Score</span>
-                <span id="lastScore">-</span>
-              </div>
+        <div class="p-6">
+          <div id="authContent">
+            <div class="mb-4">
+              <input type="email" id="authEmail" class="w-full p-3 border border-gray-300 rounded" placeholder="Email">
             </div>
-            
-            <h3 style="margin-bottom: 1rem; font-size: 1rem;">Subject Mastery</h3>
-            <div style="margin-bottom: 1.5rem;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                <span>Biology</span>
-                <span id="bioScore">0%</span>
-              </div>
-              <div style="height: 0.5rem; background-color: var(--bg-light); border-radius: var(--radius-sm); overflow: hidden;">
-                <div id="bioProgress" style="height: 100%; width: 0%; background-color: var(--primary-color);"></div>
-              </div>
+            <div class="mb-4">
+              <input type="password" id="authPassword" class="w-full p-3 border border-gray-300 rounded" placeholder="Password">
             </div>
-            <div style="margin-bottom: 1.5rem;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                <span>Chemistry</span>
-                <span id="chemScore">0%</span>
-              </div>
-              <div style="height: 0.5rem; background-color: var(--bg-light); border-radius: var(--radius-sm); overflow: hidden;">
-                <div id="chemProgress" style="height: 100%; width: 0%; background-color: var(--primary-color);"></div>
-              </div>
-            </div>
-            <div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                <span>Physics</span>
-                <span id="physicsScore">0%</span>
-              </div>
-              <div style="height: 0.5rem; background-color: var(--bg-light); border-radius: var(--radius-sm); overflow: hidden;">
-                <div id="physicsProgress" style="height: 100%; width: 0%; background-color: var(--primary-color);"></div>
-              </div>
-            </div>
+            <button id="authSubmit" class="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">Login</button>
+            <button id="googleSignIn" class="w-full bg-red-500 text-white p-3 rounded hover:bg-red-600 mt-2 flex items-center justify-center gap-2">
+              <i class="fab fa-google"></i> Sign in with Google
+            </button>
+            <p class="text-center mt-4">
+              <a href="#" id="toggleAuth" class="text-blue-500 hover:underline">Create an account</a>
+            </p>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script>
-    const state = {
-      currentSubject: null,
-      currentChapter: null,
-      currentUnit: null,
-      currentTopic: null,
-      currentQuizType: null,
-      questions: [],
-      currentQuestionIndex: 0,
-      score: 0,
-      totalAnswered: 0,
-      quizHistory: JSON.parse(localStorage.getItem('quizHistory')) || [],
-      subjectData: { biology: null, chemistry: null, physics: null },
-      subjectUrls: {
-        biology: 'https://itzfew.github.io/NEET-Questions/data/biology.json',
-        chemistry: 'https://itzfew.github.io/NEET-Questions/data/chemistry.json',
-        physics: 'https://itzfew.github.io/NEET-Questions/data/physics.json'
-      },
-      matchSelections: {}
-    };
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
+        authDomain: "community-604af.firebaseapp.com",
+        databaseURL: "https://community-604af-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "community-604af",
+        storageBucket: "community-604af.appspot.com",
+        messagingSenderId: "735063146170",
+        appId: "1:735063146170:web:725bce2c3c64afc0f30c83",
+        measurementId: "G-7YD8RLH33Q"
+      };
 
-    const elements = {
-      subjectScreen: document.getElementById('subjectScreen'),
-      chapterScreen: document.getElementById('chapterScreen'),
-      unitScreen: document.getElementById('unitScreen'),
-      topicScreen: document.getElementById('topicScreen'),
-      quizTypeScreen: document.getElementById('quizTypeScreen'),
-      quizScreen: document.getElementById('quizScreen'),
-      resetBtn: document.getElementById('resetBtn'),
-      backToSubjects: document.getElementById('backToSubjects'),
-      backToChapters: document.getElementById('backToChapters'),
-      backToUnits: document.getElementById('backToUnits'),
-      backToTopics: document.getElementById('backToTopics'),
-      subjectCard: document.getElementById('subjectCard'),
-      chapterCard: document.getElementById('chapterCard'),
-      unitCard: document.getElementById('unitCard'),
-      topicCard: document.getElementById('topicCard'),
-      quizTypeCard: document.getElementById('quizTypeCard'),
-      subjectItems: document.querySelectorAll('.list-item[data-subject]'),
-      chapterList: document.getElementById('chapterList'),
-      unitList: document.getElementById('unitList'),
-      topicList: document.getElementById('topicList'),
-      quizTypeList: document.getElementById('quizTypeList'),
-      startQuizBtn: document.getElementById('startQuizBtn'),
-      currentQuestion: document.getElementById('currentQuestion'),
-      totalQuestions: document.getElementById('totalQuestions'),
-      questionText: document.getElementById('questionText'),
-      optionsContainer: document.getElementById('optionsContainer'),
-      fillupInput: document.getElementById('fillupInput'),
-      submitFillupBtn: document.getElementById('submitFillupBtn'),
-      revealAnswerBtn: document.getElementById('revealAnswerBtn'),
-      flashcardAnswer: document.getElementById('flashcardAnswer'),
-      matchContainer: document.getElementById('matchContainer'),
-      submitMatchBtn: document.getElementById('submitMatchBtn'),
-      videoFrame: document.getElementById('videoFrame'),
-      explanationContainer: document.getElementById('explanationContainer'),
-      explanationText: document.getElementById('explanationText'),
-      prevBtn: document.getElementById('prevBtn'),
-      nextQuestionBtn: document.getElementById('nextQuestionBtn'),
-      mcqContent: document.getElementById('mcqContent'),
-      fillupContent: document.getElementById('fillupContent'),
-      flashcardContent: document.getElementById('flashcardContent'),
-      matchContent: document.getElementById('matchContent'),
-      videoContent: document.getElementById('videoContent'),
-      quizResults: document.getElementById('quizResults'),
-      scoreValue: document.getElementById('scoreValue'),
-      totalScore: document.getElementById('totalScore'),
-      restartQuizBtn: document.getElementById('restartQuizBtn'),
-      newQuizBtn: document.getElementById('newQuizBtn'),
-      loadingModal: document.getElementById('loadingModal'),
-      statsModal: document.getElementById('statsModal'),
-      statsBtn: document.getElementById('statsBtn'),
-      closeStats: document.getElementById('closeStats'),
-      scoreDisplay: document.getElementById('scoreDisplay'),
-      timerDisplay: document.getElementById('timerDisplay'),
-      progressFill: document.getElementById('progressFill'),
-      totalQuizzes: document.getElementById('totalQuizzes'),
-      averageScore: document.getElementById('averageScore'),
-      lastScore: document.getElementById('lastScore'),
-      bioScore: document.getElementById('bioScore'),
-      chemScore: document.getElementById('chemScore'),
-      physicsScore: document.getElementById('physicsScore'),
-      bioProgress: document.getElementById('bioProgress'),
-      chemProgress: document.getElementById('chemProgress'),
-      physicsProgress: document.getElementById('physicsProgress')
-    };
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.database();
+      const firestore = firebase.firestore();
 
-    let timerInterval;
-    let timeLeft = 60;
+      const elements = {
+        subjectScreen: document.getElementById('subjectScreen'),
+        dppBtn: document.getElementById('dppBtn'),
+        testsBtn: document.getElementById('testsBtn'),
+        profileBtn: document.getElementById('profileBtn'),
+        authBtn: document.getElementById('authBtn'),
+        logoutBtn: document.getElementById('logoutBtn'),
+        authModal: document.getElementById('authModal'),
+        authTitle: document.getElementById('authTitle'),
+        authEmail: document.getElementById('authEmail'),
+        authPassword: document.getElementById('authPassword'),
+        authSubmit: document.getElementById('authSubmit'),
+        googleSignIn: document.getElementById('googleSignIn'),
+        toggleAuth: document.getElementById('toggleAuth'),
+        closeAuth: document.getElementById('closeAuth'),
+        loadingModal: document.getElementById('loadingModal'),
+        subjectItems: document.querySelectorAll('.list-item[data-subject]'),
+      };
 
-    function showLoading(show) {
-      if (elements.loadingModal) {
+      let isLogin = true;
+
+      function showLoading(show) {
         elements.loadingModal.style.display = show ? 'flex' : 'none';
       }
-    }
 
-    function showScreen(screenName) {
-      const screens = ['subject', 'chapter', 'unit', 'topic', 'quizType', 'quiz'];
-      screens.forEach(screen => {
-        const element = elements[`${screen}Screen`];
-        if (element) {
-          element.style.display = screen === screenName ? 'block' : 'none';
+      function showAuthModal(show) {
+        elements.authModal.style.display = show ? 'flex' : 'none';
+        if (show) {
+          elements.authTitle.textContent = isLogin ? 'Login' : 'Sign Up';
+          elements.authSubmit.textContent = isLogin ? 'Login' : 'Sign Up';
+          elements.toggleAuth.textContent = isLogin ? 'Create an account' : 'Already have an account? Login';
+          elements.authEmail.value = '';
+          elements.authPassword.value = '';
         }
-      });
-      if (elements.resetBtn) {
-        elements.resetBtn.style.display = screenName === 'quiz' ? 'block' : 'none';
       }
-    }
 
-    function getChapterName(q) {
-      return q['Chapter Name'] || q['chapter name'] || q['Unique Chapter Name'] || q.topic_name?.split('>>')[0]?.trim() || '';
-    }
-
-    function getUnitName(q) {
-      return q.topic_name?.split('>>')[1]?.trim() || '';
-    }
-
-    function getTopicName(q) {
-      return q.topic_name?.split('>>')[2]?.trim() || '';
-    }
-
-    function createListItem(text, value, count) {
-      const li = document.createElement('li');
-      li.className = 'list-item';
-      li.dataset.value = value;
-      li.innerHTML = `
-        <div>
-          <div>${text} <span class="badge badge-primary">${count} Qs</span></div>
-        </div>
-        <i class="fas fa-chevron-right list-item-icon"></i>
-      `;
-      return li;
-    }
-
-    async function loadSubjectData(subject) {
-      if (state.subjectData[subject]) return state.subjectData[subject];
-      showLoading(true);
-      try {
-        const response = await fetch(state.subjectUrls[subject]);
-        if (!response.ok) throw new Error('Failed to fetch data');
-        const data = await response.json();
-        state.subjectData[subject] = data;
-        return data;
-      } catch (error) {
-        console.error('Error loading subject data:', error);
-        showError('Failed to load data. Please try again.');
-        resetSelections('subject');
-        return null;
-      } finally {
-        showLoading(false);
+      function showError(message) {
+        alert(message);
       }
-    }
 
-    async function handleSubjectSelect(subject) {
-      state.currentSubject = subject;
-      if (elements.subjectCard) elements.subjectCard.classList.add('hidden');
-      const data = await loadSubjectData(subject);
-      if (!data) return;
-      const chapters = [...new Set(data.map(q => getChapterName(q)))].filter(Boolean).sort();
-      if (elements.chapterList) {
-        elements.chapterList.innerHTML = '';
-        if (chapters.length === 0) {
-          elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
+      function updateAuthUI(user) {
+        if (user) {
+          elements.authBtn.classList.add('hidden');
+          elements.logoutBtn.classList.remove('hidden');
         } else {
-          chapters.forEach(chapter => {
-            const count = data.filter(q => getChapterName(q) === chapter).length;
-            const li = createListItem(chapter, chapter, count);
-            li.addEventListener('click', () => handleChapterSelect(chapter));
-            elements.chapterList.appendChild(li);
-          });
+          elements.authBtn.classList.remove('hidden');
+          elements.logoutBtn.classList.add('hidden');
         }
       }
-      showScreen('chapter');
-    }
 
-    function handleChapterSelect(chapter) {
-      state.currentChapter = chapter;
-      if (elements.chapterCard) elements.chapterCard.classList.add('hidden');
-      const data = state.subjectData[state.currentSubject];
-      const units = [...new Set(data.filter(q => getChapterName(q) === chapter).map(q => getUnitName(q)))].filter(Boolean).sort();
-      if (elements.unitList) {
-        elements.unitList.innerHTML = '';
-        if (units.length === 0) {
-          elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
-        } else {
-          units.forEach(unit => {
-            const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === unit).length;
-            const li = createListItem(unit, unit, count);
-            li.addEventListener('click', () => handleUnitSelect(unit));
-            elements.unitList.appendChild(li);
-          });
+      async function handleSubjectSelect(subject) {
+        const user = auth.currentUser;
+        if (!user) {
+          showAuthModal(true);
+          return;
         }
+        localStorage.setItem('selectedSubject', subject);
+        window.location.href = 'play.html';
       }
-      showScreen('unit');
-    }
 
-    function handleUnitSelect(unit) {
-      state.currentUnit = unit;
-      if (elements.unitCard) elements.unitCard.classList.add('hidden');
-      const data = state.subjectData[state.currentSubject];
-      const topics = [...new Set(data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === unit).map(q => getTopicName(q)))].filter(Boolean).sort();
-      if (elements.topicList) {
-        elements.topicList.innerHTML = '';
-        if (topics.length === 0) {
-          elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
-        } else {
-          topics.forEach(topic => {
-            const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === state.currentUnit && getTopicName(q) === topic).length;
-            const li = createListItem(topic, topic, count);
-            li.addEventListener('click', () => handleTopicSelect(topic));
-            elements.topicList.appendChild(li);
-          });
-        }
-      }
-      showScreen('topic');
-    }
-
-    function handleTopicSelect(topic) {
-      state.currentTopic = topic;
-      if (elements.topicCard) elements.topicCard.classList.add('hidden');
-      const data = state.subjectData[state.currentSubject];
-      const quizTypes = [...new Set(data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === state.currentUnit && getTopicName(q) === topic).map(q => q.quiz_type))].filter(Boolean).sort();
-      if (elements.quizTypeList) {
-        elements.quizTypeList.innerHTML = '';
-        if (quizTypes.length === 0) {
-          elements.quizTypeList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No quiz types found</div></div>';
-        } else {
-          quizTypes.forEach(type => {
-            const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === state.currentUnit && getTopicName(q) === state.currentTopic && q.quiz_type === type).length;
-            const li = createListItem(type, type, count);
-            li.addEventListener('click', () => handleQuizTypeSelect(type));
-            elements.quizTypeList.appendChild(li);
-          });
-        }
-      }
-      if (elements.startQuizBtn) {
-        elements.startQuizBtn.style.display = 'block';
-      }
-      showScreen('quizType');
-    }
-
-    function handleQuizTypeSelect(quizType) {
-      state.currentQuizType = quizType;
-      if (elements.quizTypeCard) elements.quizTypeCard.classList.add('hidden');
-      if (elements.startQuizBtn) elements.startQuizBtn.disabled = false;
-    }
-
-    function startQuiz() {
-      const data = state.subjectData[state.currentSubject];
-      if (!data) {
-        showError('No data available. Please select a subject again.');
-        resetSelections('subject');
-        return;
-      }
-      state.questions = data.filter(q => {
-        return (
-          getChapterName(q) === state.currentChapter &&
-          getUnitName(q) === state.currentUnit &&
-          getTopicName(q) === state.currentTopic &&
-          (!state.currentQuizType || q.quiz_type === state.currentQuizType)
-        );
-      });
-      if (state.questions.length === 0) {
-        showError('No questions found for the selected filters.');
-        return;
-      }
-      if (state.questions.length > 1) {
-        state.questions = state.questions.sort(() => Math.random() - 0.5);
-      }
-      state.currentQuestionIndex = 0;
-      state.score = 0;
-      state.totalAnswered = 0;
-      state.matchSelections = {};
-      updateScore();
-      if (elements.totalQuestions) {
-        elements.totalQuestions.textContent = state.questions.length;
-      }
-      if (elements.startQuizBtn) {
-        elements.startQuizBtn.style.display = 'none';
-      }
-      showScreen('quiz');
-      showQuestion(state.questions[0]);
-      startTimer();
-    }
-
-    function showQuestion(question) {
-      if (!question) return;
-      updateProgress();
-      ['mcqContent', 'fillupContent', 'flashcardContent', 'matchContent', 'videoContent'].forEach(id => {
-        if (elements[id]) elements[id].style.display = 'none';
-      });
-      if (elements.explanationContainer) elements.explanationContainer.style.display = 'none';
-      if (elements.prevBtn) elements.prevBtn.disabled = state.currentQuestionIndex === 0;
-      if (elements.nextQuestionBtn) {
-        elements.nextQuestionBtn.disabled = false;
-        elements.nextQuestionBtn.textContent = state.currentQuestionIndex === state.questions.length - 1 ? 'See Results' : 'Next';
-      }
-      if (elements.currentQuestion) {
-        elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
-      }
-      if (elements.questionText) {
-        elements.questionText.innerHTML = question.question || 'No question text available';
-      }
-      if (question.explanation && elements.explanationText) {
-        elements.explanationText.innerHTML = question.explanation;
-      }
-      switch (question.quiz_type) {
-        case 'mcq':
-          showMCQQuestion(question);
-          break;
-        case 'fillup':
-          showFillupQuestion(question);
-          break;
-        case 'flashcard':
-          showFlashcardQuestion(question);
-          break;
-        case 'match':
-          showMatchQuestion(question);
-          break;
-        case 'video':
-          showVideoQuestion(question);
-          break;
-        default:
-          showSimpleQuestion(question);
-      }
-    }
-
-    function showMCQQuestion(question) {
-      if (elements.mcqContent) elements.mcqContent.style.display = 'block';
-      if (elements.optionsContainer) {
-        elements.optionsContainer.innerHTML = '';
-        const options = [
-          { letter: 'A', text: question.option_a },
-          { letter: 'B', text: question.option_b },
-          { letter: 'C', text: question.option_c },
-          { letter: 'D', text: question.option_d }
-        ].filter(opt => opt.text);
-        options.forEach(opt => {
-          const button = document.createElement('button');
-          button.className = 'option-btn';
-          button.innerHTML = `<strong>${opt.letter}.</strong> ${opt.text}`;
-          button.dataset.option = opt.text;
-          button.addEventListener('click', () => checkMCQAnswer(button, question.answer));
-          elements.optionsContainer.appendChild(button);
-        });
-      }
-    }
-
-    function showFillupQuestion(question) {
-      if (elements.fillupContent) elements.fillupContent.style.display = 'block';
-      if (elements.fillupInput) {
-        elements.fillupInput.value = '';
-        elements.fillupInput.classList.remove('correct', 'incorrect');
-        elements.fillupInput.disabled = false;
-      }
-      if (elements.submitFillupBtn) {
-        elements.submitFillupBtn.disabled = false;
-        elements.submitFillupBtn.onclick = () => checkFillupAnswer(question.answer);
-      }
-    }
-
-    function showFlashcardQuestion(question) {
-      if (elements.flashcardContent) elements.flashcardContent.style.display = 'block';
-      if (elements.flashcardAnswer) {
-        elements.flashcardAnswer.innerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
-        elements.flashcardAnswer.style.display = 'none';
-      }
-      if (elements.revealAnswerBtn) {
-        elements.revealAnswerBtn.disabled = false;
-        elements.revealAnswerBtn.onclick = () => {
-          elements.flashcardAnswer.style.display = 'block';
-          elements.revealAnswerBtn.disabled = true;
-          state.totalAnswered++;
-          state.score++; // Flashcards auto-score as correct on reveal
-          updateScore();
-          if (question.explanation && elements.explanationContainer) {
-            elements.explanationContainer.style.display = 'block';
+      async function handleAuth() {
+        const email = elements.authEmail.value.trim();
+        const password = elements.authPassword.value.trim();
+        showLoading(true);
+        try {
+          if (isLogin) {
+            await auth.signInWithEmailAndPassword(email, password);
+          } else {
+            await auth.createUserWithEmailAndPassword(email, password);
+            await db.ref(`users/${auth.currentUser.uid}`).set({
+              email,
+              createdAt: firebase.database.ServerValue.TIMESTAMP,
+            });
           }
-          clearInterval(timerInterval);
-        };
-      }
-    }
-
-    function showMatchQuestion(question) {
-      if (elements.matchContent) elements.matchContent.style.display = 'block';
-      if (elements.matchContainer) {
-        elements.matchContainer.innerHTML = '';
-        state.matchSelections = {};
-        const options = [
-          question.option_a,
-          question.option_b,
-          question.option_c,
-          question.option_d
-        ].filter(opt => opt).map(opt => opt.split(','));
-        const leftItems = options.map(opt => opt[0]);
-        const rightItems = options.map(opt => opt[1]).sort(() => Math.random() - 0.5);
-        const leftColumn = document.createElement('div');
-        leftColumn.className = 'match-column';
-        const rightColumn = document.createElement('div');
-        rightColumn.className = 'match-column';
-        leftItems.forEach((item, index) => {
-          const div = document.createElement('div');
-          div.className = 'match-item';
-          div.textContent = item;
-          div.dataset.id = index;
-          div.addEventListener('click', () => selectMatchItem(div, 'left'));
-          leftColumn.appendChild(div);
-        });
-        rightItems.forEach((item, index) => {
-          const div = document.createElement('div');
-          div.className = 'match-item';
-          div.textContent = item;
-          div.dataset.id = index;
-          div.addEventListener('click', () => selectMatchItem(div, 'right'));
-          rightColumn.appendChild(div);
-        });
-        elements.matchContainer.appendChild(leftColumn);
-        elements.matchContainer.appendChild(rightColumn);
-      }
-      if (elements.submitMatchBtn) {
-        elements.submitMatchBtn.disabled = false;
-        elements.submitMatchBtn.onclick = () => checkMatchAnswer(question);
-      }
-    }
-
-    function showVideoQuestion(question) {
-      if (elements.videoContent) elements.videoContent.style.display = 'block';
-      if (elements.videoFrame) {
-        const videoId = question.question?.trim();
-        elements.videoFrame.src = videoId ? `https://www.youtube.com/embed/${videoId}` : '';
-      }
-      if (question.explanation && elements.explanationContainer) {
-        elements.explanationContainer.style.display = 'block';
-      }
-      state.totalAnswered++;
-      state.score++; // Videos auto-score as correct on view
-      updateScore();
-      clearInterval(timerInterval);
-    }
-
-    function showSimpleQuestion(question) {
-      if (elements.flashcardContent) elements.flashcardContent.style.display = 'block';
-      if (elements.flashcardAnswer) {
-        let answerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
-        if (question.option_a) answerHTML += `<br><strong>Option A:</strong> ${question.option_a}`;
-        if (question.option_b) answerHTML += `<br><strong>Option B:</strong> ${question.option_b}`;
-        elements.flashcardAnswer.innerHTML = answerHTML;
-        elements.flashcardAnswer.style.display = 'block';
-      }
-      if (question.explanation && elements.explanationContainer) {
-        elements.explanationContainer.style.display = 'block';
-      }
-      state.totalAnswered++;
-      state.score++; // Simple questions auto-score as correct
-      updateScore();
-      clearInterval(timerInterval);
-    }
-
-    function checkMCQAnswer(button, correctAnswer) {
-      const buttons = elements.optionsContainer?.querySelectorAll('.option-btn') || [];
-      state.totalAnswered++;
-      if (button.dataset.option === correctAnswer) {
-        state.score++;
-        button.classList.add('correct');
-      } else {
-        button.classList.add('incorrect');
-        buttons.forEach(btn => {
-          if (btn.dataset.option === correctAnswer) {
-            btn.classList.add('correct');
-          }
-        });
-      }
-      updateScore();
-      buttons.forEach(btn => btn.disabled = true);
-      if (elements.explanationContainer) {
-        elements.explanationContainer.style.display = 'block';
-      }
-      clearInterval(timerInterval);
-    }
-
-    function checkFillupAnswer(correctAnswer) {
-      const input = elements.fillupInput;
-      if (!input) return;
-      state.totalAnswered++;
-      const userAnswer = input.value.trim().toLowerCase();
-      if (userAnswer === correctAnswer.toLowerCase()) {
-        state.score++;
-        input.classList.add('correct');
-      } else {
-        input.classList.add('incorrect');
-      }
-      updateScore();
-      input.disabled = true;
-      if (elements.submitFillupBtn) elements.submitFillupBtn.disabled = true;
-      if (elements.explanationContainer) {
-        elements.explanationContainer.style.display = 'block';
-      }
-      clearInterval(timerInterval);
-    }
-
-    function selectMatchItem(item, side) {
-      const id = item.dataset.id;
-      const items = item.parentElement.querySelectorAll('.match-item');
-      items.forEach(i => i.classList.remove('selected'));
-      item.classList.add('selected');
-      state.matchSelections[side] = id;
-      if (elements.submitMatchBtn) {
-        elements.submitMatchBtn.disabled = !state.matchSelections.left || !state.matchSelections.right;
-      }
-    }
-
-    function checkMatchAnswer(question) {
-      const options = [
-        question.option_a,
-        question.option_b,
-        question.option_c,
-        question.option_d
-      ].filter(opt => opt).map(opt => opt.split(','));
-      const correctPairs = options.reduce((acc, [left, right], index) => ({ ...acc, [index]: index }), {});
-      const leftItems = elements.matchContainer.querySelectorAll('.match-column:first-child .match-item');
-      const rightItems = elements.matchContainer.querySelectorAll('.match-column:last-child .match-item');
-      state.totalAnswered++;
-      if (state.matchSelections.left === state.matchSelections.right) {
-        state.score++;
-        leftItems[state.matchSelections.left].classList.add('correct');
-        rightItems[state.matchSelections.right].classList.add('correct');
-      } else {
-        leftItems[state.matchSelections.left].classList.add('incorrect');
-        rightItems[state.matchSelections.right].classList.add('incorrect');
-        Object.keys(correctPairs).forEach(i => {
-          leftItems[i].classList.add('correct');
-          rightItems[correctPairs[i]].classList.add('correct');
-        });
-      }
-      updateScore();
-      leftItems.forEach(item => item.style.pointerEvents = 'none');
-      rightItems.forEach(item => item.style.pointerEvents = 'none');
-      if (elements.submitMatchBtn) elements.submitMatchBtn.disabled = true;
-      if (elements.explanationContainer) {
-        elements.explanationContainer.style.display = 'block';
-      }
-      clearInterval(timerInterval);
-    }
-
-    function showResults() {
-      const quizResult = {
-        date: new Date().toISOString(),
-        subject: state.currentSubject,
-        chapter: state.currentChapter,
-        unit: state.currentUnit,
-        topic: state.currentTopic,
-        quizType: state.currentQuizType,
-        score: state.score,
-        total: state.questions.length,
-        percentage: Math.round((state.score / state.questions.length) * 100)
-      };
-      state.quizHistory.push(quizResult);
-      localStorage.setItem('quizHistory', JSON.stringify(state.quizHistory));
-      if (elements.quizContent) elements.quizContent.style.display = 'none';
-      if (elements.quizResults) elements.quizResults.style.display = 'block';
-      if (elements.scoreValue) elements.scoreValue.textContent = state.score;
-      if (elements.totalScore) elements.totalScore.textContent = state.questions.length;
-      clearInterval(timerInterval);
-    }
-
-    function updateStats() {
-      const history = state.quizHistory;
-      if (elements.totalQuizzes) elements.totalQuizzes.textContent = history.length;
-      if (history.length > 0) {
-        const totalPercentage = history.reduce((sum, quiz) => sum + quiz.percentage, 0);
-        const average = Math.round(totalPercentage / history.length);
-        if (elements.averageScore) elements.averageScore.textContent = `${average}%`;
-        if (elements.lastScore) {
-          elements.lastScore.textContent = `${history[history.length - 1].score}/${history[history.length - 1].total} (${history[history.length - 1].percentage}%)`;
-        }
-      } else {
-        if (elements.averageScore) elements.averageScore.textContent = '0%';
-        if (elements.lastScore) elements.lastScore.textContent = '-';
-      }
-      const bioQuizzes = history.filter(q => q.subject === 'biology');
-      const chemQuizzes = history.filter(q => q.subject === 'chemistry');
-      const physicsQuizzes = history.filter(q => q.subject === 'physics');
-      function calculateMastery(quizzes) {
-        if (quizzes.length === 0) return 0;
-        const total = quizzes.reduce((sum, quiz) => sum + quiz.percentage, 0);
-        return Math.round(total / quizzes.length);
-      }
-      const bioMastery = calculateMastery(bioQuizzes);
-      const chemMastery = calculateMastery(chemQuizzes);
-      const physicsMastery = calculateMastery(physicsQuizzes);
-      if (elements.bioScore) elements.bioScore.textContent = `${bioMastery}%`;
-      if (elements.chemScore) elements.chemScore.textContent = `${chemMastery}%`;
-      if (elements.physicsScore) elements.physicsScore.textContent = `${physicsMastery}%`;
-      if (elements.bioProgress) elements.bioProgress.style.width = `${bioMastery}%`;
-      if (elements.chemProgress) elements.chemProgress.style.width = `${chemMastery}%`;
-      if (elements.physicsProgress) elements.physicsProgress.style.width = `${physicsMastery}%`;
-    }
-
-    function startTimer() {
-      timeLeft = 60;
-      if (elements.timerDisplay) {
-        elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
-      }
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        if (elements.timerDisplay) {
-          elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
-        }
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          state.totalAnswered++;
-          updateScore();
-          disableInputs();
-          if (elements.explanationContainer) {
-            elements.explanationContainer.style.display = 'block';
-          }
-        }
-      }, 1000);
-    }
-
-    function disableInputs() {
-      if (elements.optionsContainer) {
-        elements.optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
-      }
-      if (elements.fillupInput) elements.fillupInput.disabled = true;
-      if (elements.submitFillupBtn) elements.submitFillupBtn.disabled = true;
-      if (elements.revealAnswerBtn) elements.revealAnswerBtn.disabled = true;
-      if (elements.matchContainer) {
-        elements.matchContainer.querySelectorAll('.match-item').forEach(item => item.style.pointerEvents = 'none');
-      }
-      if (elements.submitMatchBtn) elements.submitMatchBtn.disabled = true;
-    }
-
-    function updateScore() {
-      if (elements.scoreDisplay) {
-        elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
-      }
-    }
-
-    function updateProgress() {
-      const progress = ((state.currentQuestionIndex + 1) / state.questions.length) * 100;
-      if (elements.progressFill) {
-        elements.progressFill.style.width = `${progress}%`;
-      }
-    }
-
-    function showError(message) {
-      const currentScreen = elements.quizScreen?.style.display === 'block' ? elements.quizScreen : elements.subjectScreen;
-      if (currentScreen && elements.quizContent) {
-        elements.quizContent.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle empty-state-icon"></i><div>${message}</div></div>`;
-        currentScreen.style.display = 'block';
-      }
-      if (elements.nextQuestionBtn) {
-        elements.nextQuestionBtn.style.display = 'none';
-      }
-    }
-
-    function resetSelections(level) {
-      const levels = ['subject', 'chapter', 'unit', 'topic', 'quizType'];
-      const index = levels.indexOf(level);
-      for (let i = index; i < levels.length; i++) {
-        state[`current${levels[i].charAt(0).toUpperCase() + levels[i].slice(1)}`] = null;
-        const card = elements[`${levels[i]}Card`];
-        const list = elements[`${levels[i]}List`];
-        if (card) card.classList.add('hidden');
-        if (list) list.innerHTML = '';
-      }
-      if (elements.startQuizBtn) {
-        elements.startQuizBtn.style.display = 'none';
-        elements.startQuizBtn.disabled = true;
-      }
-      if (elements.quizScreen) elements.quizScreen.style.display = 'none';
-      if (elements.quizContent) elements.quizContent.innerHTML = '';
-      if (elements.nextQuestionBtn) elements.nextQuestionBtn.style.display = 'none';
-      clearInterval(timerInterval);
-      timeLeft = 60;
-      if (elements.timerDisplay) elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
-      if (elements.progressFill) elements.progressFill.style.width = '0%';
-      if (level === 'subject') {
-        if (elements.subjectCard) elements.subjectCard.classList.remove('hidden');
-      } else {
-        const prevLevel = levels[index - 1];
-        if (prevLevel && elements[`${prevLevel}Card`]) {
-          elements[`${prevLevel}Card`].classList.remove('hidden');
+          showAuthModal(false);
+        } catch (error) {
+          showError(error.message);
+        } finally {
+          showLoading(false);
         }
       }
-      showScreen(level);
-    }
 
-    elements.subjectItems.forEach(item => {
-      item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
+      async function handleGoogleSignIn() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        showLoading(true);
+        try {
+          const result = await auth.signInWithPopup(provider);
+          const user = result.user;
+          await db.ref(`users/${user.uid}`).set({
+            email: user.email,
+            displayName: user.displayName,
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+          });
+          showAuthModal(false);
+        } catch (error) {
+          showError(error.message);
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      async function handleLogout() {
+        showLoading(true);
+        try {
+          await auth.signOut();
+        } catch (error) {
+          showError(error.message);
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      elements.subjectItems.forEach(item => {
+        item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
+      });
+
+      elements.dppBtn.addEventListener('click', () => {
+        if (!auth.currentUser) {
+          showAuthModal(true);
+          return;
+        }
+        window.location.href = 'dpp.html';
+      });
+
+      elements.testsBtn.addEventListener('click', () => {
+        if (!auth.currentUser) {
+          showAuthModal(true);
+          return;
+        }
+        window.location.href = 'tests.html';
+      });
+
+      elements.profileBtn.addEventListener('click', () => {
+        if (!auth.currentUser) {
+          showAuthModal(true);
+          return;
+        }
+        window.location.href = 'profile.html';
+      });
+
+      elements.authBtn.addEventListener('click', () => showAuthModal(true));
+
+      elements.authSubmit.addEventListener('click', handleAuth);
+
+      elements.googleSignIn.addEventListener('click', handleGoogleSignIn);
+
+      elements.toggleAuth.addEventListener('click', (e) => {
+        e.preventDefault();
+        isLogin = !isLogin;
+        showAuthModal(true);
+      });
+
+      elements.closeAuth.addEventListener('click', () => showAuthModal(false));
+
+      elements.logoutBtn.addEventListener('click', handleLogout);
+
+      auth.onAuthStateChanged(user => {
+        updateAuthUI(user);
+      });
     });
-
-    if (elements.backToSubjects) {
-      elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
-    }
-    if (elements.backToChapters) {
-      elements.backToChapters.addEventListener('click', () => {
-        if (elements.subjectCard) elements.subjectCard.classList.remove('hidden');
-        resetSelections('chapter');
-      });
-    }
-    if (elements.backToUnits) {
-      elements.backToUnits.addEventListener('click', () => {
-        if (elements.chapterCard) elements.chapterCard.classList.remove('hidden');
-        resetSelections('unit');
-      });
-    }
-    if (elements.backToTopics) {
-      elements.backToTopics.addEventListener('click', () => {
-        if (elements.unitCard) elements.unitCard.classList.remove('hidden');
-        resetSelections('topic');
-      });
-    }
-
-    if (elements.startQuizBtn) {
-      elements.startQuizBtn.addEventListener('click', startQuiz);
-    }
-
-    if (elements.nextQuestionBtn) {
-      elements.nextQuestionBtn.addEventListener('click', () => {
-        clearInterval(timerInterval);
-        timeLeft = 60;
-        if (state.currentQuestionIndex < state.questions.length - 1) {
-          state.currentQuestionIndex++;
-          showQuestion(state.questions[state.currentQuestionIndex]);
-          startTimer();
-        } else {
-          showResults();
-        }
-      });
-    }
-
-    if (elements.prevBtn) {
-      elements.prevBtn.addEventListener('click', () => {
-        if (state.currentQuestionIndex > 0) {
-          clearInterval(timerInterval);
-          timeLeft = 60;
-          state.currentQuestionIndex--;
-          showQuestion(state.questions[state.currentQuestionIndex]);
-          startTimer();
-        }
-      });
-    }
-
-    if (elements.restartQuizBtn) {
-      elements.restartQuizBtn.addEventListener('click', () => {
-        state.currentQuestionIndex = 0;
-        state.score = 0;
-        state.totalAnswered = 0;
-        state.matchSelections = {};
-        updateScore();
-        if (elements.quizContent) elements.quizContent.style.display = 'block';
-        if (elements.quizResults) elements.quizResults.style.display = 'none';
-        showQuestion(state.questions[0]);
-        startTimer();
-      });
-    }
-
-    if (elements.newQuizBtn) {
-      elements.newQuizBtn.addEventListener('click', () => resetSelections('subject'));
-    }
-
-    if (elements.statsBtn) {
-      elements.statsBtn.addEventListener('click', () => {
-        updateStats();
-        if (elements.statsModal) elements.statsModal.style.display = 'flex';
-      });
-    }
-
-    if (elements.closeStats) {
-      elements.closeStats.addEventListener('click', () => {
-        if (elements.statsModal) elements.statsModal.style.display = 'none';
-      });
-    }
-
-    if (elements.resetBtn) {
-      elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
-    }
-
-    showScreen('subject');
   </script>
 </body>
 </html>

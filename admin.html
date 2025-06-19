@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>NEET Quiz Explorer - Admin</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEET Quiz Admin</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -20,10 +22,8 @@
       --border-color: #e5e7eb;
       --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
       --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
       --radius-sm: 0.375rem;
       --radius-md: 0.5rem;
-      --radius-lg: 0.75rem;
     }
 
     * {
@@ -33,12 +33,11 @@
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: #f3f4f6;
       color: var(--text-dark);
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
-      min-height: 100vh;
     }
 
     #app {
@@ -73,9 +72,37 @@
       color: var(--primary-color);
     }
 
-    .nav-buttons {
+    .main-content {
+      flex: 1;
+      padding: 1.5rem;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
       display: flex;
-      gap: 0.5rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+
+    .card-body {
+      padding: 1.5rem;
     }
 
     .btn {
@@ -119,76 +146,133 @@
       justify-content: center;
     }
 
-    .main-content {
-      flex: 1;
-      padding: 1.5rem;
-      max-width: 800px;
+    .form-control {
+      display: block;
       width: 100%;
-      margin: 0 auto;
-    }
-
-    .card {
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
       background-color: white;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
+    }
+
+    .alert {
+      padding: 0.75rem 1.25rem;
+      margin-bottom: 1rem;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+    }
+
+    .alert-success {
+      color: #166534;
+      background-color: #dcfce7;
+      border-color: #bbf7d0;
+    }
+
+    .alert-error {
+      color: #991b1b;
+      background-color: #fee2e2;
+      border-color: #fecaca;
+    }
+
+    .progress {
+      height: 0.75rem;
+      background-color: var(--bg-light);
+      border-radius: var(--radius-sm);
       margin-bottom: 1.5rem;
-      transition: opacity 0.3s ease, height 0.3s ease;
-    }
-
-    .card.hidden {
-      opacity: 0;
-      height: 0;
-      margin: 0;
-      padding: 0;
       overflow: hidden;
     }
 
-    .card-header {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--border-color);
+    .progress-bar {
+      height: 100%;
+      background-color: var(--primary-color);
+      transition: width 0.3s ease;
+      font-size: 0.65rem;
+      color: white;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: center;
     }
 
-    .card-title {
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge-primary {
+      background-color: #e0e7ff;
+      color: var(--primary-dark);
+    }
+
+    .badge-success {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+
+    .group-container {
+      margin-top: 1.5rem;
+    }
+
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
       font-weight: 600;
-      font-size: 1.25rem;
     }
 
-    .card-body {
-      padding: 1.5rem;
+    .group-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 0.75rem;
     }
 
-    .list-group {
-      list-style: none;
-    }
-
-    .list-item {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--border-color);
+    .group-item {
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background-color: white;
       cursor: pointer;
-      transition: background-color 0.2s ease;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      transition: all 0.2s ease;
     }
 
-    .list-item:last-child {
-      border-bottom: none;
-    }
-
-    .list-item:hover {
+    .group-item:hover {
       background-color: var(--bg-light);
     }
 
-    .list-item.active {
+    .group-item.selected {
       background-color: #e0e7ff;
+      border-color: var(--primary-color);
     }
 
-    .list-item-icon {
-      color: var(--text-light);
+    .group-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.25rem;
+    }
+
+    .group-item-count {
+      font-size: 0.75rem;
+      color: var(--text-medium);
+    }
+
+    .hierarchy-path {
+      font-size: 0.875rem;
+      color: var(--text-medium);
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      background-color: var(--bg-light);
+      border-radius: var(--radius-sm);
+    }
+
+    .hierarchy-path span {
+      color: var(--primary-color);
+      font-weight: 500;
     }
 
     .backdrop {
@@ -201,16 +285,14 @@
       display: none;
       justify-content: center;
       align-items: center;
-      z-index: 20;
+      z-index: 1000;
     }
 
     .modal {
       background-color: white;
       border-radius: var(--radius-md);
       width: 90%;
-      max-width: 600px;
-      max-height: 90vh;
-      overflow-y: auto;
+      max-width: 500px;
       animation: fadeIn 0.3s ease;
     }
 
@@ -220,10 +302,8 @@
     }
 
     .loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
       padding: 2rem;
+      text-align: center;
     }
 
     .spinner {
@@ -233,62 +313,20 @@
       border-radius: 50%;
       border-top-color: var(--primary-color);
       animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    .badge {
-      display: inline-block;
-      padding: 0.25rem 0.5rem;
-      border-radius: var(--radius-sm);
-      font-size: 0.75rem;
-      font-weight: 500;
-      background-color: var(--bg-light);
-      color: var(--text-medium);
-    }
-
-    .badge-primary {
-      background-color: #e0e7ff;
-      color: var(--primary-dark);
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 2rem;
-      color: var(--text-medium);
-    }
-
-    .empty-state-icon {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      color: var(--text-light);
-    }
-
-    .json-preview {
-      background-color: var(--bg-light);
-      padding: 1rem;
-      border-radius: var(--radius-sm);
-      max-height: 400px;
-      overflow-y: auto;
-      font-family: monospace;
-      font-size: 0.875rem;
-      white-space: pre-wrap;
-      margin-bottom: 1rem;
-    }
-
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
+      .group-list {
+        grid-template-columns: 1fr;
+      }
+      
       .main-content {
         padding: 1rem;
-      }
-      
-      .card-body {
-        padding: 1rem;
-      }
-      
-      .list-item {
-        padding: 0.75rem 1rem;
       }
     }
   </style>
@@ -298,104 +336,85 @@
     <header class="header">
       <div class="logo">
         <i class="fas fa-atom logo-icon"></i>
-        <span>NEET Quiz Explorer - Admin</span>
-      </div>
-      <div class="nav-buttons">
-        <button id="resetBtn" class="btn btn-outline" style="display: none;">
-          <i class="fas fa-home"></i>
-        </button>
+        <span>NEET Quiz Admin</span>
       </div>
     </header>
 
     <main class="main-content">
-      <div id="subjectScreen">
-        <div class="card" id="subjectCard">
-          <div class="card-header">
-            <h2 class="card-title">Select Subject</h2>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Question Importer</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label for="subjectSelect">Select Subject:</label>
+            <select id="subjectSelect" class="form-control">
+              <option value="biology">Biology</option>
+              <option value="chemistry">Chemistry</option>
+              <option value="physics">Physics</option>
+            </select>
           </div>
-          <div class="card-body">
-            <ul class="list-group">
-              <li class="list-item" data-subject="biology">
-                <div>
-                  <div>Biology</div>
-                  <small class="text-muted">Study of living organisms and life processes</small>
-                </div>
-                <i class="fas fa-chevron-right list-item-icon"></i>
-              </li>
-              <li class="list-item" data-subject="chemistry">
-                <div>
-                  <div>Chemistry</div>
-                  <small class="text-muted">Study of matter and its transformations</small>
-                </div>
-                <i class="fas fa-chevron-right list-item-icon"></i>
-              </li>
-              <li class="list-item" data-subject="physics">
-                <div>
-                  <div>Physics</div>
-                  <small class="text-muted">Study of matter, energy, and their interactions</small>
-                </div>
-                <i class="fas fa-chevron-right list-item-icon"></i>
-              </li>
-            </ul>
-          </div>
+          <button id="fetchBtn" class="btn btn-primary">
+            <i class="fas fa-download"></i> Fetch Questions
+          </button>
         </div>
       </div>
 
-      <div id="chapterScreen" style="display: none;">
-        <div class="card" id="chapterCard">
-          <div class="card-header">
-            <button id="backToSubjects" class="btn btn-icon btn-outline">
-              <i class="fas fa-arrow-left"></i>
-            </button>
-            <h2 class="card-title">Select Chapter</h2>
+      <div class="card" id="previewCard" style="display: none;">
+        <div class="card-header">
+          <h2 class="card-title">Organize Questions</h2>
+          <div id="questionStats" class="badge badge-primary">0 questions</div>
+        </div>
+        <div class="card-body">
+          <div id="previewContent"></div>
+          
+          <div id="groupSelection" style="display: none;">
+            <div class="group-container">
+              <div class="group-header">
+                <i class="fas fa-layer-group"></i>
+                <span>Hierarchy Groups</span>
+              </div>
+              <div class="hierarchy-path">
+                Firestore path: <span>subjects</span> → <span id="currentSubjectPath"></span> → <span>chapters</span> → <span>units</span> → <span>topics</span> → <span>questions</span>
+              </div>
+              
+              <div class="group-list" id="chapterList"></div>
+              
+              <div class="group-list" id="unitList" style="display: none; margin-top: 1.5rem;"></div>
+              
+              <div class="group-list" id="topicList" style="display: none; margin-top: 1.5rem;"></div>
+            </div>
+            
+            <div style="margin-top: 1.5rem;">
+              <div class="group-header">
+                <i class="fas fa-check-circle"></i>
+                <span>Selected Groups</span>
+                <span id="selectedGroupsCount" class="badge">0 selected</span>
+              </div>
+              <div id="selectedGroupsList" style="margin-top: 0.5rem;"></div>
+              
+              <div class="selection-actions" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button id="selectAllBtn" class="btn btn-outline">Select All</button>
+                <button id="deselectAllBtn" class="btn btn-outline">Clear Selection</button>
+              </div>
+            </div>
           </div>
-          <div class="card-body">
-            <div id="chapterList" class="list-group"></div>
+          
+          <div class="progress" id="progressContainer" style="display: none;">
+            <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%">0%</div>
           </div>
+          
+          <button id="submitBtn" class="btn btn-primary" style="margin-top: 1.5rem; display: none;">
+            <i class="fas fa-save"></i> Submit to Firestore
+          </button>
         </div>
       </div>
 
-      <div id="unitScreen" style="display: none;">
-        <div class="card" id="unitCard">
-          <div class="card-header">
-            <button id="backToChapters" class="btn btn-icon btn-outline">
-              <i class="fas fa-arrow-left"></i>
-            </button>
-            <h2 class="card-title">Select Unit</h2>
-          </div>
-          <div class="card-body">
-            <div id="unitList" class="list-group"></div>
-          </div>
+      <div class="card" id="statusCard" style="display: none;">
+        <div class="card-header">
+          <h2 class="card-title">Submission Results</h2>
         </div>
-      </div>
-
-      <div id="topicScreen" style="display: none;">
-        <div class="card" id="topicCard">
-          <div class="card-header">
-            <button id="backToUnits" class="btn btn-icon btn-outline">
-              <i class="fas fa-arrow-left"></i>
-            </button>
-            <h2 class="card-title">Select Topic</h2>
-          </div>
-          <div class="card-body">
-            <div id="topicList" class="list-group"></div>
-          </div>
-        </div>
-      </div>
-
-      <div id="quizTypeScreen" style="display: none;">
-        <div class="card" id="quizTypeCard">
-          <div class="card-header">
-            <button id="backToTopics" class="btn btn-icon btn-outline">
-              <i class="fas fa-arrow-left"></i>
-            </button>
-            <h2 class="card-title">Select Quiz Type</h2>
-          </div>
-          <div class="card-body">
-            <div id="quizTypeList" class="list-group"></div>
-          </div>
-        </div>
-        <button id="submitFirestoreBtn" class="btn btn-primary" style="width: 100%; display: none;">Submit to Firestore</button>
+        <div class="card-body" id="statusContent"></div>
       </div>
     </main>
 
@@ -403,49 +422,13 @@
       <div class="modal">
         <div class="loading">
           <div class="spinner"></div>
+          <div id="loadingText">Processing...</div>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="backdrop" id="jsonModal">
-      <div class="modal">
-        <div class="card-header">
-          <h2 class="card-title">JSON Preview</h2>
-          <button id="closeJsonModal" class="btn btn-icon btn-outline">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="card-body">
-          <div class="json-preview" id="jsonPreview"></div>
-          <div style="display: flex; gap: 1rem;">
-            <button id="confirmSubmitBtn" class="btn btn-primary">Confirm & Save</button>
-            <button id="cancelSubmitBtn" class="btn btn-outline">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="backdrop" id="errorModal">
-      <div class="modal">
-        <div class="card-header">
-          <h2 class="card-title">Error</h2>
-          <button id="closeErrorModal" class="btn btn-icon btn-outline">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="card-body">
-          <div class="empty-state">
-            <i class="fas fa-exclamation-circle empty-state-icon"></i>
-            <div id="errorMessage"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
-    import { getFirestore, collection, doc, setDoc, writeBatch, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
-
+  <script>
     // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
@@ -459,410 +442,563 @@
     };
 
     // Initialize Firebase
-    let app, db;
-    try {
-      app = initializeApp(firebaseConfig);
-      db = getFirestore(app);
-    } catch (error) {
-      console.error('Error initializing Firebase:', error);
-      showError('Failed to initialize Firebase. Please check your configuration.');
-    }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    const state = {
-      currentSubject: null,
-      currentChapter: null,
-      currentUnit: null,
-      currentTopic: null,
-      currentQuizType: null,
-      questions: [],
-      subjectData: { biology: null, chemistry: null, physics: null },
-      subjectUrls: {
-        biology: 'https://itzfew.github.io/NEET-Questions/data/biology.json',
-        chemistry: 'https://itzfew.github.io/NEET-Questions/data/chemistry.json',
-        physics: 'https://itzfew.github.io/NEET-Questions/data/physics.json'
-      }
-    };
-
+    // DOM Elements
     const elements = {
-      subjectScreen: document.getElementById('subjectScreen'),
-      chapterScreen: document.getElementById('chapterScreen'),
-      unitScreen: document.getElementById('unitScreen'),
-      topicScreen: document.getElementById('topicScreen'),
-      quizTypeScreen: document.getElementById('quizTypeScreen'),
-      resetBtn: document.getElementById('resetBtn'),
-      backToSubjects: document.getElementById('backToSubjects'),
-      backToChapters: document.getElementById('backToChapters'),
-      backToUnits: document.getElementById('backToUnits'),
-      backToTopics: document.getElementById('backToTopics'),
-      subjectCard: document.getElementById('subjectCard'),
-      chapterCard: document.getElementById('chapterCard'),
-      unitCard: document.getElementById('unitCard'),
-      topicCard: document.getElementById('topicCard'),
-      quizTypeCard: document.getElementById('quizTypeCard'),
-      subjectItems: document.querySelectorAll('.list-item[data-subject]'),
+      subjectSelect: document.getElementById('subjectSelect'),
+      fetchBtn: document.getElementById('fetchBtn'),
+      previewCard: document.getElementById('previewCard'),
+      previewContent: document.getElementById('previewContent'),
+      questionStats: document.getElementById('questionStats'),
+      groupSelection: document.getElementById('groupSelection'),
       chapterList: document.getElementById('chapterList'),
       unitList: document.getElementById('unitList'),
       topicList: document.getElementById('topicList'),
-      quizTypeList: document.getElementById('quizTypeList'),
-      submitFirestoreBtn: document.getElementById('submitFirestoreBtn'),
+      currentSubjectPath: document.getElementById('currentSubjectPath'),
+      selectedGroupsCount: document.getElementById('selectedGroupsCount'),
+      selectedGroupsList: document.getElementById('selectedGroupsList'),
+      selectAllBtn: document.getElementById('selectAllBtn'),
+      deselectAllBtn: document.getElementById('deselectAllBtn'),
+      submitBtn: document.getElementById('submitBtn'),
+      statusCard: document.getElementById('statusCard'),
+      statusContent: document.getElementById('statusContent'),
       loadingModal: document.getElementById('loadingModal'),
-      jsonModal: document.getElementById('jsonModal'),
-      jsonPreview: document.getElementById('jsonPreview'),
-      confirmSubmitBtn: document.getElementById('confirmSubmitBtn'),
-      cancelSubmitBtn: document.getElementById('cancelSubmitBtn'),
-      errorModal: document.getElementById('errorModal'),
-      errorMessage: document.getElementById('errorMessage'),
-      closeErrorModal: document.getElementById('closeErrorModal'),
-      closeJsonModal: document.getElementById('closeJsonModal')
+      loadingText: document.getElementById('loadingText'),
+      progressContainer: document.getElementById('progressContainer'),
+      progressBar: document.getElementById('progressBar')
     };
 
-    function showLoading(show) {
-      if (elements.loadingModal) {
-        elements.loadingModal.style.display = show ? 'flex' : 'none';
-      }
+    // Configuration
+    const subjectUrls = {
+      biology: 'https://itzfew.github.io/NEET-Questions/data/biology.json',
+      chemistry: 'https://itzfew.github.io/NEET-Questions/data/chemistry.json',
+      physics: 'https://itzfew.github.io/NEET-Questions/data/physics.json'
+    };
+    const BATCH_SIZE = 50;
+    const MAX_BATCH_WRITES = 500; // Firestore limit
+
+    // App State
+    let state = {
+      fetchedQuestions: [],
+      groupedQuestions: {
+        chapters: {},
+        units: {},
+        topics: {}
+      },
+      selectedGroups: new Set(),
+      subject: null
+    };
+
+    // Helper Functions
+    function showLoading(show, text = 'Processing...') {
+      elements.loadingModal.style.display = show ? 'flex' : 'none';
+      elements.loadingText.textContent = text;
     }
 
-    function showError(message) {
-      if (elements.errorMessage && message) {
-        elements.errorMessage.textContent = message;
-      }
-      if (elements.errorModal) {
-        elements.errorModal.style.display = 'flex';
-      }
+    function updateProgress(percent) {
+      elements.progressBar.style.width = `${percent}%`;
+      elements.progressBar.textContent = `${Math.round(percent)}%`;
     }
 
-    function showScreen(screenName) {
-      const screens = ['subject', 'chapter', 'unit', 'topic', 'quizType'];
-      screens.forEach(screen => {
-        const element = elements[`${screen}Screen`];
-        if (element) {
-          element.style.display = screen === screenName ? 'block' : 'none';
+    function createSlug(name) {
+      return name.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+    }
+
+    function getChapterName(question) {
+      return question['Chapter Name'] || question['chapter name'] || 
+             question['Unique Chapter Name'] || 
+             question.topic_name?.split('>>')[0]?.trim() || 'Uncategorized';
+    }
+
+    function getUnitName(question) {
+      return question.topic_name?.split('>>')[1]?.trim() || 'Uncategorized';
+    }
+
+    function getTopicName(question) {
+      return question.topic_name?.split('>>')[2]?.trim() || 'Uncategorized';
+    }
+
+    function formatQuestion(question, subject) {
+      return {
+        subject: subject,
+        question: question.question,
+        answer: question.answer,
+        explanation: question.explanation,
+        quiz_type: question.quiz_type || 'mcq',
+        chapter: getChapterName(question),
+        unit: getUnitName(question),
+        topic: getTopicName(question),
+        topic_name: `${getChapterName(question)}>>${getUnitName(question)}>>${getTopicName(question)}`,
+        ...(question.quiz_type === 'mcq' && {
+          option_a: question.option_a,
+          option_b: question.option_b,
+          option_c: question.option_c,
+          option_d: question.option_d
+        }),
+        ...(question.quiz_type === 'match' && {
+          option_a: question.option_a,
+          option_b: question.option_b,
+          option_c: question.option_c,
+          option_d: question.option_d
+        }),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+    }
+
+    function groupQuestions(questions, subject) {
+      const groups = {
+        chapters: {},
+        units: {},
+        topics: {}
+      };
+
+      questions.forEach(q => {
+        const formatted = formatQuestion(q, subject);
+        const chapter = formatted.chapter;
+        const unit = `${chapter}>>${formatted.unit}`;
+        const topic = `${unit}>>${formatted.topic}`;
+
+        // Group by chapter
+        if (!groups.chapters[chapter]) {
+          groups.chapters[chapter] = {
+            name: chapter,
+            slug: createSlug(chapter),
+            questions: [],
+            units: new Set()
+          };
+        }
+        groups.chapters[chapter].questions.push(formatted);
+        groups.chapters[chapter].units.add(formatted.unit);
+
+        // Group by unit
+        if (!groups.units[unit]) {
+          groups.units[unit] = {
+            name: formatted.unit,
+            slug: createSlug(formatted.unit),
+            chapter: chapter,
+            chapterSlug: createSlug(chapter),
+            questions: [],
+            topics: new Set()
+          };
+        }
+        groups.units[unit].questions.push(formatted);
+        groups.units[unit].topics.add(formatted.topic);
+
+        // Group by topic
+        if (!groups.topics[topic]) {
+          groups.topics[topic] = {
+            name: formatted.topic,
+            slug: createSlug(formatted.topic),
+            chapter: chapter,
+            chapterSlug: createSlug(chapter),
+            unit: formatted.unit,
+            unitSlug: createSlug(formatted.unit),
+            questions: []
+          };
+        }
+        groups.topics[topic].questions.push(formatted);
+      });
+
+      return groups;
+    }
+
+    function renderGroupItems(groups, type) {
+      const container = type === 'chapters' ? elements.chapterList :
+                        type === 'units' ? elements.unitList :
+                        elements.topicList;
+      
+      container.innerHTML = '';
+      
+      Object.entries(groups[type]).forEach(([key, group]) => {
+        const item = document.createElement('div');
+        item.className = `group-item ${state.selectedGroups.has(`${type}:${key}`) ? 'selected' : ''}`;
+        item.dataset.type = type;
+        item.dataset.key = key;
+        
+        item.innerHTML = `
+          <div class="group-item-header">
+            <div>${group.name}</div>
+            <span class="badge ${state.selectedGroups.has(`${type}:${key}`) ? 'badge-primary' : ''}">
+              ${group.questions.length} Qs
+            </span>
+          </div>
+          <div class="group-item-count">
+            ${type === 'chapters' ? `${group.units.size} units` : 
+             type === 'units' ? `${group.topics.size} topics` : 
+             'Questions'}
+          </div>
+        `;
+        
+        item.addEventListener('click', () => toggleGroupSelection(type, key, item));
+        container.appendChild(item);
+      });
+      
+      container.style.display = 'grid';
+    }
+
+    function toggleGroupSelection(type, key, element) {
+      const groupKey = `${type}:${key}`;
+      
+      if (state.selectedGroups.has(groupKey)) {
+        state.selectedGroups.delete(groupKey);
+        element.classList.remove('selected');
+        element.querySelector('.badge').classList.remove('badge-primary');
+      } else {
+        state.selectedGroups.add(groupKey);
+        element.classList.add('selected');
+        element.querySelector('.badge').classList.add('badge-primary');
+      }
+      
+      updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+      // Update selected count
+      elements.selectedGroupsCount.textContent = `${state.selectedGroups.size} selected`;
+      
+      // Update selected groups list
+      elements.selectedGroupsList.innerHTML = '';
+      state.selectedGroups.forEach(groupKey => {
+        const [type, key] = groupKey.split(':');
+        const group = state.groupedQuestions[type][key];
+        
+        const item = document.createElement('div');
+        item.className = 'badge';
+        item.style.marginRight = '0.5rem';
+        item.style.marginBottom = '0.5rem';
+        item.style.display = 'inline-block';
+        
+        let icon = '';
+        if (type === 'chapters') icon = '<i class="fas fa-book"></i>';
+        else if (type === 'units') icon = '<i class="fas fa-layer-group"></i>';
+        else icon = '<i class="fas fa-tag"></i>';
+        
+        item.innerHTML = `${icon} ${group.name} (${group.questions.length} Qs)`;
+        elements.selectedGroupsList.appendChild(item);
+      });
+      
+      // Show/hide submit button
+      elements.submitBtn.style.display = state.selectedGroups.size > 0 ? 'block' : 'none';
+    }
+
+    function getSelectedQuestions() {
+      const questions = [];
+      
+      state.selectedGroups.forEach(groupKey => {
+        const [type, key] = groupKey.split(':');
+        const group = state.groupedQuestions[type][key];
+        if (group) {
+          questions.push(...group.questions);
         }
       });
-      if (elements.resetBtn) {
-        elements.resetBtn.style.display = screenName === 'quizType' ? 'block' : 'none';
-      }
+      
+      return questions;
     }
 
-    function getChapterName(q) {
-      return q['Chapter Name'] || q['chapter name'] || q['Unique Chapter Name'] || q.topic_name?.split('>>')[0]?.trim() || '';
-    }
-
-    function getUnitName(q) {
-      return q.topic_name?.split('>>')[1]?.trim() || '';
-    }
-
-    function getTopicName(q) {
-      return q.topic_name?.split('>>')[2]?.trim() || '';
-    }
-
-    function createListItem(text, value, count) {
-      const li = document.createElement('li');
-      li.className = 'list-item';
-      li.dataset.value = value;
-      li.innerHTML = `
-        <div>
-          <div>${text} <span class="badge badge-primary">${count} Qs</span></div>
-        </div>
-        <i class="fas fa-chevron-right list-item-icon"></i>
-      `;
-      return li;
-    }
-
-    async function loadSubjectData(subject) {
-      if (state.subjectData[subject]) return state.subjectData[subject];
-      showLoading(true);
+    // Main Functions
+    async function fetchQuestions() {
+      state.subject = elements.subjectSelect.value;
+      showLoading(true, `Fetching ${state.subject} questions...`);
+      
       try {
-        const response = await fetch(state.subjectUrls[subject]);
-        if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to fetch ${subject} data`);
+        const response = await fetch(subjectUrls[state.subject]);
+        if (!response.ok) throw new Error('Failed to fetch questions');
         const data = await response.json();
-        if (!Array.isArray(data)) throw new Error('Invalid data format');
-        state.subjectData[subject] = data;
-        return data;
+        
+        state.fetchedQuestions = data;
+        state.groupedQuestions = groupQuestions(data, state.subject);
+        state.selectedGroups = new Set();
+        
+        // Update UI
+        elements.questionStats.textContent = `${data.length} questions`;
+        elements.currentSubjectPath.textContent = state.subject;
+        
+        elements.previewContent.innerHTML = `
+          <p>Successfully fetched ${data.length} questions organized into:</p>
+          <ul>
+            <li>${Object.keys(state.groupedQuestions.chapters).length} Chapters</li>
+            <li>${Object.keys(state.groupedQuestions.units).length} Units</li>
+            <li>${Object.keys(state.groupedQuestions.topics).length} Topics</li>
+          </ul>
+        `;
+        
+        // Render group selectors
+        renderGroupItems(state.groupedQuestions, 'chapters');
+        renderGroupItems(state.groupedQuestions, 'units');
+        renderGroupItems(state.groupedQuestions, 'topics');
+        
+        // Show UI elements
+        elements.groupSelection.style.display = 'block';
+        elements.previewCard.style.display = 'block';
+        elements.statusCard.style.display = 'none';
+        elements.progressContainer.style.display = 'none';
+        
+        updateSelectionUI();
+        
       } catch (error) {
-        console.error('Error loading subject data:', error);
-        showError('Failed to load data. Please check your network or try again.');
-        resetSelections('subject');
-        return null;
+        console.error('Error fetching questions:', error);
+        alert(`Failed to fetch questions: ${error.message}`);
       } finally {
         showLoading(false);
       }
     }
 
-    async function handleSubjectSelect(subject) {
-      state.currentSubject = subject;
-      if (elements.subjectCard) elements.subjectCard.classList.add('hidden');
-      const data = await loadSubjectData(subject);
-      if (!data) return;
-      const chapters = [...new Set(data.map(q => getChapterName(q)))].filter(Boolean).sort();
-      if (elements.chapterList) {
-        elements.chapterList.innerHTML = '';
-        if (chapters.length === 0) {
-          elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
-        } else {
-          chapters.forEach(chapter => {
-            const count = data.filter(q => getChapterName(q) === chapter).length;
-            const li = createListItem(chapter, chapter, count);
-            li.addEventListener('click', () => handleChapterSelect(chapter));
-            elements.chapterList.appendChild(li);
-          });
-        }
-      }
-      showScreen('chapter');
-    }
-
-    function handleChapterSelect(chapter) {
-      state.currentChapter = chapter;
-      if (elements.chapterCard) elements.chapterCard.classList.add('hidden');
-      const data = state.subjectData[state.currentSubject];
-      const units = [...new Set(data.filter(q => getChapterName(q) === chapter).map(q => getUnitName(q)))].filter(Boolean).sort();
-      if (elements.unitList) {
-        elements.unitList.innerHTML = '';
-        if (units.length === 0) {
-          elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
-        } else {
-          units.forEach(unit => {
-            const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === unit).length;
-            const li = createListItem(unit, unit, count);
-            li.addEventListener('click', () => handleUnitSelect(unit));
-            elements.unitList.appendChild(li);
-          });
-        }
-      }
-      showScreen('unit');
-    }
-
-    function handleUnitSelect(unit) {
-      state.currentUnit = unit;
-      if (elements.unitCard) elements.unitCard.classList.add('hidden');
-      const data = state.subjectData[state.currentSubject];
-      const topics = [...new Set(data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === unit).map(q => getTopicName(q)))].filter(Boolean).sort();
-      if (elements.topicList) {
-        elements.topicList.innerHTML = '';
-        if (topics.length === 0) {
-          elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
-        } else {
-          topics.forEach(topic => {
-            const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === state.currentUnit && getTopicName(q) === topic).length;
-            const li = createListItem(topic, topic, count);
-            li.addEventListener('click', () => handleTopicSelect(topic));
-            elements.topicList.appendChild(li);
-          });
-        }
-      }
-      showScreen('topic');
-    }
-
-    function handleTopicSelect(topic) {
-      state.currentTopic = topic;
-      if (elements.topicCard) elements.topicCard.classList.add('hidden');
-      const data = state.subjectData[state.currentSubject];
-      const quizTypes = [...new Set(data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === state.currentUnit && getTopicName(q) === topic).map(q => q.quiz_type))].filter(Boolean).sort();
-      if (elements.quizTypeList) {
-        elements.quizTypeList.innerHTML = '';
-        if (quizTypes.length === 0) {
-          elements.quizTypeList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No quiz types found</div></div>';
-        } else {
-          quizTypes.forEach(type => {
-            const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === state.currentUnit && getTopicName(q) === topic && q.quiz_type === type).length;
-            const li = createListItem(type, type, count);
-            li.addEventListener('click', () => handleQuizTypeSelect(type));
-            elements.quizTypeList.appendChild(li);
-          });
-        }
-      }
-      if (elements.submitFirestoreBtn) {
-        elements.submitFirestoreBtn.style.display = 'block';
-      }
-      showScreen('quizType');
-    }
-
-    function handleQuizTypeSelect(quizType) {
-      state.currentQuizType = quizType;
-      if (elements.quizTypeCard) elements.quizTypeCard.classList.add('hidden');
-      if (elements.submitFirestoreBtn) elements.submitFirestoreBtn.disabled = false;
-    }
-
-    async function prepareQuestionsForSubmission() {
-      if (!db) {
-        showError('Firestore is not initialized. Please check Firebase configuration.');
+    async function submitQuestions() {
+      const questionsToSubmit = getSelectedQuestions();
+      if (questionsToSubmit.length === 0) {
+        alert('No questions selected for submission');
         return;
       }
-      const data = state.subjectData[state.currentSubject];
-      if (!data) {
-        showError('No data available. Please select a subject again.');
-        return;
-      }
-      state.questions = data.filter(q => {
-        return (
-          getChapterName(q) === state.currentChapter &&
-          getUnitName(q) === state.currentUnit &&
-          getTopicName(q) === state.currentTopic &&
-          (!state.currentQuizType || q.quiz_type === state.currentQuizType)
-        );
-      });
-      if (state.questions.length === 0) {
-        showError('No questions found for the selected filters.');
-        return;
-      }
-      const questionsJSON = state.questions.map((q, index) => ({
-        questionId: `q${index + 1}_${Date.now()}`,
-        unique_id: q.unique_id || null,
-        question: q.question || '',
-        quiz_type: q.quiz_type || '',
-        answer: q.answer || null,
-        option_a: q.option_a || null,
-        option_b: q.option_b || null,
-        option_c: q.option_c || null,
-        option_d: q.option_d || null,
-        explanation: q.explanation || null,
-        difficulty_level: q.difficulty_level || null,
-        clue_1: q.clue_1 || null,
-        clue_2: q.clue_2 || null,
-        clue_3: q.clue_3 || null,
-        syllabus_update: q.syllabus_update || null,
-        ncert22_page: q.ncert22_page || null,
-        ncert23_page: q.ncert23_page || null
-      }));
-      if (elements.jsonPreview) {
-        elements.jsonPreview.textContent = JSON.stringify(
-          {
-            subject: state.currentSubject,
-            chapter: state.currentChapter,
-            unit: state.currentUnit,
-            topic: state.currentTopic,
-            quizType: state.currentQuizType,
-            questions: questionsJSON
-          },
-          null,
-          2
-        );
-      }
-      if (elements.jsonModal) {
-        elements.jsonModal.style.display = 'flex';
-      }
-    }
-
-    async function submitToFirestore() {
-      if (!db) {
-        showError('Firestore is not initialized. Please check Firebase configuration.');
-        return;
-      }
-      showLoading(true);
+      
+      showLoading(true, 'Preparing Firestore structure...');
+      elements.progressContainer.style.display = 'block';
+      updateProgress(0);
+      
       try {
-        const batch = writeBatch(db);
-        state.questions.forEach((q, index) => {
-          const questionId = `q${index + 1}_${Date.now()}`;
-          const questionRef = doc(
-            collection(db, 'subjects', state.currentSubject, 'chapters', state.currentChapter, 'units', state.currentUnit, 'topics', state.currentTopic, 'questions'),
-            questionId
-          );
-          batch.set(questionRef, {
-            unique_id: q.unique_id || null,
-            question: q.question || '',
-            quiz_type: q.quiz_type || '',
-            answer: q.answer || null,
-            option_a: q.option_a || null,
-            option_b: q.option_b || null,
-            option_c: q.option_c || null,
-            option_d: q.option_d || null,
-            explanation: q.explanation || null,
-            difficulty_level: q.difficulty_level || null,
-            clue_1: q.clue_1 || null,
-            clue_2: q.clue_2 || null,
-            clue_3: q.clue_3 || null,
-            syllabus_update: q.syllabus_update || null,
-            ncert22_page: q.ncert22_page || null,
-            ncert23_page: q.ncert23_page || null,
-            createdAt: serverTimestamp()
-          });
-        });
-        await batch.commit();
-        if (elements.jsonModal) elements.jsonModal.style.display = 'none';
-        alert('Questions successfully saved to Firestore!');
-        resetSelections('subject');
+        let successfulSubmissions = 0;
+        let failedSubmissions = 0;
+        const totalQuestions = questionsToSubmit.length;
+        const subjectSlug = createSlug(state.subject);
+        
+        // Track created documents to avoid duplicates
+        const createdDocs = {
+          subjects: new Set(),
+          chapters: new Set(),
+          units: new Set(),
+          topics: new Set()
+        };
+        
+        // Process in batches
+        for (let i = 0; i < totalQuestions; i += BATCH_SIZE) {
+          const batchEnd = Math.min(i + BATCH_SIZE, totalQuestions);
+          const batch = questionsToSubmit.slice(i, batchEnd);
+          
+          showLoading(true, `Submitting questions ${i+1}-${batchEnd} of ${totalQuestions}...`);
+          
+          try {
+            // Create batches of writes
+            let writes = [];
+            
+            for (const question of batch) {
+              try {
+                const chapterSlug = createSlug(question.chapter);
+                const unitSlug = createSlug(question.unit);
+                const topicSlug = createSlug(question.topic);
+                
+                // 1. Ensure subject exists
+                const subjectKey = `subjects:${subjectSlug}`;
+                if (!createdDocs.subjects.has(subjectKey)) {
+                  writes.push({
+                    type: 'set',
+                    ref: db.collection('subjects').doc(subjectSlug),
+                    data: {
+                      name: state.subject,
+                      slug: subjectSlug,
+                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                  });
+                  createdDocs.subjects.add(subjectKey);
+                }
+                
+                // 2. Ensure chapter exists
+                const chapterKey = `chapters:${subjectSlug}_${chapterSlug}`;
+                if (!createdDocs.chapters.has(chapterKey)) {
+                  writes.push({
+                    type: 'set',
+                    ref: db.collection('subjects').doc(subjectSlug)
+                      .collection('chapters').doc(chapterSlug),
+                    data: {
+                      name: question.chapter,
+                      slug: chapterSlug,
+                      subject: state.subject,
+                      subjectSlug: subjectSlug,
+                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                  });
+                  createdDocs.chapters.add(chapterKey);
+                }
+                
+                // 3. Ensure unit exists
+                const unitKey = `units:${subjectSlug}_${chapterSlug}_${unitSlug}`;
+                if (!createdDocs.units.has(unitKey)) {
+                  writes.push({
+                    type: 'set',
+                    ref: db.collection('subjects').doc(subjectSlug)
+                      .collection('chapters').doc(chapterSlug)
+                      .collection('units').doc(unitSlug),
+                    data: {
+                      name: question.unit,
+                      slug: unitSlug,
+                      chapter: question.chapter,
+                      chapterSlug: chapterSlug,
+                      subject: state.subject,
+                      subjectSlug: subjectSlug,
+                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                  });
+                  createdDocs.units.add(unitKey);
+                }
+                
+                // 4. Ensure topic exists
+                const topicKey = `topics:${subjectSlug}_${chapterSlug}_${unitSlug}_${topicSlug}`;
+                if (!createdDocs.topics.has(topicKey)) {
+                  writes.push({
+                    type: 'set',
+                    ref: db.collection('subjects').doc(subjectSlug)
+                      .collection('chapters').doc(chapterSlug)
+                      .collection('units').doc(unitSlug)
+                      .collection('topics').doc(topicSlug),
+                    data: {
+                      name: question.topic,
+                      slug: topicSlug,
+                      unit: question.unit,
+                      unitSlug: unitSlug,
+                      chapter: question.chapter,
+                      chapterSlug: chapterSlug,
+                      subject: state.subject,
+                      subjectSlug: subjectSlug,
+                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                  });
+                  createdDocs.topics.add(topicKey);
+                }
+                
+                // 5. Add question
+                writes.push({
+                  type: 'add',
+                  ref: db.collection('subjects').doc(subjectSlug)
+                    .collection('chapters').doc(chapterSlug)
+                    .collection('units').doc(unitSlug)
+                    .collection('topics').doc(topicSlug)
+                    .collection('questions'),
+                  data: question
+                });
+                
+              } catch (error) {
+                console.error('Error preparing question:', question.question, error);
+                failedSubmissions++;
+              }
+            }
+            
+            // Execute writes in batches of 500 (Firestore limit)
+            for (let j = 0; j < writes.length; j += MAX_BATCH_WRITES) {
+              const writeBatch = db.batch();
+              const writeChunk = writes.slice(j, j + MAX_BATCH_WRITES);
+              
+              writeChunk.forEach(write => {
+                if (write.type === 'set') {
+                  writeBatch.set(write.ref, write.data, { merge: true });
+                } else if (write.type === 'add') {
+                  const newRef = write.ref.doc();
+                  writeBatch.set(newRef, write.data);
+                }
+              });
+              
+              await writeBatch.commit();
+              successfulSubmissions += writeChunk.filter(w => w.type === 'add').length;
+            }
+            
+          } catch (error) {
+            console.error('Error submitting batch:', error);
+            failedSubmissions += batch.length;
+          }
+          
+          // Update progress
+          updateProgress((batchEnd / totalQuestions) * 100);
+        }
+        
+        // Show results
+        showLoading(false);
+        elements.statusContent.innerHTML = `
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> Successfully submitted ${successfulSubmissions} questions!
+          </div>
+          
+          <div class="hierarchy-path">
+            Created Firestore structure: <br>
+            <span>subjects</span> → 
+            <span>${state.subject}</span> → 
+            <span>chapters</span> → 
+            <span>units</span> → 
+            <span>topics</span> → 
+            <span>questions</span>
+          </div>
+          
+          <h3 style="margin-top: 1rem;">Submission Details:</h3>
+          <ul>
+            <li>Subjects created: ${createdDocs.subjects.size}</li>
+            <li>Chapters created: ${createdDocs.chapters.size}</li>
+            <li>Units created: ${createdDocs.units.size}</li>
+            <li>Topics created: ${createdDocs.topics.size}</li>
+          </ul>
+          
+          ${failedSubmissions > 0 ? `
+            <div class="alert alert-error" style="margin-top: 1rem;">
+              <i class="fas fa-exclamation-circle"></i> 
+              ${failedSubmissions} questions failed to submit (check console for details)
+            </div>
+          ` : ''}
+        `;
+        
+        elements.statusCard.style.display = 'block';
+        elements.previewCard.style.display = 'none';
+        
       } catch (error) {
-        console.error('Error saving to Firestore:', error);
-        showError('Failed to save questions to Firestore. Please try again.');
+        console.error('Submission error:', error);
+        elements.statusContent.innerHTML = `
+          <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> 
+            Error during submission: ${error.message}
+          </div>
+        `;
+        elements.statusCard.style.display = 'block';
       } finally {
         showLoading(false);
       }
     }
 
-    function resetSelections(level) {
-      const levels = ['subject', 'chapter', 'unit', 'topic', 'quizType'];
-      const index = levels.indexOf(level);
-      for (let i = index; i < levels.length; i++) {
-        state[`current${levels[i].charAt(0).toUpperCase() + levels[i].slice(1)}`] = null;
-        const card = elements[`${levels[i]}Card`];
-        const list = elements[`${levels[i]}List`];
-        if (card) card.classList.remove('hidden');
-        if (list) list.innerHTML = '';
-      }
-      state.questions = [];
-      if (elements.submitFirestoreBtn) {
-        elements.submitFirestoreBtn.style.display = 'none';
-        elements.submitFirestoreBtn.disabled = true;
-      }
-      if (level !== 'subject' && elements.subjectCard) {
-        elements.subjectCard.classList.remove('hidden');
-      }
-      showScreen(level);
-    }
-
-    elements.subjectItems.forEach(item => {
-      item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
+    // Event Listeners
+    elements.fetchBtn.addEventListener('click', fetchQuestions);
+    elements.submitBtn.addEventListener('click', submitQuestions);
+    
+    elements.selectAllBtn.addEventListener('click', () => {
+      // Select all chapters, units, and topics
+      Object.keys(state.groupedQuestions.chapters).forEach(key => {
+        state.selectedGroups.add(`chapters:${key}`);
+      });
+      Object.keys(state.groupedQuestions.units).forEach(key => {
+        state.selectedGroups.add(`units:${key}`);
+      });
+      Object.keys(state.groupedQuestions.topics).forEach(key => {
+        state.selectedGroups.add(`topics:${key}`);
+      });
+      
+      // Update UI
+      document.querySelectorAll('.group-item').forEach(item => {
+        item.classList.add('selected');
+        item.querySelector('.badge').classList.add('badge-primary');
+      });
+      
+      updateSelectionUI();
     });
-
-    if (elements.backToSubjects) {
-      elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
-    }
-    if (elements.backToChapters) {
-      elements.backToChapters.addEventListener('click', () => resetSelections('chapter'));
-    }
-    if (elements.backToUnits) {
-      elements.backToUnits.addEventListener('click', () => resetSelections('unit'));
-    }
-    if (elements.backToTopics) {
-      elements.backToTopics.addEventListener('click', () => resetSelections('topic'));
-    }
-
-    if (elements.submitFirestoreBtn) {
-      elements.submitFirestoreBtn.addEventListener('click', prepareQuestionsForSubmission);
-    }
-
-    if (elements.confirmSubmitBtn) {
-      elements.confirmSubmitBtn.addEventListener('click', submitToFirestore);
-    }
-
-    if (elements.cancelSubmitBtn) {
-      elements.cancelSubmitBtn.addEventListener('click', () => {
-        if (elements.jsonModal) elements.jsonModal.style.display = 'none';
+    
+    elements.deselectAllBtn.addEventListener('click', () => {
+      state.selectedGroups.clear();
+      document.querySelectorAll('.group-item').forEach(item => {
+        item.classList.remove('selected');
+        item.querySelector('.badge').classList.remove('badge-primary');
       });
-    }
-
-    if (elements.closeErrorModal) {
-      elements.closeErrorModal.addEventListener('click', () => {
-        if (elements.errorModal) elements.errorModal.style.display = 'none';
-      });
-    }
-
-    if (elements.closeJsonModal) {
-      elements.closeJsonModal.addEventListener('click', () => {
-        if (elements.jsonModal) elements.jsonModal.style.display = 'none';
-      });
-    }
-
-    if (elements.resetBtn) {
-      elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
-    }
-
-    // Check Firebase initialization on load
-    if (!app || !db) {
-      showError('Firebase failed to initialize. Please check the Firebase scripts and configuration.');
-    } else {
-      showScreen('subject');
-    }
+      updateSelectionUI();
+    });
   </script>
 </body>
-</html> 
+</html>

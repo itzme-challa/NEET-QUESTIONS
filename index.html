@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>NEET Quiz Explorer</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEET Prep Master</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary-color: #4361ee;
@@ -42,139 +42,404 @@
       min-height: 100vh;
     }
 
-    .backdrop {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 20;
+    #app {
+      max-width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    .modal {
+    .header {
       background-color: white;
-      border-radius: var(--radius-md);
-      width: 90%;
-      max-width: 400px;
-      max-height: 90vh;
-      overflow-y: auto;
-      animation: fadeIn 0.3s ease;
+      padding: 1rem;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      text-decoration: none;
     }
 
-    .loading {
+    .logo-icon {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-medium);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--bg-light);
+    }
+
+    .btn-icon {
+      padding: 0.5rem;
+      border-radius: 50%;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 1.5rem;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .auth-container {
       display: flex;
       justify-content: center;
       align-items: center;
+      min-height: 80vh;
+    }
+
+    .auth-card {
+      background-color: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
       padding: 2rem;
+      width: 100%;
+      max-width: 400px;
     }
 
-    .spinner {
-      width: 2rem;
-      height: 2rem;
-      border: 3px solid rgba(0, 0, 0, 0.1);
+    .auth-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      color: var(--primary-dark);
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-label {
+      font-weight: 500;
+      color: var(--text-dark);
+    }
+
+    .form-input {
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+    }
+
+    .auth-footer {
+      margin-top: 1rem;
+      text-align: center;
+      color: var(--text-medium);
+    }
+
+    .auth-link {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .auth-link:hover {
+      text-decoration: underline;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 1rem 0;
+      color: var(--text-light);
+    }
+
+    .divider::before, .divider::after {
+      content: "";
+      flex: 1;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .divider::before {
+      margin-right: 0.5rem;
+    }
+
+    .divider::after {
+      margin-left: 0.5rem;
+    }
+
+    .google-btn {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      color: var(--text-dark);
+      width: 100%;
+      justify-content: center;
+    }
+
+    .google-btn:hover {
+      background-color: var(--bg-light);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .dashboard-card {
+      background-color: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      padding: 1.5rem;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-icon {
+      font-size: 2rem;
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-description {
+      color: var(--text-medium);
+      font-size: 0.875rem;
+    }
+
+    .user-menu {
+      position: relative;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      border-top-color: var(--primary-color);
-      animation: spin 1s linear infinite;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 600;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    .dropdown-menu {
+      position: absolute;
+      right: 0;
+      top: 50px;
+      background-color: white;
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      min-width: 200px;
+      z-index: 20;
+      display: none;
+    }
+
+    .dropdown-menu.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-dark);
+    }
+
+    .dropdown-item:hover {
+      background-color: var(--bg-light);
+    }
+
+    .dropdown-divider {
+      border-top: 1px solid var(--border-color);
+      margin: 0.25rem 0;
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        padding: 1rem;
+      }
+      
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+      
+      .auth-card {
+        padding: 1.5rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="app" class="min-h-screen flex flex-col">
-    <header class="bg-white shadow-sm sticky top-0 z-10 px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <i class="fas fa-atom text-2xl text-blue-500"></i>
-        <span class="font-semibold text-xl text-gray-800">NEET Quiz Explorer</span>
-      </div>
-      <div class="flex gap-2">
-        <button id="dppBtn" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">DPP</button>
-        <button id="testsBtn" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Tests</button>
-        <button id="profileBtn" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Profile</button>
-        <button id="authBtn" class="btn bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Login</button>
-        <button id="logoutBtn" class="btn bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 hidden">Logout</button>
+  <div id="app">
+    <header class="header">
+      <a href="index.html" class="logo">
+        <i class="fas fa-atom logo-icon"></i>
+        <span>NEET Prep Master</span>
+      </a>
+      <div class="nav-buttons">
+        <div class="user-menu" id="userMenu" style="display: none;">
+          <div class="user-avatar" id="userAvatar">U</div>
+          <div class="dropdown-menu" id="dropdownMenu">
+            <a href="profile.html" class="dropdown-item">
+              <i class="fas fa-user"></i> Profile
+            </a>
+            <a href="dpp.html" class="dropdown-item">
+              <i class="fas fa-tasks"></i> My DPPs
+            </a>
+            <a href="tests.html" class="dropdown-item">
+              <i class="fas fa-file-alt"></i> My Tests
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item" id="logoutBtn">
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+          </div>
+        </div>
+        <button id="loginBtn" class="btn btn-outline">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </button>
       </div>
     </header>
 
-    <main class="flex-1 p-6 max-w-4xl mx-auto w-full">
-      <div id="subjectScreen">
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-          <div class="border-b border-gray-200 p-4 flex justify-between items-center">
-            <h2 class="text-xl font-semibold">Select Subject</h2>
+    <main class="main-content">
+      <div id="authScreen" style="display: none;">
+        <div class="auth-container">
+          <div class="auth-card">
+            <h2 class="auth-title" id="authTitle">Login</h2>
+            <form class="auth-form" id="authForm">
+              <div class="form-group" id="nameGroup" style="display: none;">
+                <label for="name" class="form-label">Full Name</label>
+                <input type="text" id="name" class="form-input" placeholder="Enter your name">
+              </div>
+              <div class="form-group">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" class="form-input" placeholder="Enter your email">
+              </div>
+              <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" class="form-input" placeholder="Enter your password">
+              </div>
+              <button type="submit" class="btn btn-primary" id="authSubmit">Login</button>
+              <div class="divider">OR</div>
+              <button type="button" class="btn google-btn" id="googleAuth">
+                <i class="fab fa-google"></i> Continue with Google
+              </button>
+            </form>
+            <div class="auth-footer">
+              <span id="authFooterText">Don't have an account?</span>
+              <a href="#" class="auth-link" id="authToggle">Sign up</a>
+            </div>
           </div>
-          <div class="p-6">
-            <ul class="list-none">
-              <li class="list-item p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 flex justify-between items-center" data-subject="biology">
-                <div>
-                  <div class="font-medium">Biology</div>
-                  <small class="text-gray-500">Study of living organisms and life processes</small>
-                </div>
-                <i class="fas fa-chevron-right text-gray-400"></i>
-              </li>
-              <li class="list-item p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 flex justify-between items-center" data-subject="chemistry">
-                <div>
-                  <div class="font-medium">Chemistry</div>
-                  <small class="text-gray-500">Study of matter and its transformations</small>
-                </div>
-                <i class="fas fa-chevron-right text-gray-400"></i>
-              </li>
-              <li class="list-item p-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center" data-subject="physics">
-                <div>
-                  <div class="font-medium">Physics</div>
-                  <small class="text-gray-500">Study of matter, energy, and their interactions</small>
-                </div>
-                <i class="fas fa-chevron-right text-gray-400"></i>
-              </li>
-            </ul>
-          </div>
+        </div>
+      </div>
+
+      <div id="dashboardScreen">
+        <h1>Welcome to NEET Prep Master</h1>
+        <p>Your complete solution for NEET preparation</p>
+        
+        <div class="dashboard">
+          <a href="play.html" class="dashboard-card">
+            <div class="card-icon">
+              <i class="fas fa-play"></i>
+            </div>
+            <h3 class="card-title">Practice Questions</h3>
+            <p class="card-description">Practice topic-wise questions with detailed explanations</p>
+          </a>
+          
+          <a href="dpp.html" class="dashboard-card">
+            <div class="card-icon">
+              <i class="fas fa-tasks"></i>
+            </div>
+            <h3 class="card-title">Daily Practice Problems</h3>
+            <p class="card-description">Create custom DPPs for focused practice</p>
+          </a>
+          
+          <a href="tests.html" class="dashboard-card">
+            <div class="card-icon">
+              <i class="fas fa-file-alt"></i>
+            </div>
+            <h3 class="card-title">Mock Tests</h3>
+            <p class="card-description">Take full-length or chapter-wise mock tests</p>
+          </a>
+          
+          <a href="profile.html" class="dashboard-card">
+            <div class="card-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <h3 class="card-title">Progress Tracking</h3>
+            <p class="card-description">View your performance analytics and progress</p>
+          </a>
         </div>
       </div>
     </main>
-
-    <div class="backdrop" id="loadingModal">
-      <div class="modal">
-        <div class="loading">
-          <div class="spinner"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="backdrop" id="authModal">
-      <div class="modal">
-        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h2 class="text-xl font-semibold" id="authTitle">Login</h2>
-          <button id="closeAuth" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="p-6">
-          <div id="authContent">
-            <div class="mb-4">
-              <input type="email" id="authEmail" class="w-full p-3 border border-gray-300 rounded" placeholder="Email">
-            </div>
-            <div class="mb-4">
-              <input type="password" id="authPassword" class="w-full p-3 border border-gray-300 rounded" placeholder="Password">
-            </div>
-            <button id="authSubmit" class="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">Login</button>
-            <button id="googleSignIn" class="w-full bg-red-500 text-white p-3 rounded hover:bg-red-600 mt-2 flex items-center justify-center gap-2">
-              <i class="fab fa-google"></i> Sign in with Google
-            </button>
-            <p class="text-center mt-4">
-              <a href="#" id="toggleAuth" class="text-blue-500 hover:underline">Create an account</a>
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Firebase SDK -->
@@ -182,6 +447,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Initialize Firebase
@@ -198,167 +464,164 @@
 
       firebase.initializeApp(firebaseConfig);
       const auth = firebase.auth();
-      const db = firebase.database();
+      const database = firebase.database();
       const firestore = firebase.firestore();
 
       const elements = {
-        subjectScreen: document.getElementById('subjectScreen'),
-        dppBtn: document.getElementById('dppBtn'),
-        testsBtn: document.getElementById('testsBtn'),
-        profileBtn: document.getElementById('profileBtn'),
-        authBtn: document.getElementById('authBtn'),
-        logoutBtn: document.getElementById('logoutBtn'),
-        authModal: document.getElementById('authModal'),
+        authScreen: document.getElementById('authScreen'),
+        dashboardScreen: document.getElementById('dashboardScreen'),
         authTitle: document.getElementById('authTitle'),
-        authEmail: document.getElementById('authEmail'),
-        authPassword: document.getElementById('authPassword'),
+        authForm: document.getElementById('authForm'),
+        nameGroup: document.getElementById('nameGroup'),
+        email: document.getElementById('email'),
+        password: document.getElementById('password'),
         authSubmit: document.getElementById('authSubmit'),
-        googleSignIn: document.getElementById('googleSignIn'),
-        toggleAuth: document.getElementById('toggleAuth'),
-        closeAuth: document.getElementById('closeAuth'),
-        loadingModal: document.getElementById('loadingModal'),
-        subjectItems: document.querySelectorAll('.list-item[data-subject]'),
+        authFooterText: document.getElementById('authFooterText'),
+        authToggle: document.getElementById('authToggle'),
+        googleAuth: document.getElementById('googleAuth'),
+        loginBtn: document.getElementById('loginBtn'),
+        userMenu: document.getElementById('userMenu'),
+        userAvatar: document.getElementById('userAvatar'),
+        dropdownMenu: document.getElementById('dropdownMenu'),
+        logoutBtn: document.getElementById('logoutBtn')
       };
 
       let isLogin = true;
 
-      function showLoading(show) {
-        elements.loadingModal.style.display = show ? 'flex' : 'none';
-      }
-
-      function showAuthModal(show) {
-        elements.authModal.style.display = show ? 'flex' : 'none';
-        if (show) {
-          elements.authTitle.textContent = isLogin ? 'Login' : 'Sign Up';
-          elements.authSubmit.textContent = isLogin ? 'Login' : 'Sign Up';
-          elements.toggleAuth.textContent = isLogin ? 'Create an account' : 'Already have an account? Login';
-          elements.authEmail.value = '';
-          elements.authPassword.value = '';
-        }
-      }
-
-      function showError(message) {
-        alert(message);
-      }
-
-      function updateAuthUI(user) {
-        if (user) {
-          elements.authBtn.classList.add('hidden');
-          elements.logoutBtn.classList.remove('hidden');
-        } else {
-          elements.authBtn.classList.remove('hidden');
-          elements.logoutBtn.classList.add('hidden');
-        }
-      }
-
-      async function handleSubjectSelect(subject) {
-        const user = auth.currentUser;
-        if (!user) {
-          showAuthModal(true);
-          return;
-        }
-        localStorage.setItem('selectedSubject', subject);
-        window.location.href = 'play.html';
-      }
-
-      async function handleAuth() {
-        const email = elements.authEmail.value.trim();
-        const password = elements.authPassword.value.trim();
-        showLoading(true);
-        try {
-          if (isLogin) {
-            await auth.signInWithEmailAndPassword(email, password);
-          } else {
-            await auth.createUserWithEmailAndPassword(email, password);
-            await db.ref(`users/${auth.currentUser.uid}`).set({
-              email,
-              createdAt: firebase.database.ServerValue.TIMESTAMP,
-            });
-          }
-          showAuthModal(false);
-        } catch (error) {
-          showError(error.message);
-        } finally {
-          showLoading(false);
-        }
-      }
-
-      async function handleGoogleSignIn() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        showLoading(true);
-        try {
-          const result = await auth.signInWithPopup(provider);
-          const user = result.user;
-          await db.ref(`users/${user.uid}`).set({
-            email: user.email,
-            displayName: user.displayName,
-            createdAt: firebase.database.ServerValue.TIMESTAMP,
-          });
-          showAuthModal(false);
-        } catch (error) {
-          showError(error.message);
-        } finally {
-          showLoading(false);
-        }
-      }
-
-      async function handleLogout() {
-        showLoading(true);
-        try {
-          await auth.signOut();
-        } catch (error) {
-          showError(error.message);
-        } finally {
-          showLoading(false);
-        }
-      }
-
-      elements.subjectItems.forEach(item => {
-        item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
-      });
-
-      elements.dppBtn.addEventListener('click', () => {
-        if (!auth.currentUser) {
-          showAuthModal(true);
-          return;
-        }
-        window.location.href = 'dpp.html';
-      });
-
-      elements.testsBtn.addEventListener('click', () => {
-        if (!auth.currentUser) {
-          showAuthModal(true);
-          return;
-        }
-        window.location.href = 'tests.html';
-      });
-
-      elements.profileBtn.addEventListener('click', () => {
-        if (!auth.currentUser) {
-          showAuthModal(true);
-          return;
-        }
-        window.location.href = 'profile.html';
-      });
-
-      elements.authBtn.addEventListener('click', () => showAuthModal(true));
-
-      elements.authSubmit.addEventListener('click', handleAuth);
-
-      elements.googleSignIn.addEventListener('click', handleGoogleSignIn);
-
-      elements.toggleAuth.addEventListener('click', (e) => {
+      // Toggle between login and signup
+      elements.authToggle.addEventListener('click', (e) => {
         e.preventDefault();
         isLogin = !isLogin;
-        showAuthModal(true);
+        if (isLogin) {
+          elements.authTitle.textContent = 'Login';
+          elements.authSubmit.textContent = 'Login';
+          elements.authFooterText.textContent = "Don't have an account?";
+          elements.authToggle.textContent = 'Sign up';
+          elements.nameGroup.style.display = 'none';
+        } else {
+          elements.authTitle.textContent = 'Sign Up';
+          elements.authSubmit.textContent = 'Sign Up';
+          elements.authFooterText.textContent = "Already have an account?";
+          elements.authToggle.textContent = 'Login';
+          elements.nameGroup.style.display = 'flex';
+        }
       });
 
-      elements.closeAuth.addEventListener('click', () => showAuthModal(false));
+      // Handle form submission
+      elements.authForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = elements.email.value;
+        const password = elements.password.value;
+        
+        if (isLogin) {
+          // Login
+          auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+              updateUI(userCredential.user);
+            })
+            .catch((error) => {
+              alert(error.message);
+            });
+        } else {
+          // Signup
+          const name = document.getElementById('name').value;
+          auth.createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+              // Save user data
+              return userCredential.user.updateProfile({
+                displayName: name
+              }).then(() => {
+                // Save additional user data to Realtime Database
+                return database.ref('users/' + userCredential.user.uid).set({
+                  name: name,
+                  email: email,
+                  createdAt: firebase.database.ServerValue.TIMESTAMP
+                });
+              });
+            })
+            .then(() => {
+              updateUI(auth.currentUser);
+            })
+            .catch((error) => {
+              alert(error.message);
+            });
+        }
+      });
 
-      elements.logoutBtn.addEventListener('click', handleLogout);
+      // Google authentication
+      elements.googleAuth.addEventListener('click', () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+          .then((result) => {
+            const user = result.user;
+            // Save user data if new user
+            if (result.additionalUserInfo.isNewUser) {
+              database.ref('users/' + user.uid).set({
+                name: user.displayName,
+                email: user.email,
+                photoURL: user.photoURL,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+              });
+            }
+            updateUI(user);
+          })
+          .catch((error) => {
+            alert(error.message);
+          });
+      });
 
-      auth.onAuthStateChanged(user => {
-        updateAuthUI(user);
+      // Login button click
+      elements.loginBtn.addEventListener('click', () => {
+        elements.authScreen.style.display = 'block';
+        elements.dashboardScreen.style.display = 'none';
+      });
+
+      // Logout
+      elements.logoutBtn.addEventListener('click', () => {
+        auth.signOut();
+      });
+
+      // Toggle dropdown menu
+      elements.userAvatar.addEventListener('click', () => {
+        elements.dropdownMenu.classList.toggle('show');
+      });
+
+      // Close dropdown when clicking outside
+      window.addEventListener('click', (e) => {
+        if (!elements.userMenu.contains(e.target)) {
+          elements.dropdownMenu.classList.remove('show');
+        }
+      });
+
+      // Update UI based on auth state
+      function updateUI(user) {
+        if (user) {
+          // User is signed in
+          elements.authScreen.style.display = 'none';
+          elements.dashboardScreen.style.display = 'block';
+          elements.loginBtn.style.display = 'none';
+          elements.userMenu.style.display = 'block';
+          
+          // Set user avatar
+          if (user.photoURL) {
+            elements.userAvatar.style.backgroundImage = `url(${user.photoURL})`;
+            elements.userAvatar.style.backgroundSize = 'cover';
+            elements.userAvatar.textContent = '';
+          } else {
+            elements.userAvatar.textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U';
+          }
+        } else {
+          // User is signed out
+          elements.authScreen.style.display = 'none';
+          elements.dashboardScreen.style.display = 'block';
+          elements.loginBtn.style.display = 'block';
+          elements.userMenu.style.display = 'none';
+        }
+      }
+
+      // Check auth state on load
+      auth.onAuthStateChanged((user) => {
+        updateUI(user);
       });
     });
   </script>

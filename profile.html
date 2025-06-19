@@ -1,133 +1,491 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Profile - NEET Quiz Explorer</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile | NEET Prep Master</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary-color: #4361ee;
-      --primary-dark: #3a0ca3;
+      --primary: #3b82f6;
+      --primary-dark: #1d4ed8;
+      --text-dark: #1f2937;
+      --text-medium: #6b7280;
+      --background: #f3f4f6;
       --bg-light: #f9fafb;
-      --border-color: #e5e7eb;
-      --radius-sm: 0.375rem;
+      --border-color: #d1d5db;
+      --radius-sm: 0.25rem;
+      --radius-md: 0.5rem;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
 
-    .backdrop {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 20;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    .modal {
-      background-color: white;
-      border-radius: var(--radius-sm);
-      width: 90%;
-      max-width: 400px;
-      max-height: 90vh;
-      overflow-y: auto;
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--background);
+      color: var(--text-dark);
     }
 
-    .loading {
+    .header {
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
-      padding: 2rem;
+      padding: 1rem 2rem;
+      background-color: white;
+      box-shadow: var(--shadow-sm);
     }
 
-    .spinner {
-      width: 2rem;
-      height: 2rem;
-      border: 3px solid rgba(0, 0, 0, 0.1);
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: var(--text-dark);
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+
+    .logo-icon {
+      color: var(--primary);
+      font-size: 1.5rem;
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-menu {
+      position: relative;
+    }
+
+    .user-avatar {
+      width: 2.5rem;
+      height: 2.5rem;
       border-radius: 50%;
-      border-top-color: var(--primary-color);
-      animation: spin 1s linear infinite;
+      background-color: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      cursor: pointer;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    .dropdown-menu {
+      position: absolute;
+      right: 0;
+      top: 3rem;
+      background-color: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      min-width: 200px;
+      display: none;
+    }
+
+    .dropdown-menu.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      text-decoration: none;
+      color: var(--text-dark);
+    }
+
+    .dropdown-item:hover {
+      background-color: var(--background);
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background-color: var(--background);
+      margin: 0.5rem 0;
+    }
+
+    .main-content {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .form-label {
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .form-input {
+      padding: 0.5rem;
+      border: 1px solid var(--text-medium);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-medium);
+    }
+
+    .empty-state-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .profile-container {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 1.5rem;
+    }
+
+    .profile-card {
+      background-color: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 2.5rem;
+      font-weight: 600;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .profile-name {
+      font-weight: 600;
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .profile-email {
+      color: var(--text-medium);
+      margin-bottom: 1rem;
+    }
+
+    .profile-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .stat-item {
+      background-color: var(--bg-light);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      font-size: 1.25rem;
+      color: var(--primary-dark);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-medium);
+    }
+
+    .stats-card {
+      background-color: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      padding: 1.5rem;
+    }
+
+    .stats-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+    }
+
+    .stats-tab {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .stats-tab.active {
+      border-bottom-color: var(--primary);
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    .stats-content {
+      display: none;
+    }
+
+    .stats-content.active {
+      display: block;
+    }
+
+    .progress-container {
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-title {
+      font-weight: 500;
+    }
+
+    .progress-percent {
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background-color: var(--bg-light);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--primary);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .history-item {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-info {
+      flex: 1;
+    }
+
+    .history-title {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .history-meta {
+      display: flex;
+      gap: 0.75rem;
+      color: var(--text-medium);
+      font-size: 0.875rem;
+    }
+
+    .history-score {
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+
+    @media (max-width: 768px) {
+      .profile-container {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
-<body class="min-h-screen bg-gray-100">
-  <div id="app" class="min-h-screen flex flex-col">
-    <header class="bg-white shadow-sm sticky top-0 z-10 px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <i class="fas fa-atom text-2xl text-blue-500"></i>
-        <span class="font-semibold text-xl text-gray-800">NEET Quiz Explorer</span>
-      </div>
-      <div class="flex gap-2">
-        <a href="index.html" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Home</a>
-        <button id="logoutBtn" class="btn bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+<body>
+  <div id="app">
+    <header class="header">
+      <a href="index.html" class="logo">
+        <i class="fas fa-atom logo-icon"></i>
+        <span>NEET Prep Master</span>
+      </a>
+      <div class="nav-buttons">
+        <div class="user-menu" id="userMenu">
+          <div class="user-avatar" id="userAvatar">U</div>
+          <div class="dropdown-menu" id="dropdownMenu">
+            <a href="profile.html" class="dropdown-item">
+              <i class="fas fa-user"></i> Profile
+            </a>
+            <a href="dpp.html" class="dropdown-item">
+              <i class="fas fa-tasks"></i> My DPPs
+            </a>
+            <a href="tests.html" class="dropdown-item">
+              <i class="fas fa-file-alt"></i> My Tests
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item" id="logoutBtn">
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+          </div>
+        </div>
       </div>
     </header>
 
-    <main class="flex-1 p-6 max-w-4xl mx-auto w-full">
-      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h2 class="text-xl font-semibold mb-4">User Profile</h2>
-        <div id="userInfo">
-          <p><strong>Email:</strong> <span id="userEmail"></span></p>
-          <p><strong>Joined:</strong> <span id="userJoined"></span></p>
+    <main class="main-content">
+      <h1>My Profile</h1>
+      
+      <div class="profile-container">
+        <div class="profile-card">
+          <div class="profile-avatar" id="profileAvatar">U</div>
+          <h3 class="profile-name" id="profileName">User Name</h3>
+          <p class="profile-email" id="profileEmail">user@example.com</p>
+          
+          <div class="profile-stats">
+            <div class="stat-item">
+              <div class="stat-value" id="totalQuizzes">0</div>
+              <div class="stat-label">Quizzes Taken</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="avgScore">0%</div>
+              <div class="stat-label">Avg. Score</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="totalDPPs">0</div>
+              <div class="stat-label">DPPs Created</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="totalTests">0</div>
+              <div class="stat-label">Tests Taken</div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h2 class="text-xl font-semibold mb-4">Statistics</h2>
-        <div id="statsContent">
-          <div class="flex justify-between mb-2">
-            <span>Total Quizzes Taken</span>
-            <span id="totalQuizzes">0</span>
+        
+        <div class="stats-card">
+          <div class="stats-tabs">
+            <div class="stats-tab active" data-tab="progress">Progress</div>
+            <div class="stats-tab" data-tab="history">Quiz History</div>
+            <div class="stats-tab" data-tab="dpp">DPPs</div>
+            <div class="stats-tab" data-tab="tests">Tests</div>
           </div>
-          <div class="flex justify-between mb-2">
-            <span>Average Score</span>
-            <span id="averageScore">0%</span>
+          
+          <div class="stats-content active" id="progressTab">
+            <h3 style="margin-bottom: 1.5rem;">Subject Mastery</h3>
+            
+            <div class="progress-container">
+              <div class="progress-header">
+                <span class="progress-title">Biology</span>
+                <span class="progress-percent" id="bioPercent">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="bioProgress"></div>
+              </div>
+            </div>
+            
+            <div class="progress-container">
+              <div class="progress-header">
+                <span class="progress-title">Chemistry</span>
+                <span class="progress-percent" id="chemPercent">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="chemProgress"></div>
+              </div>
+            </div>
+            
+            <div class="progress-container">
+              <div class="progress-header">
+                <span class="progress-title">Physics</span>
+                <span class="progress-percent" id="physicsPercent">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="physicsProgress"></div>
+              </div>
+            </div>
           </div>
-          <div class="flex justify-between">
-            <span>Last Quiz Score</span>
-            <span id="lastScore">-</span>
+          
+          <div class="stats-content" id="historyTab">
+            <div id="historyList">
+              <div class="empty-state">
+                <i class="fas fa-info-circle empty-state-icon"></i>
+                <div>No quiz history yet</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="stats-content" id="dppTab">
+            <div id="dppList">
+              <div class="empty-state">
+                <i class="fas fa-info-circle empty-state-icon"></i>
+                <div>No DPPs created yet</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="stats-content" id="testsTab">
+            <div id="testsList">
+              <div class="empty-state">
+                <i class="fas fa-info-circle empty-state-icon"></i>
+                <div>No tests taken yet</div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h2 class="text-xl font-semibold mb-4">Generated DPPs</h2>
-        <div id="dppList"></div>
-      </div>
-
-      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h2 class="text-xl font-semibold mb-4">Generated Tests</h2>
-        <div id="testList"></div>
-      </div>
-
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <h2 class="text-xl font-semibold mb-4">Quiz History</h2>
-        <div id="quizHistory"></div>
       </div>
     </main>
-
-    <div class="backdrop" id="loadingModal">
-      <div class="modal">
-        <div class="loading">
-          <div class="spinner"></div>
-        </div>
-      </div>
-    </div>
   </div>
 
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Initialize Firebase
       const firebaseConfig = {
         apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
         authDomain: "community-604af.firebaseapp.com",
@@ -141,121 +499,234 @@
 
       firebase.initializeApp(firebaseConfig);
       const auth = firebase.auth();
-      const db = firebase.database();
+      const database = firebase.database();
+      const firestore = firebase.firestore();
 
-      const elements = {
-        userEmail: document.getElementById('userEmail'),
-        userJoined: document.getElementById('userJoined'),
-        totalQuizzes: document.getElementById('totalQuizzes'),
-        averageScore: document.getElementById('averageScore'),
-        lastScore: document.getElementById('lastScore'),
-        dppList: document.getElementById('dppList'),
-        testList: document.getElementById('testList'),
-        quizHistory: document.getElementById('quizHistory'),
-        logoutBtn: document.getElementById('logoutBtn'),
-        loadingModal: document.getElementById('loadingModal'),
-      };
-
-      function showLoading(show) {
-        elements.loadingModal.style.display = show ? 'flex' : 'none';
-      }
-
-      function showError(message) {
-        alert(message);
-      }
-
-      async function loadUserData(user) {
-        showLoading(true);
-        try {
-          const userRef = db.ref(`users/${user.uid}`);
-          const userSnapshot = await userRef.once('value');
-          const userData = userSnapshot.val();
-          elements.userEmail.textContent = userData.email;
-          elements.userJoined.textContent = new Date(userData.createdAt).toLocaleDateString();
-
-          const quizzesRef = db.ref(`quizzes/${user.uid}`);
-          const quizzesSnapshot = await quizzesRef.once('value');
-          const quizzes = quizzesSnapshot.val() || {};
-          const quizArray = Object.values(quizzes);
-          elements.totalQuizzes.textContent = quizArray.length;
-          if (quizArray.length > 0) {
-            const totalPercentage = quizArray.reduce((sum, quiz) => sum + quiz.percentage, 0);
-            elements.averageScore.textContent = `${Math.round(totalPercentage / quizArray.length)}%`;
-            const lastQuiz = quizArray[quizArray.length - 1];
-            elements.lastScore.textContent = `${lastQuiz.score}/${lastQuiz.total} (${lastQuiz.percentage}%)`;
-          }
-
-          const dppsRef = db.ref(`dpps/${user.uid}`);
-          const dppsSnapshot = await dppsRef.once('value');
-          const dpps = dppsSnapshot.val() || {};
-          elements.dppList.innerHTML = '';
-          for (const [dppId, dpp] of Object.entries(dpps)) {
-            const div = document.createElement('div');
-            div.className = 'p-4 border-b border-gray-200 flex justify-between items-center';
-            div.innerHTML = `
-              <div>
-                <div class="font-medium">${dpp.subject} - ${dpp.topic}</div>
-                <small class="text-gray-500">${new Date(dpp.createdAt).toLocaleString()}</small>
-              </div>
-              <a href="play.html?dppId=${dppId}" class="text-blue-500 hover:underline">Play</a>
-            `;
-            elements.dppList.appendChild(div);
-          }
-
-          const testsRef = db.ref(`tests/${user.uid}`);
-          const testsSnapshot = await testsRef.once('value');
-          const tests = testsSnapshot.val() || {};
-          elements.testList.innerHTML = '';
-          for (const [testId, test] of Object.entries(tests)) {
-            const div = document.createElement('div');
-            div.className = 'p-4 border-b border-gray-200 flex justify-between items-center';
-            div.innerHTML = `
-              <div>
-                <div class="font-medium">${test.subjects.join(', ')} - ${test.chapters.join(', ')}</div>
-                <small class="text-gray-500">${new Date(test.createdAt).toLocaleString()}</small>
-              </div>
-              <a href="play.html?testId=${testId}" class="text-blue-500 hover:underline">Play</a>
-            `;
-            elements.testList.appendChild(div);
-          }
-
-          elements.quizHistory.innerHTML = '';
-          for (const quiz of quizArray) {
-            const div = document.createElement('div');
-            div.className = 'p-4 border-b border-gray-200';
-            div.innerHTML = `
-              <div class="font-medium">${quiz.subject} - ${quiz.topic || quiz.chapters.join(', ')}</div>
-              <div>Score: ${quiz.score}/${quiz.total} (${quiz.percentage}%)</div>
-              <small class="text-gray-500">${new Date(quiz.date).toLocaleString()}</small>
-            `;
-            elements.quizHistory.appendChild(div);
-          }
-        } catch (error) {
-          showError(error.message);
-        } finally {
-          showLoading(false);
-        }
-      }
-
-      elements.logoutBtn.addEventListener('click', async () => {
-        showLoading(true);
-        try {
-          await auth.signOut();
+      // Add auth state listener
+      auth.onAuthStateChanged((user) => {
+        if (!user) {
           window.location.href = 'index.html';
-        } catch (error) {
-          showError(error.message);
-        } finally {
-          showLoading(false);
-        }
-      });
-
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          loadUserData(user);
         } else {
-          window.location.href = 'index.html';
+          // Set user avatar and info
+          if (user.photoURL) {
+            document.getElementById('profileAvatar').style.backgroundImage = `url(${user.photoURL})`;
+            document.getElementById('profileAvatar').textContent = '';
+            document.getElementById('userAvatar').style.backgroundImage = `url(${user.photoURL})`;
+            document.getElementById('userAvatar').textContent = '';
+          } else {
+            const initial = user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U';
+            document.getElementById('profileAvatar').textContent = initial;
+            document.getElementById('userAvatar').textContent = initial;
+          }
+          
+          document.getElementById('profileName').textContent = user.displayName || 'User';
+          document.getElementById('profileEmail').textContent = user.email;
+          
+          // Load user data
+          loadUserData(user.uid);
+          
+          // Initialize tabs
+          initTabs();
         }
       });
+
+      // Handle logout
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        auth.signOut().then(() => {
+          window.location.href = 'index.html';
+        });
+      });
+
+      // Toggle dropdown menu
+      document.getElementById('userAvatar').addEventListener('click', () => {
+        document.getElementById('dropdownMenu').classList.toggle('show');
+      });
+
+      // Close dropdown when clicking outside
+      window.addEventListener('click', (e) => {
+        if (!document.getElementById('userMenu').contains(e.target)) {
+          document.getElementById('dropdownMenu').classList.remove('show');
+        }
+      });
+
+      // Initialize tabs
+      function initTabs() {
+        const tabs = document.querySelectorAll('.stats-tab');
+        tabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.stats-content').forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            tab.classList.add('active');
+            const tabId = tab.dataset.tab + 'Tab';
+            document.getElementById(tabId).classList.add('active');
+          });
+        });
+      }
+
+      // Load user data from database
+      function loadUserData(userId) {
+        // Load quiz history
+        database.ref('quizHistory/' + userId).once('value').then((snapshot) => {
+          const history = snapshot.val();
+          const historyList = document.getElementById('historyList');
+          historyList.innerHTML = '';
+          
+          if (!history) {
+            historyList.innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-info-circle empty-state-icon"></i>
+                <div>No quiz history yet</div>
+              </div>
+            `;
+            document.getElementById('totalQuizzes').textContent = '0';
+            return;
+          }
+          
+          const historyArray = Object.entries(history).map(([id, item]) => ({ id, ...item }));
+          historyArray.sort((a, b) => b.date - a.date);
+          
+          document.getElementById('totalQuizzes').textContent = historyArray.length;
+          
+          // Calculate average score
+          const totalScore = historyArray.reduce((sum, quiz) => sum + (quiz.score / quiz.total), 0);
+          const avgScore = historyArray.length > 0 ? Math.round((totalScore / historyArray.length) * 100) : 0;
+          document.getElementById('avgScore').textContent = `${avgScore}%`;
+          
+          // Display history items
+          historyArray.forEach(quiz => {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `
+              <div class="history-info">
+                <div class="history-title">${quiz.subject.charAt(0).toUpperCase() + quiz.subject.slice(1)} - ${quiz.topic || quiz.chapter}</div>
+                <div class="history-meta">
+                  <span>${new Date(quiz.date).toLocaleDateString()}</span>
+                  <span>${quiz.quizType || 'Quiz'}</span>
+                </div>
+              </div>
+              <div class="history-score">
+                ${quiz.score}/${quiz.total} (${Math.round((quiz.score / quiz.total) * 100)}%)
+              </div>
+            `;
+            historyList.appendChild(historyItem);
+          });
+          
+          // Calculate subject mastery
+          calculateSubjectMastery(historyArray);
+        }).catch((error) => {
+          console.error('Error loading quiz history:', error);
+        });
+        
+        // Load DPPs
+        database.ref('dpps/' + userId).once('value').then((snapshot) => {
+          const dpps = snapshot.val();
+          const dppList = document.getElementById('dppList');
+          dppList.innerHTML = '';
+          
+          document.getElementById('totalDPPs').textContent = dpps ? Object.keys(dpps).length : '0';
+          
+          if (!dpps) {
+            dppList.innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-info-circle empty-state-icon"></i>
+                <div>No DPPs created yet</div>
+              </div>
+            `;
+            return;
+          }
+          
+          const dppArray = Object.entries(dpps).map(([id, dpp]) => ({ id, ...dpp }));
+          dppArray.sort((a, b) => b.createdAt - a.createdAt);
+          
+          dppArray.forEach(dpp => {
+            const dppItem = document.createElement('div');
+            dppItem.className = 'history-item';
+            dppItem.innerHTML = `
+              <div class="history-info">
+                <div class="history-title">${dpp.name}</div>
+                <div class="history-meta">
+                  <span>${new Date(dpp.createdAt).toLocaleDateString()}</span>
+                  <span>${dpp.subject.charAt(0).toUpperCase() + dpp.subject.slice(1)} - ${dpp.topic}</span>
+                </div>
+              </div>
+              <div class="history-score">
+                ${dpp.questions} Qs
+              </div>
+            `;
+            dppList.appendChild(dppItem);
+          });
+        }).catch((error) => {
+          console.error('Error loading DPPs:', error);
+        });
+        
+        // Load tests
+        database.ref('tests/' + userId).once('value').then((snapshot) => {
+          const tests = snapshot.val();
+          const testsList = document.getElementById('testsList');
+          testsList.innerHTML = '';
+          
+          document.getElementById('totalTests').textContent = tests ? Object.keys(tests).length : '0';
+          
+          if (!tests) {
+            testsList.innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-info-circle empty-state-icon"></i>
+                <div>No tests taken yet</div>
+              </div>
+            `;
+            return;
+          }
+          
+          const testArray = Object.entries(tests).map(([id, test]) => ({ id, ...test }));
+          testArray.sort((a, b) => b.createdAt - a.createdAt);
+          
+          testArray.forEach(test => {
+            const testItem = document.createElement('div');
+            testItem.className = 'history-item';
+            testItem.innerHTML = `
+              <div class="history-info">
+                <div class="history-title">${test.name}</div>
+                <div class="history-meta">
+                  <span>${new Date(test.createdAt).toLocaleDateString()}</span>
+                  <span>${test.subject === 'all' ? 'All Subjects' : (test.subject.charAt(0).toUpperCase() + test.subject.slice(1))}</span>
+                </div>
+              </div>
+              <div class="history-score">
+                ${test.questions} Qs
+              </div>
+            `;
+            testsList.appendChild(testItem);
+          });
+        }).catch((error) => {
+          console.error('Error loading tests:', error);
+        });
+      }
+      
+      // Calculate subject mastery from quiz history
+      function calculateSubjectMastery(history) {
+        const subjects = {
+          biology: { count: 0, total: 0 },
+          chemistry: { count: 0, total: 0 },
+          physics: { count: 0, total: 0 }
+        };
+        
+        history.forEach(quiz => {
+          if (subjects[quiz.subject]) {
+            subjects[quiz.subject].count += quiz.score;
+            subjects[quiz.subject].total += quiz.total;
+          }
+        });
+        
+        // Calculate percentages and update UI
+        Object.entries(subjects).forEach(([subject, data]) => {
+          const percent = data.total > 0 ? Math.round((data.count / data.total) * 100) : 0;
+          document.getElementById(`${subject}Percent`).textContent = `${percent}%`;
+          document.getElementById(`${subject}Progress`).style.width = `${percent}%`;
+        });
+      }
     });
   </script>
 </body>

@@ -765,7 +765,9 @@
     let timeLeft = 60;
 
     function showLoading(show) {
-      elements.loadingModal.style.display = show ? 'flex' : 'none';
+      if (elements.loadingModal) {
+        elements.loadingModal.style.display = show ? 'flex' : 'none';
+      }
     }
 
     function showScreen(screenName) {
@@ -776,19 +778,21 @@
           element.style.display = screen === screenName ? 'block' : 'none';
         }
       });
-      elements.resetBtn.style.display = screenName === 'quiz' ? 'block' : 'none';
+      if (elements.resetBtn) {
+        elements.resetBtn.style.display = screenName === 'quiz' ? 'block' : 'none';
+      }
     }
 
     function getChapterName(q) {
-      return q['Chapter Name'] || q['chapter name'] || q['Unique Chapter Name'] || q.topic_name.split('>>')[0]?.trim() || '';
+      return q['Chapter Name'] || q['chapter name'] || q['Unique Chapter Name'] || q.topic_name?.split('>>')[0]?.trim() || '';
     }
 
     function getUnitName(q) {
-      return q.topic_name.split('>>')[1]?.trim() || '';
+      return q.topic_name?.split('>>')[1]?.trim() || '';
     }
 
     function getTopicName(q) {
-      return q.topic_name.split('>>')[2]?.trim() || '';
+      return q.topic_name?.split('>>')[2]?.trim() || '';
     }
 
     function createListItem(text, value, count) {
@@ -816,6 +820,7 @@
       } catch (error) {
         console.error('Error loading subject data:', error);
         showError('Failed to load data. Please try again.');
+        resetSelections('subject');
         return null;
       } finally {
         showLoading(false);
@@ -824,90 +829,105 @@
 
     async function handleSubjectSelect(subject) {
       state.currentSubject = subject;
-      elements.subjectCard.classList.add('hidden');
+      if (elements.subjectCard) elements.subjectCard.classList.add('hidden');
       const data = await loadSubjectData(subject);
       if (!data) return;
       const chapters = [...new Set(data.map(q => getChapterName(q)))].filter(Boolean).sort();
-      elements.chapterList.innerHTML = '';
-      if (chapters.length === 0) {
-        elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
-      } else {
-        chapters.forEach(chapter => {
-          const count = data.filter(q => getChapterName(q) === chapter).length;
-          const li = createListItem(chapter, chapter, count);
-          li.addEventListener('click', () => handleChapterSelect(chapter));
-          elements.chapterList.appendChild(li);
-        });
+      if (elements.chapterList) {
+        elements.chapterList.innerHTML = '';
+        if (chapters.length === 0) {
+          elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
+        } else {
+          chapters.forEach(chapter => {
+            const count = data.filter(q => getChapterName(q) === chapter).length;
+            const li = createListItem(chapter, chapter, count);
+            li.addEventListener('click', () => handleChapterSelect(chapter));
+            elements.chapterList.appendChild(li);
+          });
+        }
       }
       showScreen('chapter');
     }
 
     function handleChapterSelect(chapter) {
       state.currentChapter = chapter;
-      elements.chapterCard.classList.add('hidden');
+      if (elements.chapterCard) elements.chapterCard.classList.add('hidden');
       const data = state.subjectData[state.currentSubject];
       const units = [...new Set(data.filter(q => getChapterName(q) === chapter).map(q => getUnitName(q)))].filter(Boolean).sort();
-      elements.unitList.innerHTML = '';
-      if (units.length === 0) {
-        elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
-      } else {
-        units.forEach(unit => {
-          const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === unit).length;
-          const li = createListItem(unit, unit, count);
-          li.addEventListener('click', () => handleUnitSelect(unit));
-          elements.unitList.appendChild(li);
-        });
+      if (elements.unitList) {
+        elements.unitList.innerHTML = '';
+        if (units.length === 0) {
+          elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
+        } else {
+          units.forEach(unit => {
+            const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === unit).length;
+            const li = createListItem(unit, unit, count);
+            li.addEventListener('click', () => handleUnitSelect(unit));
+            elements.unitList.appendChild(li);
+          });
+        }
       }
       showScreen('unit');
     }
 
     function handleUnitSelect(unit) {
       state.currentUnit = unit;
-      elements.unitCard.classList.add('hidden');
+      if (elements.unitCard) elements.unitCard.classList.add('hidden');
       const data = state.subjectData[state.currentSubject];
       const topics = [...new Set(data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === unit).map(q => getTopicName(q)))].filter(Boolean).sort();
-      elements.topicList.innerHTML = '';
-      if (topics.length === 0) {
-        elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
-      } else {
-        topics.forEach(topic => {
-          const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === state.currentUnit && getTopicName(q) === topic).length;
-          const li = createListItem(topic, topic, count);
-          li.addEventListener('click', () => handleTopicSelect(topic));
-          elements.topicList.appendChild(li);
-        });
+      if (elements.topicList) {
+        elements.topicList.innerHTML = '';
+        if (topics.length === 0) {
+          elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
+        } else {
+          topics.forEach(topic => {
+            const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === state.currentUnit && getTopicName(q) === topic).length;
+            const li = createListItem(topic, topic, count);
+            li.addEventListener('click', () => handleTopicSelect(topic));
+            elements.topicList.appendChild(li);
+          });
+        }
       }
       showScreen('topic');
     }
 
     function handleTopicSelect(topic) {
       state.currentTopic = topic;
-      elements.topicCard.classList.add('hidden');
+      if (elements.topicCard) elements.topicCard.classList.add('hidden');
       const data = state.subjectData[state.currentSubject];
       const quizTypes = [...new Set(data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === state.currentUnit && getTopicName(q) === topic).map(q => q.quiz_type))].filter(Boolean).sort();
-      elements.quizTypeList.innerHTML = '';
-      if (quizTypes.length === 0) {
-        elements.quizTypeList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No quiz types found</div></div>';
-      } else {
-        quizTypes.forEach(type => {
-          const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === state.currentUnit && getTopicName(q) === state.currentTopic && q.quiz_type === type).length;
-          const li = createListItem(type, type, count);
-          li.addEventListener('click', () => handleQuizTypeSelect(type));
-          elements.quizTypeList.appendChild(li);
-        });
+      if (elements.quizTypeList) {
+        elements.quizTypeList.innerHTML = '';
+        if (quizTypes.length === 0) {
+          elements.quizTypeList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No quiz types found</div></div>';
+        } else {
+          quizTypes.forEach(type => {
+            const count = data.filter(q => getChapterName(q) === state.currentChapter && getUnitName(q) === state.currentUnit && getTopicName(q) === state.currentTopic && q.quiz_type === type).length;
+            const li = createListItem(type, type, count);
+            li.addEventListener('click', () => handleQuizTypeSelect(type));
+            elements.quizTypeList.appendChild(li);
+          });
+        }
       }
-      elements.startQuizBtn.style.display = 'block';
+      if (elements.startQuizBtn) {
+        elements.startQuizBtn.style.display = 'block';
+      }
       showScreen('quizType');
     }
 
     function handleQuizTypeSelect(quizType) {
       state.currentQuizType = quizType;
-      elements.quizTypeCard.classList.add('hidden');
-      elements.startQuizBtn.disabled = false;
+      if (elements.quizTypeCard) elements.quizTypeCard.classList.add('hidden');
+      if (elements.startQuizBtn) elements.startQuizBtn.disabled = false;
     }
 
     function startQuiz() {
       const data = state.subjectData[state.currentSubject];
+      if (!data) {
+        showError('No data available. Please select a subject again.');
+        resetSelections('subject');
+        return;
+      }
       state.questions = data.filter(q => {
         return (
           getChapterName(q) === state.currentChapter &&
@@ -927,24 +947,35 @@
       state.score = 0;
       state.totalAnswered = 0;
       updateScore();
-      elements.totalQuestions.textContent = state.questions.length;
-      elements.startQuizBtn.style.display = 'none';
+      if (elements.totalQuestions) {
+        elements.totalQuestions.textContent = state.questions.length;
+      }
+      if (elements.startQuizBtn) {
+        elements.startQuizBtn.style.display = 'none';
+      }
       showScreen('quiz');
       showQuestion(state.questions[0]);
       startTimer();
     }
 
     function showQuestion(question) {
+      if (!question) return;
       updateProgress();
-      elements.mcqContent.style.display = 'none';
-      elements.flashcardContent.style.display = 'none';
-      elements.videoContent.style.display = 'none';
-      elements.explanationContainer.style.display = 'none';
-      elements.prevBtn.disabled = state.currentQuestionIndex === 0;
-      elements.nextQuestionBtn.disabled = false;
-      elements.nextQuestionBtn.textContent = state.currentQuestionIndex === state.questions.length - 1 ? 'See Results' : 'Next';
-      elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
-      elements.questionText.innerHTML = question.question;
+      if (elements.mcqContent) elements.mcqContent.style.display = 'none';
+      if (elements.flashcardContent) elements.flashcardContent.style.display = 'none';
+      if (elements.videoContent) elements.videoContent.style.display = 'none';
+      if (elements.explanationContainer) elements.explanationContainer.style.display = 'none';
+      if (elements.prevBtn) elements.prevBtn.disabled = state.currentQuestionIndex === 0;
+      if (elements.nextQuestionBtn) {
+        elements.nextQuestionBtn.disabled = false;
+        elements.nextQuestionBtn.textContent = state.currentQuestionIndex === state.questions.length - 1 ? 'See Results' : 'Next';
+      }
+      if (elements.currentQuestion) {
+        elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
+      }
+      if (elements.questionText) {
+        elements.questionText.innerHTML = question.question;
+      }
       switch (question.quiz_type) {
         case 'mcq':
           showMCQQuestion(question);
@@ -962,59 +993,67 @@
         default:
           showSimpleQuestion(question);
       }
-      if (question.explanation) {
+      if (question.explanation && elements.explanationText) {
         elements.explanationText.innerHTML = question.explanation;
       }
     }
 
     function showMCQQuestion(question) {
-      elements.mcqContent.style.display = 'block';
-      elements.optionsContainer.innerHTML = '';
-      const options = [
-        { letter: 'A', text: question.option_a },
-        { letter: 'B', text: question.option_b },
-        { letter: 'C', text: question.option_c },
-        { letter: 'D', text: question.option_d }
-      ].filter(opt => opt.text);
-      options.forEach(opt => {
-        const button = document.createElement('button');
-        button.className = 'option-btn';
-        button.innerHTML = `<strong>${opt.letter}.</strong> ${opt.text}`;
-        button.dataset.option = opt.text;
-        button.addEventListener('click', () => checkAnswer(button, question.answer));
-        elements.optionsContainer.appendChild(button);
-      });
+      if (elements.mcqContent) elements.mcqContent.style.display = 'block';
+      if (elements.optionsContainer) {
+        elements.optionsContainer.innerHTML = '';
+        const options = [
+          { letter: 'A', text: question.option_a },
+          { letter: 'B', text: question.option_b },
+          { letter: 'C', text: question.option_c },
+          { letter: 'D', text: question.option_d }
+        ].filter(opt => opt.text);
+        options.forEach(opt => {
+          const button = document.createElement('button');
+          button.className = 'option-btn';
+          button.innerHTML = `<strong>${opt.letter}.</strong> ${opt.text}`;
+          button.dataset.option = opt.text;
+          button.addEventListener('click', () => checkAnswer(button, question.answer));
+          elements.optionsContainer.appendChild(button);
+        });
+      }
     }
 
     function showFlashcardQuestion(question) {
-      elements.flashcardContent.style.display = 'block';
-      elements.flashcardAnswer.innerHTML = `<strong>Answer:</strong> ${question.answer}`;
-      if (question.explanation) {
+      if (elements.flashcardContent) elements.flashcardContent.style.display = 'block';
+      if (elements.flashcardAnswer) {
+        elements.flashcardAnswer.innerHTML = `<strong>Answer:</strong> ${question.answer}`;
+      }
+      if (question.explanation && elements.explanationContainer) {
         elements.explanationContainer.style.display = 'block';
       }
     }
 
     function showVideoQuestion(question) {
-      elements.videoContent.style.display = 'block';
-      elements.videoFrame.src = `https://www.youtube.com/embed/${question.question}`;
-      if (question.explanation) {
+      if (elements.videoContent) elements.videoContent.style.display = 'block';
+      if (elements.videoFrame) {
+        elements.videoFrame.src = `https://www.youtube.com/embed/${question.question}`;
+      }
+      if (question.explanation && elements.explanationContainer) {
         elements.explanationContainer.style.display = 'block';
       }
     }
 
     function showSimpleQuestion(question) {
-      elements.flashcardContent.style.display = 'block';
-      let answerHTML = `<strong>Answer:</strong> ${question.answer}`;
-      if (question.option_a) answerHTML += `<br><strong>Option A:</strong> ${question.option_a}`;
-      if (question.option_b) answerHTML += `<br><strong>Option B:</strong> ${question.option_b}`;
-      elements.flashcardAnswer.innerHTML = answerHTML;
-      if (question.explanation) {
+      if (elements.flashcardContent) elements.flashcardContent.style.display = 'block';
+      if (elements.flashcardAnswer) {
+        let answerHTML = `<strong>Answer:</strong> ${question.answer}`;
+        if (question.option_a) answerHTML += `<br><strong>Option A:</strong> ${question.option_a}`;
+        if (question.option_b) answerHTML += `<br><strong>Option B:</strong> ${question.option_b}`;
+        elements.flashcardAnswer.innerHTML = answerHTML;
+      }
+      if (question.explanation && elements.explanationContainer) {
         elements.explanationContainer.style.display = 'block';
       }
     }
 
     function checkAnswer(button, correctAnswer) {
-      const buttons = [...elements.optionsContainer.querySelectorAll('.option-btn')];
+      const buttons = elements.optionsContainer?.querySelectorAll('.option-btn') || [];
       const explanation = elements.explanationContainer;
       state.totalAnswered++;
       if (button.dataset.option === correctAnswer) {
@@ -1050,24 +1089,26 @@
       };
       state.quizHistory.push(quizResult);
       localStorage.setItem('quizHistory', JSON.stringify(state.quizHistory));
-      elements.quizContent.style.display = 'none';
-      elements.quizResults.style.display = 'block';
-      elements.scoreValue.textContent = state.score;
-      elements.totalScore.textContent = state.questions.length;
+      if (elements.quizContent) elements.quizContent.style.display = 'none';
+      if (elements.quizResults) elements.quizResults.style.display = 'block';
+      if (elements.scoreValue) elements.scoreValue.textContent = state.score;
+      if (elements.totalScore) elements.totalScore.textContent = state.questions.length;
       clearInterval(timerInterval);
     }
 
     function updateStats() {
       const history = state.quizHistory;
-      elements.totalQuizzes.textContent = history.length;
+      if (elements.totalQuizzes) elements.totalQuizzes.textContent = history.length;
       if (history.length > 0) {
         const totalPercentage = history.reduce((sum, quiz) => sum + quiz.percentage, 0);
         const average = Math.round(totalPercentage / history.length);
-        elements.averageScore.textContent = `${average}%`;
-        elements.lastScore.textContent = `${history[history.length - 1].score}/${history[history.length - 1].total} (${history[history.length - 1].percentage}%)`;
+        if (elements.averageScore) elements.averageScore.textContent = `${average}%`;
+        if (elements.lastScore) {
+          elements.lastScore.textContent = `${history[history.length - 1].score}/${history[history.length - 1].total} (${history[history.length - 1].percentage}%)`;
+        }
       } else {
-        elements.averageScore.textContent = '0%';
-        elements.lastScore.textContent = '-';
+        if (elements.averageScore) elements.averageScore.textContent = '0%';
+        if (elements.lastScore) elements.lastScore.textContent = '-';
       }
       const bioQuizzes = history.filter(q => q.subject === 'biology');
       const chemQuizzes = history.filter(q => q.subject === 'chemistry');
@@ -1080,25 +1121,29 @@
       const bioMastery = calculateMastery(bioQuizzes);
       const chemMastery = calculateMastery(chemQuizzes);
       const physicsMastery = calculateMastery(physicsQuizzes);
-      elements.bioScore.textContent = `${bioMastery}%`;
-      elements.chemScore.textContent = `${chemMastery}%`;
-      elements.physicsScore.textContent = `${physicsMastery}%`;
-      elements.bioProgress.style.width = `${bioMastery}%`;
-      elements.chemProgress.style.width = `${chemMastery}%`;
-      elements.physicsProgress.style.width = `${physicsMastery}%`;
+      if (elements.bioScore) elements.bioScore.textContent = `${bioMastery}%`;
+      if (elements.chemScore) elements.chemScore.textContent = `${chemMastery}%`;
+      if (elements.physicsScore) elements.physicsScore.textContent = `${physicsMastery}%`;
+      if (elements.bioProgress) elements.bioProgress.style.width = `${bioMastery}%`;
+      if (elements.chemProgress) elements.chemProgress.style.width = `${chemMastery}%`;
+      if (elements.physicsProgress) elements.physicsProgress.style.width = `${physicsMastery}%`;
     }
 
     function startTimer() {
       timeLeft = 60;
-      elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
+      if (elements.timerDisplay) {
+        elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
+      }
       timerInterval = setInterval(() => {
         timeLeft--;
-        elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
+        if (elements.timerDisplay) {
+          elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
+        }
         if (timeLeft <= 0) {
           clearInterval(timerInterval);
           state.totalAnswered++;
           updateScore();
-          const buttons = elements.optionsContainer.querySelectorAll('.option-btn');
+          const buttons = elements.optionsContainer?.querySelectorAll('.option-btn') || [];
           buttons.forEach(btn => btn.disabled = true);
           if (elements.explanationContainer) {
             elements.explanationContainer.style.display = 'block';
@@ -1108,18 +1153,27 @@
     }
 
     function updateScore() {
-      elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
+      if (elements.scoreDisplay) {
+        elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
+      }
     }
 
     function updateProgress() {
       const progress = ((state.currentQuestionIndex + 1) / state.questions.length) * 100;
-      elements.progressFill.style.width = `${progress}%`;
+      if (elements.progressFill) {
+        elements.progressFill.style.width = `${progress}%`;
+      }
     }
 
     function showError(message) {
-      elements.quizContent.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle empty-state-icon"></i><div>${message}</div></div>`;
-      elements.quizScreen.style.display = 'block';
-      elements.nextQuestionBtn.classList.add('hidden');
+      const currentScreen = elements.quizScreen?.style.display === 'block' ? elements.quizScreen : elements.subjectScreen;
+      if (currentScreen && elements.quizContent) {
+        elements.quizContent.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle empty-state-icon"></i><div>${message}</div></div>`;
+        currentScreen.style.display = 'block';
+      }
+      if (elements.nextQuestionBtn) {
+        elements.nextQuestionBtn.style.display = 'none';
+      }
     }
 
     function resetSelections(level) {
@@ -1132,17 +1186,24 @@
         if (card) card.classList.add('hidden');
         if (list) list.innerHTML = '';
       }
-      elements.startQuizBtn.style.display = 'none';
-      elements.startQuizBtn.disabled = true;
-      elements.quizScreen.style.display = 'none';
-      elements.quizContent.innerHTML = '';
-      elements.nextQuestionBtn.classList.add('hidden');
+      if (elements.startQuizBtn) {
+        elements.startQuizBtn.style.display = 'none';
+        elements.startQuizBtn.disabled = true;
+      }
+      if (elements.quizScreen) elements.quizScreen.style.display = 'none';
+      if (elements.quizContent) elements.quizContent.innerHTML = '';
+      if (elements.nextQuestionBtn) elements.nextQuestionBtn.style.display = 'none';
       clearInterval(timerInterval);
       timeLeft = 60;
-      elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
-      elements.progressFill.style.width = '0%';
+      if (elements.timerDisplay) elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
+      if (elements.progressFill) elements.progressFill.style.width = '0%';
       if (level === 'subject') {
-        elements.subjectCard.classList.remove('hidden');
+        if (elements.subjectCard) elements.subjectCard.classList.remove('hidden');
+      } else {
+        const prevLevel = levels[index - 1];
+        if (prevLevel && elements[`${prevLevel}Card`]) {
+          elements[`${prevLevel}Card`].classList.remove('hidden');
+        }
       }
       showScreen(level);
     }
@@ -1151,67 +1212,91 @@
       item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
     });
 
-    elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
-    elements.backToChapters.addEventListener('click', () => {
-      elements.subjectCard.classList.remove('hidden');
-      resetSelections('chapter');
-    });
-    elements.backToUnits.addEventListener('click', () => {
-      elements.chapterCard.classList.remove('hidden');
-      resetSelections('unit');
-    });
-    elements.backToTopics.addEventListener('click', () => {
-      elements.unitCard.classList.remove('hidden');
-      resetSelections('topic');
-    });
+    if (elements.backToSubjects) {
+      elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
+    }
+    if (elements.backToChapters) {
+      elements.backToChapters.addEventListener('click', () => {
+        if (elements.subjectCard) elements.subjectCard.classList.remove('hidden');
+        resetSelections('chapter');
+      });
+    }
+    if (elements.backToUnits) {
+      elements.backToUnits.addEventListener('click', () => {
+        if (elements.chapterCard) elements.chapterCard.classList.remove('hidden');
+        resetSelections('unit');
+      });
+    }
+    if (elements.backToTopics) {
+      elements.backToTopics.addEventListener('click', () => {
+        if (elements.unitCard) elements.unitCard.classList.remove('hidden');
+        resetSelections('topic');
+      });
+    }
 
-    elements.startQuizBtn.addEventListener('click', startQuiz);
+    if (elements.startQuizBtn) {
+      elements.startQuizBtn.addEventListener('click', startQuiz);
+    }
 
-    elements.nextQuestionBtn.addEventListener('click', () => {
-      clearInterval(timerInterval);
-      timeLeft = 60;
-      if (state.currentQuestionIndex < state.questions.length - 1) {
-        state.currentQuestionIndex++;
-        showQuestion(state.questions[state.currentQuestionIndex]);
-        startTimer();
-      } else {
-        showResults();
-      }
-    });
-
-    elements.prevBtn.addEventListener('click', () => {
-      if (state.currentQuestionIndex > 0) {
+    if (elements.nextQuestionBtn) {
+      elements.nextQuestionBtn.addEventListener('click', () => {
         clearInterval(timerInterval);
         timeLeft = 60;
-        state.currentQuestionIndex--;
-        showQuestion(state.questions[state.currentQuestionIndex]);
+        if (state.currentQuestionIndex < state.questions.length - 1) {
+          state.currentQuestionIndex++;
+          showQuestion(state.questions[state.currentQuestionIndex]);
+          startTimer();
+        } else {
+          showResults();
+        }
+      });
+    }
+
+    if (elements.prevBtn) {
+      elements.prevBtn.addEventListener('click', () => {
+        if (state.currentQuestionIndex > 0) {
+          clearInterval(timerInterval);
+          timeLeft = 60;
+          state.currentQuestionIndex--;
+          showQuestion(state.questions[state.currentQuestionIndex]);
+          startTimer();
+        }
+      });
+    }
+
+    if (elements.restartQuizBtn) {
+      elements.restartQuizBtn.addEventListener('click', () => {
+        state.currentQuestionIndex = 0;
+        state.score = 0;
+        state.totalAnswered = 0;
+        updateScore();
+        if (elements.quizContent) elements.quizContent.style.display = 'block';
+        if (elements.quizResults) elements.quizResults.style.display = 'none';
+        showQuestion(state.questions[0]);
         startTimer();
-      }
-    });
+      });
+    }
 
-    elements.restartQuizBtn.addEventListener('click', () => {
-      state.currentQuestionIndex = 0;
-      state.score = 0;
-      state.totalAnswered = 0;
-      updateScore();
-      elements.quizContent.style.display = 'block';
-      elements.quizResults.style.display = 'none';
-      showQuestion(state.questions[0]);
-      startTimer();
-    });
+    if (elements.newQuizBtn) {
+      elements.newQuizBtn.addEventListener('click', () => resetSelections('subject'));
+    }
 
-    elements.newQuizBtn.addEventListener('click', () => resetSelections('subject'));
+    if (elements.statsBtn) {
+      elements.statsBtn.addEventListener('click', () => {
+        updateStats();
+        if (elements.statsModal) elements.statsModal.style.display = 'flex';
+      });
+    }
 
-    elements.statsBtn.addEventListener('click', () => {
-      updateStats();
-      elements.statsModal.style.display = 'flex';
-    });
+    if (elements.closeStats) {
+      elements.closeStats.addEventListener('click', () => {
+        if (elements.statsModal) elements.statsModal.style.display = 'none';
+      });
+    }
 
-    elements.closeStats.addEventListener('click', () => {
-      elements.statsModal.style.display = 'none';
-    });
-
-    elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
+    if (elements.resetBtn) {
+      elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
+    }
 
     showScreen('subject');
   </script>

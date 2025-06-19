@@ -447,8 +447,9 @@
 
 <!-- Update the main script -->
 <script type="module">
-  import { auth, database, firestore } from './js/firebase.js';
-document.addEventListener('DOMContentLoaded', () => {
+    import { auth, database, firestore } from './js/firebase.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
       const elements = {
         authScreen: document.getElementById('authScreen'),
         dashboardScreen: document.getElementById('dashboardScreen'),

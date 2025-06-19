@@ -273,39 +273,6 @@
       display: block;
     }
 
-    .progress-container {
-      margin-bottom: 1.5rem;
-    }
-
-    .progress-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
-
-    .progress-title {
-      font-weight: 500;
-    }
-
-    .progress-percent {
-      color: var(--primary-dark);
-      font-weight: 600;
-    }
-
-    .progress-bar {
-      height: 8px;
-      background-color: var(--bg-light);
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background-color: var(--primary);
-      width: 0%;
-      transition: width 0.5s ease;
-    }
-
     .history-item {
       padding: 1rem;
       border-bottom: 1px solid var(--border-color);
@@ -406,42 +373,18 @@
         
         <div class="stats-card">
           <div class="stats-tabs">
-            <div class="stats-tab active" data-tab="progress">Progress</div>
+            <div class="stats-tab active" data-tab="topScores">Top Scores This Month</div>
             <div class="stats-tab" data-tab="history">Quiz History</div>
             <div class="stats-tab" data-tab="dpp">DPPs</div>
             <div class="stats-tab" data-tab="tests">Tests</div>
           </div>
           
-          <div class="stats-content active" id="progressTab">
-            <h3 style="margin-bottom: 1.5rem;">Subject Mastery</h3>
-            
-            <div class="progress-container">
-              <div class="progress-header">
-                <span class="progress-title">Biology</span>
-                <span class="progress-percent" id="bioPercent">0%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" id="bioProgress"></div>
-              </div>
-            </div>
-            
-            <div class="progress-container">
-              <div class="progress-header">
-                <span class="progress-title">Chemistry</span>
-                <span class="progress-percent" id="chemPercent">0%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" id="chemProgress"></div>
-              </div>
-            </div>
-            
-            <div class="progress-container">
-              <div class="progress-header">
-                <span class="progress-title">Physics</span>
-                <span class="progress-percent" id="physicsPercent">0%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" id="physicsProgress"></div>
+          <div class="stats-content active" id="topScoresTab">
+            <h3 style="margin-bottom: 1.5rem;">Top Scores This Month</h3>
+            <div id="topScoresList">
+              <div class="empty-state">
+                <i class="fas fa-info-circle empty-state-icon"></i>
+                <div>No quizzes taken this month</div>
               </div>
             </div>
           </div>
@@ -572,13 +515,21 @@
         database.ref('quizHistory/' + userId).once('value').then((snapshot) => {
           const history = snapshot.val();
           const historyList = document.getElementById('historyList');
+          const topScoresList = document.getElementById('topScoresList');
           historyList.innerHTML = '';
+          topScoresList.innerHTML = '';
           
           if (!history) {
             historyList.innerHTML = `
               <div class="empty-state">
                 <i class="fas fa-info-circle empty-state-icon"></i>
                 <div>No quiz history yet</div>
+              </div>
+            `;
+            topScoresList.innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-info-circle empty-state-icon"></i>
+                <div>No quizzes taken this month</div>
               </div>
             `;
             document.getElementById('totalQuizzes').textContent = '0';
@@ -595,7 +546,47 @@
           const avgScore = historyArray.length > 0 ? Math.round((totalScore / historyArray.length) * 100) : 0;
           document.getElementById('avgScore').textContent = `${avgScore}%`;
           
-          // Display history items
+          // Filter and display top scores this month
+          const now = new Date();
+          const currentMonth = now.getMonth();
+          const currentYear = now.getFullYear();
+          const monthlyQuizzes = historyArray.filter(quiz => {
+            const quizDate = new Date(quiz.date);
+            return quizDate.getMonth() === currentMonth && quizDate.getFullYear() === currentYear;
+          });
+          
+          // Sort by percentage score (descending) and take top 5
+          monthlyQuizzes.sort((a, b) => (b.score / b.total) - (a.score / a.total));
+          const topScores = monthlyQuizzes.slice(0, 5);
+          
+          if (topScores.length === 0) {
+            topScoresList.innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-info-circle empty-state-icon"></i>
+                <div>No quizzes taken this month</div>
+              </div>
+            `;
+          } else {
+            topScores.forEach(quiz => {
+              const topScoreItem = document.createElement('div');
+              topScoreItem.className = 'history-item';
+              topScoreItem.innerHTML = `
+                <div class="history-info">
+                  <div class="history-title">${quiz.subject.charAt(0).toUpperCase() + quiz.subject.slice(1)} - ${quiz.topic || quiz.chapter}</div>
+                  <div class="history-meta">
+                    <span>${new Date(quiz.date).toLocaleDateString()}</span>
+                    <span>${quiz.quizType || 'Quiz'}</span>
+                  </div>
+                </div>
+                <div class="history-score">
+                  ${quiz.score}/${quiz.total} (${Math.round((quiz.score / quiz.total) * 100)}%)
+                </div>
+              `;
+              topScoresList.appendChild(topScoreItem);
+            });
+          }
+          
+          // Display all history items
           historyArray.forEach(quiz => {
             const historyItem = document.createElement('div');
             historyItem.className = 'history-item';
@@ -613,11 +604,20 @@
             `;
             historyList.appendChild(historyItem);
           });
-          
-          // Calculate subject mastery
-          calculateSubjectMastery(historyArray);
         }).catch((error) => {
           console.error('Error loading quiz history:', error);
+          document.getElementById('topScoresList').innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-circle empty-state-icon"></i>
+              <div>Error loading top scores</div>
+            </div>
+          `;
+          document.getElementById('historyList').innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-circle empty-state-icon"></i>
+              <div>Error loading quiz history</div>
+            </div>
+          `;
         });
         
         // Load DPPs
@@ -660,6 +660,12 @@
           });
         }).catch((error) => {
           console.error('Error loading DPPs:', error);
+          document.getElementById('dppList').innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-circle empty-state-icon"></i>
+              <div>Error loading DPPs</div>
+            </div>
+          `;
         });
         
         // Load tests
@@ -702,29 +708,12 @@
           });
         }).catch((error) => {
           console.error('Error loading tests:', error);
-        });
-      }
-      
-      // Calculate subject mastery from quiz history
-      function calculateSubjectMastery(history) {
-        const subjects = {
-          biology: { count: 0, total: 0 },
-          chemistry: { count: 0, total: 0 },
-          physics: { count: 0, total: 0 }
-        };
-        
-        history.forEach(quiz => {
-          if (subjects[quiz.subject]) {
-            subjects[quiz.subject].count += quiz.score;
-            subjects[quiz.subject].total += quiz.total;
-          }
-        });
-        
-        // Calculate percentages and update UI
-        Object.entries(subjects).forEach(([subject, data]) => {
-          const percent = data.total > 0 ? Math.round((data.count / data.total) * 100) : 0;
-          document.getElementById(`${subject}Percent`).textContent = `${percent}%`;
-          document.getElementById(`${subject}Progress`).style.width = `${percent}%`;
+          document.getElementById('testsList').innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-exclamation-circle empty-state-icon"></i>
+              <div>Error loading tests</div>
+            </div>
+          `;
         });
       }
     });

@@ -1,448 +1,621 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEET Quiz Application</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .hidden {
-            display: none;
-        }
-        .quiz-container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .option-btn {
-            transition: background-color 0.3s;
-        }
-        .option-btn:hover {
-            background-color: #e5e7eb;
-        }
-        .correct {
-            background-color: #d1fae5;
-        }
-        .incorrect {
-            background-color: #fee2e2;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NEET Quiz Explorer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .app-container {
+      max-width: 900px;
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      background: #1e40af;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .main-content {
+      padding: 24px;
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+    .filter-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .filter-card {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+    }
+    .filter-card.hidden {
+      opacity: 0;
+      height: 0;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+    .filter-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    .filter-card h3 {
+      font-size: 1rem;
+      color: #1f2937;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .filter-list {
+      list-style: none;
+      max-height: 200px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #d1d5db #f9fafb;
+    }
+    .filter-list li {
+      padding: 12px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .filter-list li:hover {
+      background: #e5e7eb;
+    }
+    .filter-list li.selected {
+      background: #dbeafe;
+      color: #1e40af;
+      font-weight: 500;
+    }
+    .start-button {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      margin-top: 24px;
+      background: #1e40af;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .start-button:hover {
+      background: #1e3a8a;
+    }
+    .start-button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .quiz-container {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 24px;
+      border: 1px solid #e5e7eb;
+    }
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #1e40af;
+      transition: width 0.3s ease;
+    }
+    .score-timer {
+      display: flex;
+      gap: 16px;
+      font-size: 0.95rem;
+      color: #4b5563;
+    }
+    .question {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 16px;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .option-button {
+      padding: 16px;
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .option-button:hover {
+      background: #f3f4f6;
+    }
+    .option-button.correct {
+      background: #d1fae5;
+      border-color: #10b981;
+      color: #065f46;
+      animation: correctAnswer 0.3s ease;
+    }
+    .option-button.wrong {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #991b1b;
+      animation: wrongAnswer 0.3s ease;
+    }
+    @keyframes correctAnswer {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes wrongAnswer {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+    .explanation {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      color: #4b5563;
+      font-size: 0.95rem;
+    }
+    .video-container {
+      margin-top: 16px;
+    }
+    .video-container iframe {
+      width: 100%;
+      height: 300px;
+      border-radius: 8px;
+      border: none;
+    }
+    .next-button, .restart-button {
+      margin-top: 24px;
+      padding: 16px;
+      width: 100%;
+      background: #1e40af;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .next-button:hover, .restart-button:hover {
+      background: #1e3a8a;
+    }
+    .error-message {
+      color: #dc2626;
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.95rem;
+    }
+    .hidden {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .filter-section {
+        flex-direction: column;
+      }
+      .video-container iframe {
+        height: 200px;
+      }
+      .score-timer {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100">
-    <div class="quiz-container p-6">
-        <h1 class="text-3xl font-bold text-center mb-6">NEET Quiz Application</h1>
-
-        <!-- Subject Selection -->
-        <div id="subject-section" class="mb-6">
-            <h2 class="text-2xl font-semibold mb-4">Select Subject</h2>
-            <div id="subject-list" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
-        </div>
-
-        <!-- Quiz Type Selection -->
-        <div id="quiz-type-section" class="mb-6 hidden">
-            <h2 class="text-2xl font-semibold mb-4">Select Quiz Type</h2>
-            <div id="quiz-type-list" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
-            <button id="back-to-subjects" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Back to Subjects</button>
-        </div>
-
-        <!-- Chapter Selection -->
-        <div id="chapter-section" class="mb-6 hidden">
-            <h2 class="text-2xl font-semibold mb-4">Select Chapter</h2>
-            <div id="chapter-list" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
-            <button id="back-to-quiz-types" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Back to Quiz Types</button>
-        </div>
-
-        <!-- Unit Selection -->
-        <div id="unit-section" class="mb-6 hidden">
-            <h2 class="text-2xl font-semibold mb-4">Select Unit</h2>
-            <div id="unit-list" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
-            <button id="back-to-chapters" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Back to Chapters</button>
-        </div>
-
-        <!-- Topic Selection -->
-        <div id="topic-section" class="mb-6 hidden">
-            <h2 class="text-2xl font-semibold mb-4">Select Topic</h2>
-            <div id="topic-list" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
-            <button id="back-to-units" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Back to Units</button>
-        </div>
-
-        <!-- Quiz Game Section -->
-        <div id="quiz-section" class="mb-6 hidden">
-            <h2 class="text-2xl font-semibold mb-4">Quiz</h2>
-            <div id="quiz-content" class="bg-white p-6 rounded-lg shadow-md">
-                <div id="question-text" class="text-lg mb-4"></div>
-                <div id="options-container" class="mb-4"></div>
-                <div id="video-container" class="mb-4 hidden">
-                    <iframe id="video-player" class="w-full h-64" frameborder="0" allowfullscreen></iframe>
-                </div>
-                <div id="flashcard-container" class="mb-4 hidden">
-                    <p id="flashcard-text" class="text-lg"></p>
-                </div>
-                <div id="fillup-container" class="mb-4 hidden">
-                    <input id="fillup-input" type="text" class="w-full p-2 border rounded" placeholder="Enter your answer">
-                </div>
-                <div id="match-container" class="mb-4 hidden">
-                    <div id="match-options" class="grid grid-cols-2 gap-4"></div>
-                </div>
-                <div id="explanation" class="text-sm text-gray-600 mb-4 hidden"></div>
-                <button id="submit-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 hidden">Submit</button>
-                <button id="next-btn" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 hidden">Next Question</button>
-            </div>
-            <button id="back-to-topics" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Back to Topics</button>
-        </div>
+<body>
+  <div class="app-container">
+    <div class="header">
+      <h1><i class="fa-solid fa-graduation-cap"></i> NEET Quiz Explorer</h1>
     </div>
+    <div class="main-content">
+      <div class="filter-section">
+        <div class="filter-card" id="subjectCard">
+          <h3><i class="fa-solid fa-book"></i> Subject</h3>
+          <ul class="filter-list" id="subjectList">
+            <li data-value="biology">Biology <i class="fa-solid fa-chevron-right"></i></li>
+            <li data-value="chemistry">Chemistry <i class="fa-solid fa-chevron-right"></i></li>
+            <li data-value="physics">Physics <i class="fa-solid fa-chevron-right"></i></li>
+          </ul>
+        </div>
+        <div class="filter-card hidden" id="chapterCard">
+          <h3><i class="fa-solid fa-book-open"></i> Chapter</h3>
+          <ul class="filter-list" id="chapterList"></ul>
+        </div>
+        <div class="filter-card hidden" id="unitCard">
+          <h3><i class="fa-solid fa-layer-group"></i> Unit</h3>
+          <ul class="filter-list" id="unitList"></ul>
+        </div>
+        <div class="filter-card hidden" id="topicCard">
+          <h3><i class="fa-solid fa-tag"></i> Topic</h3>
+          <ul class="filter-list" id="topicList"></ul>
+        </div>
+        <div class="filter-card hidden" id="quizTypeCard">
+          <h3><i class="fa-solid fa-question-circle"></i> Quiz Type</h3>
+          <ul class="filter-list" id="quizTypeList"></ul>
+        </div>
+      </div>
+      <button class="start-button hidden" id="startQuizBtn">Start Quiz</button>
+      <div class="quiz-container hidden" id="quizContainer">
+        <div class="quiz-header">
+          <div class="score-timer">
+            <span id="scoreDisplay">Score: 0/0</span>
+            <span id="timerDisplay">Time: 60s</span>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div id="quizContent"></div>
+        <button class="next-button hidden" id="nextBtn">Next</button>
+        <button class="restart-button hidden" id="restartBtn">Restart Quiz</button>
+      </div>
+    </div>
+  </div>
 
-    <script>
-        const subjects = [
-            { name: 'Biology', url: 'https://itzfew.github.io/NEET-Questions/data/biology.json' },
-            { name: 'Chemistry', url: 'https://itzfew.github.io/NEET-Questions/data/chemistry.json' },
-            { name: 'Physics', url: 'https://itzfew.github.io/NEET-Questions/data/physics.json' }
-        ];
+  <script>
+    const subjectUrls = {
+      biology: 'https://itzfew.github.io/NEET-Questions/data/biology.json',
+      chemistry: 'https://itzfew.github.io/NEET-Questions/data/chemistry.json',
+      physics: 'https://itzfew.github.io/NEET-Questions/data/physics.json',
+    };
 
-        let currentSubjectData = [];
-        let currentQuestions = [];
-        let currentQuestionIndex = 0;
-        let selectedQuizTypes = ['mcq', 'flashcard', 'fillup', 'match', 'video'];
+    let fullData = [];
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let totalAnswered = 0;
+    let timerInterval;
+    let timeLeft = 60;
+    let selections = {
+      subject: '',
+      chapter: '',
+      unit: '',
+      topic: '',
+      quizType: ''
+    };
 
-        // DOM Elements
-        const sections = {
-            subject: document.getElementById('subject-section'),
-            quizType: document.getElementById('quiz-type-section'),
-            chapter: document.getElementById('chapter-section'),
-            unit: document.getElementById('unit-section'),
-            topic: document.getElementById('topic-section'),
-            quiz: document.getElementById('quiz-section')
-        };
+    const subjectList = document.getElementById('subjectList');
+    const chapterList = document.getElementById('chapterList');
+    const unitList = document.getElementById('unitList');
+    const topicList = document.getElementById('topicList');
+    const quizTypeList = document.getElementById('quizTypeList');
+    const subjectCard = document.getElementById('subjectCard');
+    const chapterCard = document.getElementById('chapterCard');
+    const unitCard = document.getElementById('unitCard');
+    const topicCard = document.getElementById('topicCard');
+    const quizTypeCard = document.getElementById('quizTypeCard');
+    const startQuizBtn = document.getElementById('startQuizBtn');
+    const quizContainer = document.getElementById('quizContainer');
+    const quizContent = document.getElementById('quizContent');
+    const nextBtn = document.getElementById('nextBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const progressFill = document.getElementById('progressFill');
 
-        const lists = {
-            subject: document.getElementById('subject-list'),
-            quizType: document.getElementById('quiz-type-list'),
-            chapter: document.getElementById('chapter-list'),
-            unit: document.getElementById('unit-list'),
-            topic: document.getElementById('topic-list')
-        };
+    subjectList.addEventListener('click', async (e) => {
+      const li = e.target.closest('li');
+      if (!li) return;
+      resetSelections('subject');
+      selections.subject = li.dataset.value;
+      selectItem(subjectList, li);
+      subjectCard.classList.add('hidden');
+      try {
+        const url = subjectUrls[selections.subject];
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch data');
+        fullData = await res.json();
+        const chapters = [...new Set(fullData.map(q => getChapterName(q)))].filter(Boolean).sort();
+        populateList(chapterList, chapters);
+        chapterCard.classList.remove('hidden');
+      } catch (error) {
+        showError('Error loading data. Please try again.');
+      }
+    });
 
-        const buttons = {
-            backToSubjects: document.getElementById('back-to-subjects'),
-            backToQuizTypes: document.getElementById('back-to-quiz-types'),
-            backToChapters: document.getElementById('back-to-chapters'),
-            backToUnits: document.getElementById('back-to-units'),
-            backToTopics: document.getElementById('back-to-topics'),
-            submit: document.getElementById('submit-btn'),
-            next: document.getElementById('next-btn')
-        };
+    chapterList.addEventListener('click', (e) => {
+      const li = e.target.closest('li');
+      if (!li) return;
+      resetSelections('chapter');
+      selections.chapter = li.textContent;
+      selectItem(chapterList, li);
+      chapterCard.classList.add('hidden');
+      const units = [...new Set(fullData
+        .filter(q => getChapterName(q) === selections.chapter)
+        .map(q => getUnitName(q)))].filter(Boolean).sort();
+      populateList(unitList, units);
+      unitCard.classList.remove('hidden');
+    });
 
-        const quizContent = {
-            question: document.getElementById('question-text'),
-            options: document.getElementById('options-container'),
-            video: document.getElementById('video-container'),
-            videoPlayer: document.getElementById('video-player'),
-            flashcard: document.getElementById('flashcard-container'),
-            flashcardText: document.getElementById('flashcard-text'),
-            fillup: document.getElementById('fillup-container'),
-            fillupInput: document.getElementById('fillup-input'),
-            match: document.getElementById('match-container'),
-            matchOptions: document.getElementById('match-options'),
-            explanation: document.getElementById('explanation')
-        };
+    unitList.addEventListener('click', (e) => {
+      const li = e.target.closest('li');
+      if (!li) return;
+      resetSelections('unit');
+      selections.unit = li.textContent;
+      selectItem(unitList, li);
+      unitCard.classList.add('hidden');
+      const topics = [...new Set(fullData
+        .filter(q => getChapterName(q) === selections.chapter && getUnitName(q) === selections.unit)
+        .map(q => getTopicName(q)))].filter(Boolean).sort();
+      populateList(topicList, topics);
+      topicCard.classList.remove('hidden');
+    });
 
-        // Initialize
-        function init() {
-            renderSubjectList();
-            setupEventListeners();
+    topicList.addEventListener('click', (e) => {
+      const li = e.target.closest('li');
+      if (!li) return;
+      resetSelections('topic');
+      selections.topic = li.textContent;
+      selectItem(topicList, li);
+      topicCard.classList.add('hidden');
+      const quizTypes = [...new Set(fullData
+        .filter(q => getChapterName(q) === selections.chapter && getUnitName(q) === selections.unit && getTopicName(q) === selections.topic)
+        .map(q => q.quiz_type))].filter(Boolean).sort();
+      populateList(quizTypeList, quizTypes);
+      quizTypeCard.classList.remove('hidden');
+      startQuizBtn.classList.remove('hidden');
+    });
+
+    quizTypeList.addEventListener('click', (e) => {
+      const li = e.target.closest('li');
+      if (!li) return;
+      selections.quizType = li.textContent;
+      selectItem(quizTypeList, li);
+      quizTypeCard.classList.add('hidden');
+      startQuizBtn.disabled = false;
+    });
+
+    startQuizBtn.addEventListener('click', () => {
+      currentQuestions = fullData.filter(q => {
+        return (
+          getChapterName(q) === selections.chapter &&
+          getUnitName(q) === selections.unit &&
+          getTopicName(q) === selections.topic &&
+          (!selections.quizType || q.quiz_type === selections.quizType)
+        );
+      });
+      currentIndex = 0;
+      score = 0;
+      totalAnswered = 0;
+      updateScore();
+      if (currentQuestions.length > 0) {
+        startQuizBtn.classList.add('hidden');
+        quizContainer.classList.remove('hidden');
+        showQuestion(currentQuestions[0]);
+        startTimer();
+      } else {
+        showError('No questions found for selected filters.');
+        quizContainer.classList.remove('hidden');
+        nextBtn.classList.add('hidden');
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      currentIndex++;
+      clearInterval(timerInterval);
+      timeLeft = 60;
+      if (currentIndex < currentQuestions.length) {
+        showQuestion(currentQuestions[currentIndex]);
+        startTimer();
+      } else {
+        quizContent.innerHTML = `<h3 class="question">Quiz Completed! Final Score: ${score}/${totalAnswered}</h3>`;
+        nextBtn.classList.add('hidden');
+        restartBtn.classList.remove('hidden');
+      }
+    });
+
+    restartBtn.addEventListener('click', () => {
+      resetSelections('subject');
+      subjectCard.classList.remove('hidden');
+      quizContainer.classList.add('hidden');
+      restartBtn.classList.add('hidden');
+      score = 0;
+      totalAnswered = 0;
+      currentIndex = 0;
+      updateScore();
+      clearInterval(timerInterval);
+      timeLeft = 60;
+      timerDisplay.textContent = `Time: ${timeLeft}s`;
+      progressFill.style.width = '0%';
+    });
+
+    function showQuestion(q) {
+      updateProgress();
+      let html = `<p class="question">${q.question}</p>`;
+      if (q.quiz_type === 'mcq') {
+        html += `<div class="options">`;
+        if (q.option_a) html += `<button class="option-button" onclick="checkAnswer(this, '${q.answer.replace(/'/g, "\\'")}')">${q.option_a}</button>`;
+        if (q.option_b) html += `<button class="option-button" onclick="checkAnswer(this, '${q.answer.replace(/'/g, "\\'")}')">${q.option_b}</button>`;
+        if (q.option_c) html += `<button class="option-button" onclick="checkAnswer(this, '${q.answer.replace(/'/g, "\\'")}')">${q.option_c}</button>`;
+        if (q.option_d) html += `<button class="option-button" onclick="checkAnswer(this, '${q.answer.replace(/'/g, "\\'")}')">${q.option_d}</button>`;
+        html += `</div>`;
+        if (q.explanation) {
+          html += `<div class="explanation hidden">${q.explanation}</div>`;
         }
-
-        // Render Subject List
-        function renderSubjectList() {
-            lists.subject.innerHTML = '';
-            subjects.forEach(subject => {
-                const btn = createButton(subject.name, () => loadSubjectData(subject.url, subject.name));
-                lists.subject.appendChild(btn);
-            });
+      } else if (q.quiz_type === 'flashcard') {
+        html += `<p><strong>Answer:</strong> ${q.answer}</p>`;
+        if (q.explanation) {
+          html += `<div class="explanation">${q.explanation}</div>`;
         }
-
-        // Load Subject Data
-        async function loadSubjectData(url, subjectName) {
-            try {
-                const response = await fetch(url);
-                currentSubjectData = await response.json();
-                renderQuizTypeList();
-                showSection('quizType');
-            } catch (error) {
-                alert('Error loading data. Please try again.');
-                console.error(error);
-            }
+      } else if (q.quiz_type === 'fillup') {
+        html += `<p><strong>Answer:</strong> ${q.answer}</p>`;
+        if (q.explanation) {
+          html += `<div class="explanation">${q.explanation}</div>`;
         }
-
-        // Render Quiz Type List
-        function renderQuizTypeList() {
-            lists.quizType.innerHTML = '';
-            const quizTypes = [...new Set(currentSubjectData.map(q => q.quiz_type))];
-            quizTypes.forEach(type => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center';
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = type;
-                checkbox.checked = selectedQuizTypes.includes(type);
-                checkbox.className = 'mr-2';
-                checkbox.addEventListener('change', updateSelectedQuizTypes);
-                const label = document.createElement('label');
-                label.textContent = type.charAt(0).toUpperCase() + type.slice(1);
-                div.appendChild(checkbox);
-                div.appendChild(label);
-                lists.quizType.appendChild(div);
-            });
-            updateChapterList();
+      } else if (q.quiz_type === 'video') {
+        html += `<div class="video-container"><iframe src="https://www.youtube.com/embed/${q.question}" allowfullscreen></iframe></div>`;
+        if (q.explanation) {
+          html += `<div class="explanation">${q.explanation}</div>`;
         }
+      } else if (q.quiz_type === 'match') {
+        html += `<p><strong>Answer:</strong> ${q.answer}</p>`;
+        if (q.option_a) html += `<p>Option A: ${q.option_a}</p>`;
+        if (q.option_b) html += `<p>Option B: ${q.option_b}</p>`;
+        if (q.explanation) html += `<div class="explanation">${q.explanation}</div>`;
+      }
+      quizContent.innerHTML = html;
+      nextBtn.classList.remove('hidden');
+    }
 
-        // Update Selected Quiz Types
-        function updateSelectedQuizTypes() {
-            selectedQuizTypes = Array.from(document.querySelectorAll('#quiz-type-list input:checked')).map(cb => cb.value);
-            updateChapterList();
+    function checkAnswer(button, correctAnswer) {
+      const buttons = [...button.parentElement.querySelectorAll('.option-button')];
+      const explanation = button.parentElement.parentElement.querySelector('.explanation');
+      totalAnswered++;
+      if (button.textContent === correctAnswer) {
+        score++;
+        button.classList.add('correct');
+      } else {
+        button.classList.add('wrong');
+        buttons.forEach(btn => {
+          if (btn.textContent === correctAnswer) {
+            btn.classList.add('correct');
+          }
+        });
+      }
+      updateScore();
+      buttons.forEach(btn => btn.disabled = true);
+      if (explanation) {
+        explanation.classList.remove('hidden');
+      }
+      clearInterval(timerInterval);
+    }
+
+    function startTimer() {
+      timerDisplay.textContent = `Time: ${timeLeft}s`;
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `Time: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          totalAnswered++;
+          updateScore();
+          const buttons = quizContent.querySelectorAll('.option-button');
+          buttons.forEach(btn => btn.disabled = true);
+          const explanation = quizContent.querySelector('.explanation');
+          if (explanation) explanation.classList.remove('hidden');
         }
+      }, 1000);
+    }
 
-        // Update Chapter List
-        function updateChapterList() {
-            const chapters = [...new Set(currentSubjectData
-                .filter(q => selectedQuizTypes.includes(q.quiz_type))
-                .map(q => q['Chapter Name'] || q['chapter name'] || q['Unique Chapter Name'] || 'Unknown')
-                .filter(ch => ch !== ''))];
-            lists.chapter.innerHTML = '';
-            chapters.sort().forEach(chapter => {
-                const btn = createButton(chapter, () => selectChapter(chapter));
-                lists.chapter.appendChild(btn);
-            });
-        }
+    function updateScore() {
+      scoreDisplay.textContent = `Score: ${score}/${totalAnswered}`;
+    }
 
-        // Select Chapter
-        function selectChapter(chapter) {
-            renderUnitList(chapter);
-            showSection('unit');
-        }
+    function updateProgress() {
+      const progress = ((currentIndex + 1) / currentQuestions.length) * 100;
+      progressFill.style.width = `${progress}%`;
+    }
 
-        // Render Unit List
-        function renderUnitList(chapter) {
-            const units = [];
-            currentSubjectData
-                .filter(q => (q['Chapter Name'] || q['chapter name'] || q['Unique Chapter Name']) === chapter && selectedQuizTypes.includes(q.quiz_type))
-                .forEach(q => {
-                    const hierarchy = q.topic_name.split('>>').map(t => t.trim());
-                    if (hierarchy.length > 1) {
-                        units.push(hierarchy[1]);
-                    }
-                });
-            const uniqueUnits = [...new Set(units)];
-            lists.unit.innerHTML = '';
-            uniqueUnits.sort().forEach(unitName => {
-                const btn = createButton(unitName, () => selectUnit(chapter, unitName));
-                lists.unit.appendChild(btn);
-            });
-        }
+    function getChapterName(q) {
+      return q['Chapter Name'] || q['chapter name'] || q['Unique Chapter Name'] || q.topic_name.split('>>')[0]?.trim() || '';
+    }
 
-        // Select Unit
-        function selectUnit(chapterName, unitName) {
-            renderTopicList(chapterName, unitName);
-            showSection('topic');
-        }
+    function getUnitName(q) {
+      const parts = q.topic_name.split('>>');
+      return parts[1]?.trim() || '';
+    }
 
-        // Render Topic List
-        function renderTopicList(chapterName, unitName) {
-            const topics = [];
-            currentSubjectData
-                .filter(q => {
-                    const hierarchy = q.topic_name.split('>>').map(t => t.trim());
-                    return (
-                        (q['Chapter Name'] || q['chapter name'] || q['Unique Chapter Name']) === chapterName &&
-                        hierarchy[1] === unitName &&
-                        selectedQuizTypes.includes(q.quiz_type)
-                    );
-                })
-                .forEach(q => {
-                    const hierarchy = q.topic_name.split('>>').map(t => t.trim());
-                    if (hierarchy.length > 2) {
-                        topics.push(hierarchy[2]);
-                    }
-                });
-            const uniqueTopics = [...new Set(topics)];
-            lists.topic.innerHTML = '';
-            uniqueTopics.sort().forEach(topic => {
-                const btn = createButton(topic, () => startQuiz(chapterName, unitName, topic));
-                lists.topic.appendChild(btn);
-            });
-        }
+    function getTopicName(q) {
+      const parts = q.topic_name.split('>>');
+      return parts[2]?.trim() || '';
+    }
 
-        // Start Quiz
-        function startQuiz(chapterName, unitName, topicName) {
-            const topicPath = `${chapterName} >> ${unitName} >> ${topicName}`;
-            currentQuestions = currentSubjectData.filter(q => q.topic_name === topicPath && selectedQuizTypes.includes(q.quiz_type));
-            if (currentQuestions.length === 0) {
-                alert('No questions available for this topic.');
-                return;
-            }
-            currentQuestionIndex = 0;
-            loadQuestion();
-            showSection('quiz');
-        }
+    function populateList(list, items) {
+      list.innerHTML = '';
+      items.forEach(item => {
+        list.innerHTML += `<li>${item}<i class="fa-solid fa-chevron-right"></i></li>`;
+      });
+    }
 
-        // Load Question
-        function loadQuestion() {
-            const q = currentQuestions[currentQuestionIndex];
-            quizContent.question.innerHTML = q.question.replace(/\n/g, '<br>');
-            quizContent.explanation.classList.add('hidden');
-            quizContent.options.classList.add('hidden');
-            quizContent.video.classList.add('hidden');
-            quizContent.flashcard.classList.add('hidden');
-            quizContent.fillup.classList.add('hidden');
-            quizContent.match.classList.add('hidden');
-            buttons.submit.classList.add('hidden');
-            buttons.next.classList.add('hidden');
+    function selectItem(list, item) {
+      [...list.querySelectorAll('li')].forEach(li => li.classList.remove('selected'));
+      item.classList.add('selected');
+    }
 
-            switch (q.quiz_type) {
-                case 'mcq':
-                    renderMCQ(q);
-                    break;
-                case 'video':
-                    renderVideo(q);
-                    break;
-                case 'flashcard':
-                    renderFlashcard(q);
-                    break;
-                case 'fillup':
-                    renderFillup(q);
-                    break;
-                case 'match':
-                    renderMatch(q);
-                    break;
-            }
-        }
+    function showError(message) {
+      quizContent.innerHTML = `<p class="error-message">${message}</p>`;
+      quizContainer.classList.remove('hidden');
+      nextBtn.classList.add('hidden');
+    }
 
-        // Render MCQ
-        function renderMCQ(q) {
-            quizContent.options.innerHTML = '';
-            const options = [
-                { key: 'A', value: q.option_a },
-                { key: 'B', value: q.option_b },
-                { key: 'C', value: q.option_c },
-                { key: 'D', value: q.option_d }
-            ].filter(opt => opt.value !== '');
-            options.forEach(opt => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn w-full text-left p-2 border rounded mb-2';
-                btn.innerHTML = `<span>${opt.key}: ${opt.value}</span>`;
-                btn.onclick = () => checkMCQAnswer(q, opt.value, btn);
-                quizContent.options.appendChild(btn);
-            });
-            quizContent.options.classList.remove('hidden');
-            buttons.submit.classList.add('hidden');
-        }
-
-        // Check MCQ Answer
-        function checkMCQAnswer(q, selected, btn) {
-            const correct = selected === q.answer;
-            btn.classList.add(correct ? 'correct' : 'incorrect');
-            quizContent.explanation.innerHTML = q.explanation || 'No explanation provided.';
-            quizContent.explanation.classList.remove('hidden');
-            buttons.next.classList.remove('hidden');
-            quizContent.options.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
-        }
-
-        // Render Video
-        function renderVideo(q) {
-            quizContent.videoPlayer.src = `https://www.youtube.com/embed/${q.question}`;
-            quizContent.video.classList.remove('hidden');
-            buttons.next.classList.remove('hidden');
-        }
-
-        // Render Flashcard
-        function renderFlashcard(q) {
-            quizContent.flashcardText.textContent = q.answer || q.question;
-            quizContent.flashcard.classList.remove('hidden');
-            buttons.next.classList.remove('hidden');
-        }
-
-        // Render Fillup
-        function renderFillup(q) {
-            quizContent.fillupInput.value = '';
-            quizContent.fillup.classList.remove('hidden');
-            buttons.submit.classList.remove('hidden');
-            buttons.submit.onclick = () => checkFillupAnswer(q);
-        }
-
-        // Check Fillup Answer
-        function checkFillupAnswer(q) {
-            const selected = quizContent.fillupInput.value.trim();
-            const correct = selected.toLowerCase() === q.answer.toLowerCase();
-            quizContent.fillupInput.classList.add(correct ? 'correct' : 'incorrect');
-            quizContent.explanation.innerHTML = q.explanation || 'No explanation provided.';
-            quizContent.explanation.classList.remove('hidden');
-            buttons.next.classList.remove('hidden');
-            buttons.submit.classList.add('hidden');
-        }
-
-        // Render Match
-        function renderMatch(q) {
-            quizContent.matchOptions.innerHTML = '';
-            const pairs = q.answer.split(',').map(p => p.split('='));
-            const options = [
-                { key: 'A', value: q.option_a.split(',')[1] },
-                { key: 'B', value: q.option_b.split(',')[1] }
-            ].filter(opt => opt.value);
-            options.forEach(opt => {
-                const div = document.createElement('div');
-                div.innerHTML = `<p>${opt.key}: ${opt.value}</p>`;
-                quizContent.matchOptions.appendChild(div);
-            });
-            quizContent.match.classList.remove('hidden');
-            buttons.submit.classList.remove('hidden');
-            buttons.submit.onclick = () => checkMatchAnswer(q);
-        }
-
-        // Check Match Answer
-        function checkMatchAnswer(q) {
-            quizContent.explanation.innerHTML = q.explanation || 'No explanation provided.';
-            quizContent.explanation.classList.remove('hidden');
-            buttons.next.classList.remove('hidden');
-            buttons.submit.classList.add('hidden');
-        }
-
-        // Create Button
-        function createButton(text, onClick) {
-            const btn = document.createElement('button');
-            btn.className = 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600';
-            btn.textContent = text;
-            btn.onclick = onClick;
-            return btn;
-        }
-
-        // Show Section
-        function showSection(sectionName) {
-            Object.values(sections).forEach(s => s.classList.add('hidden'));
-            sections[sectionName].classList.remove('hidden');
-        }
-
-        // Setup Event Listeners
-        function setupEventListeners() {
-            buttons.backToSubjects.onclick = () => showSection('subject');
-            buttons.backToQuizTypes.onclick = () => showSection('quizType');
-            buttons.backToChapters.onclick = () => showSection('chapter');
-            buttons.backToUnits.onclick = () => showSection('unit');
-            buttons.backToTopics.onclick = () => showSection('topic');
-            buttons.next.onclick = () => {
-                currentQuestionIndex++;
-                if (currentQuestionIndex < currentQuestions.length) {
-                    loadQuestion();
-                } else {
-                    alert('Quiz completed!');
-                    showSection('topic');
-                }
-            };
-        }
-
-        // Start the application
-        init();
-    </script>
+    function resetSelections(level) {
+      const levels = ['subject', 'chapter', 'unit', 'topic', 'quizType'];
+      const index = levels.indexOf(level);
+      for (let i = index + 1; i < levels.length; i++) {
+        selections[levels[i]] = '';
+        const card = document.getElementById(`${levels[i]}Card`);
+        const list = document.getElementById(`${levels[i]}List`);
+        if (card) card.classList.add('hidden');
+        if (list) list.innerHTML = '';
+      }
+      if (level !== 'subject') {
+        const prevLevel = levels[index - 1];
+        if (prevLevel) document.getElementById(`${prevLevel}Card`).classList.add('hidden');
+      }
+      startQuizBtn.classList.add('hidden');
+      startQuizBtn.disabled = true;
+      quizContainer.classList.add('hidden');
+      quizContent.innerHTML = '';
+      nextBtn.classList.add('hidden');
+    }
+  </script>
 </body>
 </html>

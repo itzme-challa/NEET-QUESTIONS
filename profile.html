@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Profile - NEET Quiz Explorer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --primary-dark: #3a0ca3;
+      --bg-light: #f9fafb;
+      --border-color: #e5e7eb;
+      --radius-sm: 0.375rem;
+    }
+
+    .backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .modal {
+      background-color: white;
+      border-radius: var(--radius-sm);
+      width: 90%;
+      max-width: 400px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .spinner {
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+  <div id="app" class="min-h-screen flex flex-col">
+    <header class="bg-white shadow-sm sticky top-0 z-10 px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <i class="fas fa-atom text-2xl text-blue-500"></i>
+        <span class="font-semibold text-xl text-gray-800">NEET Quiz Explorer</span>
+      </div>
+      <div class="flex gap-2">
+        <a href="index.html" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Home</a>
+        <button id="logoutBtn" class="btn bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+      </div>
+    </header>
+
+    <main class="flex-1 p-6 max-w-4xl mx-auto w-full">
+      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">User Profile</h2>
+        <div id="userInfo">
+          <p><strong>Email:</strong> <span id="userEmail"></span></p>
+          <p><strong>Joined:</strong> <span id="userJoined"></span></p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Statistics</h2>
+        <div id="statsContent">
+          <div class="flex justify-between mb-2">
+            <span>Total Quizzes Taken</span>
+            <span id="totalQuizzes">0</span>
+          </div>
+          <div class="flex justify-between mb-2">
+            <span>Average Score</span>
+            <span id="averageScore">0%</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Last Quiz Score</span>
+            <span id="lastScore">-</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Generated DPPs</h2>
+        <div id="dppList"></div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Generated Tests</h2>
+        <div id="testList"></div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-xl font-semibold mb-4">Quiz History</h2>
+        <div id="quizHistory"></div>
+      </div>
+    </main>
+
+    <div class="backdrop" id="loadingModal">
+      <div class="modal">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const firebaseConfig = {
+        apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
+        authDomain: "community-604af.firebaseapp.com",
+        databaseURL: "https://community-604af-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "community-604af",
+        storageBucket: "community-604af.appspot.com",
+        messagingSenderId: "735063146170",
+        appId: "1:735063146170:web:725bce2c3c64afc0f30c83",
+        measurementId: "G-7YD8RLH33Q"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.database();
+
+      const elements = {
+        userEmail: document.getElementById('userEmail'),
+        userJoined: document.getElementById('userJoined'),
+        totalQuizzes: document.getElementById('totalQuizzes'),
+        averageScore: document.getElementById('averageScore'),
+        lastScore: document.getElementById('lastScore'),
+        dppList: document.getElementById('dppList'),
+        testList: document.getElementById('testList'),
+        quizHistory: document.getElementById('quizHistory'),
+        logoutBtn: document.getElementById('logoutBtn'),
+        loadingModal: document.getElementById('loadingModal'),
+      };
+
+      function showLoading(show) {
+        elements.loadingModal.style.display = show ? 'flex' : 'none';
+      }
+
+      function showError(message) {
+        alert(message);
+      }
+
+      async function loadUserData(user) {
+        showLoading(true);
+        try {
+          const userRef = db.ref(`users/${user.uid}`);
+          const userSnapshot = await userRef.once('value');
+          const userData = userSnapshot.val();
+          elements.userEmail.textContent = userData.email;
+          elements.userJoined.textContent = new Date(userData.createdAt).toLocaleDateString();
+
+          const quizzesRef = db.ref(`quizzes/${user.uid}`);
+          const quizzesSnapshot = await quizzesRef.once('value');
+          const quizzes = quizzesSnapshot.val() || {};
+          const quizArray = Object.values(quizzes);
+          elements.totalQuizzes.textContent = quizArray.length;
+          if (quizArray.length > 0) {
+            const totalPercentage = quizArray.reduce((sum, quiz) => sum + quiz.percentage, 0);
+            elements.averageScore.textContent = `${Math.round(totalPercentage / quizArray.length)}%`;
+            const lastQuiz = quizArray[quizArray.length - 1];
+            elements.lastScore.textContent = `${lastQuiz.score}/${lastQuiz.total} (${lastQuiz.percentage}%)`;
+          }
+
+          const dppsRef = db.ref(`dpps/${user.uid}`);
+          const dppsSnapshot = await dppsRef.once('value');
+          const dpps = dppsSnapshot.val() || {};
+          elements.dppList.innerHTML = '';
+          for (const [dppId, dpp] of Object.entries(dpps)) {
+            const div = document.createElement('div');
+            div.className = 'p-4 border-b border-gray-200 flex justify-between items-center';
+            div.innerHTML = `
+              <div>
+                <div class="font-medium">${dpp.subject} - ${dpp.topic}</div>
+                <small class="text-gray-500">${new Date(dpp.createdAt).toLocaleString()}</small>
+              </div>
+              <a href="play.html?dppId=${dppId}" class="text-blue-500 hover:underline">Play</a>
+            `;
+            elements.dppList.appendChild(div);
+          }
+
+          const testsRef = db.ref(`tests/${user.uid}`);
+          const testsSnapshot = await testsRef.once('value');
+          const tests = testsSnapshot.val() || {};
+          elements.testList.innerHTML = '';
+          for (const [testId, test] of Object.entries(tests)) {
+            const div = document.createElement('div');
+            div.className = 'p-4 border-b border-gray-200 flex justify-between items-center';
+            div.innerHTML = `
+              <div>
+                <div class="font-medium">${test.subjects.join(', ')} - ${test.chapters.join(', ')}</div>
+                <small class="text-gray-500">${new Date(test.createdAt).toLocaleString()}</small>
+              </div>
+              <a href="play.html?testId=${testId}" class="text-blue-500 hover:underline">Play</a>
+            `;
+            elements.testList.appendChild(div);
+          }
+
+          elements.quizHistory.innerHTML = '';
+          for (const quiz of quizArray) {
+            const div = document.createElement('div');
+            div.className = 'p-4 border-b border-gray-200';
+            div.innerHTML = `
+              <div class="font-medium">${quiz.subject} - ${quiz.topic || quiz.chapters.join(', ')}</div>
+              <div>Score: ${quiz.score}/${quiz.total} (${quiz.percentage}%)</div>
+              <small class="text-gray-500">${new Date(quiz.date).toLocaleString()}</small>
+            `;
+            elements.quizHistory.appendChild(div);
+          }
+        } catch (error) {
+          showError(error.message);
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      elements.logoutBtn.addEventListener('click', async () => {
+        showLoading(true);
+        try {
+          await auth.signOut();
+          window.location.href = 'index.html';
+        } catch (error) {
+          showError(error.message);
+        } finally {
+          showLoading(false);
+        }
+      });
+
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          loadUserData(user);
+        } else {
+          window.location.href = 'index.html';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

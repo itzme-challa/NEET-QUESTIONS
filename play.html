@@ -2,13 +2,572 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Practice Questions | NEET Prep Master</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Include all the styles from your original quiz interface */
-    /* ... (copy all the CSS from your original quiz interface) ... */
+    :root {
+      --primary-color: #4361ee;
+      --primary-dark: #3a0ca3;
+      --secondary-color: #4cc9f0;
+      --success-color: #4ade80;
+      --error-color: #f87171;
+      --warning-color: #fbbf24;
+      --text-dark: #1f2937;
+      --text-medium: #6b7280;
+      --text-light: #9ca3af;
+      --bg-light: #f9fafb;
+      --border-color: #e5e7eb;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #f3f4f6;
+      color: var(--text-dark);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    #app {
+      max-width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background-color: white;
+      padding: 1rem;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-medium);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--bg-light);
+    }
+
+    .btn-icon {
+      padding: 0.5rem;
+      border-radius: 50%;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 1.5rem;
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      transition: opacity 0.3s ease, height 0.3s ease;
+    }
+
+    .card.hidden {
+      opacity: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .list-group {
+      list-style: none;
+    }
+
+    .list-item {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .list-item:hover {
+      background-color: var(--bg-light);
+    }
+
+    .list-item.active {
+      background-color: #e0e7ff;
+    }
+
+    .list-item-icon {
+      color: var(--text-light);
+    }
+
+    .quiz-container {
+      display: none;
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .quiz-progress {
+      font-size: 0.875rem;
+      color: var(--text-medium);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-light);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary-color);
+      transition: width 0.3s ease;
+    }
+
+    .score-timer {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--text-medium);
+    }
+
+    .quiz-question {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .option-btn {
+      padding: 1rem 1.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background-color: white;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .option-btn:hover {
+      background-color: var(--bg-light);
+    }
+
+    .option-btn.correct {
+      background-color: #dcfce7;
+      border-color: #86efac;
+      color: #166534;
+      animation: correctAnswer 0.3s ease;
+    }
+
+    .option-btn.incorrect {
+      background-color: #fee2e2;
+      border-color: #fca5a5;
+      color: #991b1b;
+      animation: wrongAnswer 0.3s ease;
+    }
+
+    @keyframes correctAnswer {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes wrongAnswer {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+
+    .quiz-explanation {
+      padding: 1.5rem;
+      background-color: var(--bg-light);
+      border-radius: var(--radius-sm);
+      margin-top: 1.5rem;
+      display: none;
+    }
+
+    .quiz-explanation-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .quiz-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1.5rem;
+    }
+
+    .quiz-video {
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .quiz-video iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .quiz-result {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .quiz-result-icon {
+      font-size: 3rem;
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+
+    .quiz-result-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .quiz-result-score {
+      font-size: 1.25rem;
+      color: var(--text-medium);
+      margin-bottom: 1.5rem;
+    }
+
+    .backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .modal {
+      background-color: white;
+      border-radius: var(--radius-md);
+      width: 90%;
+      max-width: 400px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .spinner {
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+      background-color: var(--bg-light);
+      color: var(--text-medium);
+    }
+
+    .badge-primary {
+      background-color: #e0e7ff;
+      color: var(--primary-dark);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-medium);
+    }
+
+    .empty-state-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--text-light);
+    }
+
+    .fillup-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .fillup-input.correct {
+      border-color: #86efac;
+      background-color: #dcfce7;
+    }
+
+    .fillup-input.incorrect {
+      border-color: #fca5a5;
+      background-color: #fee2e2;
+    }
+
+    .match-container {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .match-column {
+      flex: 1;
+    }
+
+    .match-item {
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      background-color: white;
+    }
+
+    .match-item.selected {
+      background-color: #e0e7ff;
+    }
+
+    .match-item.correct {
+      border-color: #86efac;
+      background-color: #dcfce7;
+    }
+
+    .match-item.incorrect {
+      border-color: #fca5a5;
+      background-color: #fee2e2;
+    }
+
+    .user-menu {
+      position: relative;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      right: 0;
+      top: 50px;
+      background-color: white;
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      min-width: 200px;
+      z-index: 20;
+      display: none;
+    }
+
+    .dropdown-menu.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-dark);
+    }
+
+    .dropdown-item:hover {
+      background-color: var(--bg-light);
+    }
+
+    .dropdown-divider {
+      border-top: 1px solid var(--border-color);
+      margin: 0.25rem 0;
+    }
+
+    .quiz-info {
+      background-color: #e0e7ff;
+      padding: 1rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1.5rem;
+    }
+
+    .quiz-info-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .quiz-info-details {
+      color: var(--text-medium);
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 640px) {
+      .main-content {
+        padding: 1rem;
+      }
+      
+      .card-body {
+        padding: 1rem;
+      }
+      
+      .list-item {
+        padding: 0.75rem 1rem;
+      }
+      
+      .quiz-question {
+        font-size: 1.1rem;
+      }
+      
+      .option-btn {
+        padding: 0.75rem 1rem;
+      }
+
+      .score-timer {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .match-container {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
@@ -44,9 +603,181 @@
     </header>
 
     <main class="main-content">
-      <!-- Include all the quiz interface HTML from your original code -->
-      <!-- ... (copy all the quiz interface HTML) ... -->
+      <div id="subjectScreen">
+        <div class="card" id="subjectCard">
+          <div class="card-header">
+            <h2 class="card-title">Select Subject</h2>
+          </div>
+          <div class="card-body">
+            <ul class="list-group">
+              <li class="list-item" data-subject="biology">
+                <div>
+                  <div>Biology</div>
+                  <small class="text-muted">Study of living organisms and life processes</small>
+                </div>
+                <i class="fas fa-chevron-right list-item-icon"></i>
+              </li>
+              <li class="list-item" data-subject="chemistry">
+                <div>
+                  <div>Chemistry</div>
+                  <small class="text-muted">Study of matter and its transformations</small>
+                </div>
+                <i class="fas fa-chevron-right list-item-icon"></i>
+              </li>
+              <li class="list-item" data-subject="physics">
+                <div>
+                  <div>Physics</div>
+                  <small class="text-muted">Study of matter, energy, and their interactions</small>
+                </div>
+                <i class="fas fa-chevron-right list-item-icon"></i>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div id="chapterScreen" style="display: none;">
+        <div class="card" id="chapterCard">
+          <div class="card-header">
+            <button id="backToSubjects" class="btn btn-icon btn-outline">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2 class="card-title">Select Chapter</h2>
+          </div>
+          <div class="card-body">
+            <div id="chapterList" class="list-group"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="unitScreen" style="display: none;">
+        <div class="card" id="unitCard">
+          <div class="card-header">
+            <button id="backToChapters" class="btn btn-icon btn-outline">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2 class="card-title">Select Unit</h2>
+          </div>
+          <div class="card-body">
+            <div id="unitList" class="list-group"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="topicScreen" style="display: none;">
+        <div class="card" id="topicCard">
+          <div class="card-header">
+            <button id="backToUnits" class="btn btn-icon btn-outline">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2 class="card-title">Select Topic</h2>
+          </div>
+          <div class="card-body">
+            <div id="topicList" class="list-group"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="quizTypeScreen" style="display: none;">
+        <div class="card" id="quizTypeCard">
+          <div class="card-header">
+            <button id="backToTopics" class="btn btn-icon btn-outline">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2 class="card-title">Select Quiz Type</h2>
+          </div>
+          <div class="card-body">
+            <div id="quizTypeList" class="list-group"></div>
+          </div>
+        </div>
+        <button id="startQuizBtn" class="btn btn-primary" style="width: 100%; display: none;">Start Quiz</button>
+      </div>
+
+      <div id="quizScreen" class="quiz-container">
+        <div class="card">
+          <div class="card-header">
+            <div class="quiz-progress">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">0</span></div>
+            <div class="score-timer">
+              <span id="scoreDisplay">Score: 0/0</span>
+              <span id="timerDisplay">Time: 60s</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="quizInfo" class="quiz-info" style="display: none;">
+              <div class="quiz-info-title" id="quizInfoTitle"></div>
+              <div class="quiz-info-details" id="quizInfoDetails"></div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div id="quizContent">
+              <div class="quiz-question" id="questionText"></div>
+              
+              <div id="mcqContent" style="display: none;">
+                <div class="quiz-options" id="optionsContainer"></div>
+              </div>
+              
+              <div id="fillupContent" style="display: none;">
+                <input type="text" id="fillupInput" class="fillup-input" placeholder="Type your answer...">
+                <button id="submitFillupBtn" class="btn btn-primary">Submit</button>
+              </div>
+              
+              <div id="flashcardContent" style="display: none;">
+                <button id="revealAnswerBtn" class="btn btn-primary">Reveal Answer</button>
+                <div class="quiz-answer" id="flashcardAnswer" style="display: none;"></div>
+              </div>
+              
+              <div id="matchContent" style="display: none;">
+                <div class="match-container" id="matchContainer"></div>
+                <button id="submitMatchBtn" class="btn btn-primary">Submit</button>
+              </div>
+              
+              <div id="videoContent" style="display: none;">
+                <div class="quiz-video">
+                  <iframe id="videoFrame" allowfullscreen></iframe>
+                </div>
+              </div>
+              
+              <div class="quiz-explanation" id="explanationContainer">
+                <div class="quiz-explanation-title">Explanation</div>
+                <div id="explanationText"></div>
+              </div>
+              
+              <div class="quiz-actions">
+                <button id="prevBtn" class="btn btn-outline" disabled>
+                  <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button id="nextQuestionBtn" class="btn btn-primary">
+                  Next <i class="fas fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div id="quizResults" style="display: none;">
+              <div class="quiz-result">
+                <i class="fas fa-trophy quiz-result-icon"></i>
+                <h3 class="quiz-result-title">Quiz Completed!</h3>
+                <div class="quiz-result-score">You scored <span id="scoreValue">0</span> out of <span id="totalScore">0</span></div>
+                <button id="restartQuizBtn" class="btn btn-primary">
+                  <i class="fas fa-redo"></i> Restart Quiz
+                </button>
+                <button id="newQuizBtn" class="btn btn-outline" style="margin-top: 0.5rem;">
+                  <i class="fas fa-book"></i> New Quiz
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
+
+    <div class="backdrop" id="loadingModal">
+      <div class="modal">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Firebase SDK -->
@@ -56,9 +787,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   
   <script>
-    // Initialize Firebase (same config as index.html)
-    // ... (copy Firebase initialization from index.html) ...
-document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
       // Initialize Firebase
       const firebaseConfig = {
         apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
@@ -76,60 +805,945 @@ document.addEventListener('DOMContentLoaded', () => {
       const database = firebase.database();
       const firestore = firebase.firestore();
 
+      const state = {
+        currentSubject: null,
+        currentChapter: null,
+        currentUnit: null,
+        currentTopic: null,
+        currentQuizType: null,
+        questions: [],
+        currentQuestionIndex: 0,
+        score: 0,
+        totalAnswered: 0,
+        quizHistory: [],
+        subjectData: { biology: [], chemistry: [], physics: [] },
+        matchSelections: {},
+        isDPP: false,
+        isTest: false,
+        dppId: null,
+        testId: null,
+        timeLimit: 60,
+        startTime: null
+      };
+
       const elements = {
-        authScreen: document.getElementById('authScreen'),
-        dashboardScreen: document.getElementById('dashboardScreen'),
-        authTitle: document.getElementById('authTitle'),
-        authForm: document.getElementById('authForm'),
-        nameGroup: document.getElementById('nameGroup'),
-        email: document.getElementById('email'),
-        password: document.getElementById('password'),
-        authSubmit: document.getElementById('authSubmit'),
-        authFooterText: document.getElementById('authFooterText'),
-        authToggle: document.getElementById('authToggle'),
-        googleAuth: document.getElementById('googleAuth'),
-        loginBtn: document.getElementById('loginBtn'),
+        subjectScreen: document.getElementById('subjectScreen'),
+        chapterScreen: document.getElementById('chapterScreen'),
+        unitScreen: document.getElementById('unitScreen'),
+        topicScreen: document.getElementById('topicScreen'),
+        quizTypeScreen: document.getElementById('quizTypeScreen'),
+        quizScreen: document.getElementById('quizScreen'),
+        resetBtn: document.getElementById('resetBtn'),
+        backToSubjects: document.getElementById('backToSubjects'),
+        backToChapters: document.getElementById('backToChapters'),
+        backToUnits: document.getElementById('backToUnits'),
+        backToTopics: document.getElementById('backToTopics'),
+        subjectCard: document.getElementById('subjectCard'),
+        chapterCard: document.getElementById('chapterCard'),
+        unitCard: document.getElementById('unitCard'),
+        topicCard: document.getElementById('topicCard'),
+        quizTypeCard: document.getElementById('quizTypeCard'),
+        subjectItems: document.querySelectorAll('.list-item[data-subject]'),
+        chapterList: document.getElementById('chapterList'),
+        unitList: document.getElementById('unitList'),
+        topicList: document.getElementById('topicList'),
+        quizTypeList: document.getElementById('quizTypeList'),
+        startQuizBtn: document.getElementById('startQuizBtn'),
+        currentQuestion: document.getElementById('currentQuestion'),
+        totalQuestions: document.getElementById('totalQuestions'),
+        questionText: document.getElementById('questionText'),
+        optionsContainer: document.getElementById('optionsContainer'),
+        fillupInput: document.getElementById('fillupInput'),
+        submitFillupBtn: document.getElementById('submitFillupBtn'),
+        revealAnswerBtn: document.getElementById('revealAnswerBtn'),
+        flashcardAnswer: document.getElementById('flashcardAnswer'),
+        matchContainer: document.getElementById('matchContainer'),
+        submitMatchBtn: document.getElementById('submitMatchBtn'),
+        videoFrame: document.getElementById('videoFrame'),
+        explanationContainer: document.getElementById('explanationContainer'),
+        explanationText: document.getElementById('explanationText'),
+        prevBtn: document.getElementById('prevBtn'),
+        nextQuestionBtn: document.getElementById('nextQuestionBtn'),
+        mcqContent: document.getElementById('mcqContent'),
+        fillupContent: document.getElementById('fillupContent'),
+        flashcardContent: document.getElementById('flashcardContent'),
+        matchContent: document.getElementById('matchContent'),
+        videoContent: document.getElementById('videoContent'),
+        quizResults: document.getElementById('quizResults'),
+        scoreValue: document.getElementById('scoreValue'),
+        totalScore: document.getElementById('totalScore'),
+        restartQuizBtn: document.getElementById('restartQuizBtn'),
+        newQuizBtn: document.getElementById('newQuizBtn'),
+        loadingModal: document.getElementById('loadingModal'),
+        scoreDisplay: document.getElementById('scoreDisplay'),
+        timerDisplay: document.getElementById('timerDisplay'),
+        progressFill: document.getElementById('progressFill'),
+        quizInfo: document.getElementById('quizInfo'),
+        quizInfoTitle: document.getElementById('quizInfoTitle'),
+        quizInfoDetails: document.getElementById('quizInfoDetails'),
         userMenu: document.getElementById('userMenu'),
         userAvatar: document.getElementById('userAvatar'),
         dropdownMenu: document.getElementById('dropdownMenu'),
         logoutBtn: document.getElementById('logoutBtn')
       };
- 
-    // Add auth state listener
-    auth.onAuthStateChanged((user) => {
-      if (!user) {
-        window.location.href = 'index.html';
-      } else {
-        // Set user avatar
-        if (user.photoURL) {
-          document.getElementById('userAvatar').style.backgroundImage = `url(${user.photoURL})`;
-          document.getElementById('userAvatar').textContent = '';
+
+      let timerInterval;
+      let timeLeft = 60;
+
+      // Check URL parameters for DPP or test ID
+      function checkUrlParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const dppId = urlParams.get('dppId');
+        const testId = urlParams.get('testId');
+        
+        if (dppId) {
+          loadDPP(dppId);
+        } else if (testId) {
+          loadTest(testId);
         } else {
-          document.getElementById('userAvatar').textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U';
+          // Regular quiz mode
+          showScreen('subject');
+        }
+      }
+
+      // Load DPP from database
+      async function loadDPP(dppId) {
+        showLoading(true);
+        state.isDPP = true;
+        state.dppId = dppId;
+        
+        try {
+          const snapshot = await database.ref('dpps/' + auth.currentUser.uid + '/' + dppId).once('value');
+          const dpp = snapshot.val();
+          
+          if (!dpp) {
+            throw new Error('DPP not found');
+          }
+          
+          // Set quiz info
+          elements.quizInfoTitle.textContent = dpp.name;
+          elements.quizInfoDetails.innerHTML = `
+            ${dpp.subject.charAt(0).toUpperCase() + dpp.subject.slice(1)} | 
+            ${dpp.chapter} | 
+            ${dpp.unit} | 
+            ${dpp.topic}
+          `;
+          elements.quizInfo.style.display = 'block';
+          
+          // Load questions for this DPP
+          const data = await loadSubjectData(dpp.subject);
+          state.questions = data.filter(q => 
+            q.chapter_name === dpp.chapter && 
+            q.unit_name === dpp.unit && 
+            q.topic_name === dpp.topic
+          ).slice(0, dpp.questions);
+          
+          if (state.questions.length === 0) {
+            throw new Error('No questions found for this DPP');
+          }
+          
+          startQuiz();
+        } catch (error) {
+          console.error('Error loading DPP:', error);
+          showError('Failed to load DPP. ' + error.message);
+          resetSelections('subject');
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      // Load Test from database
+      async function loadTest(testId) {
+        showLoading(true);
+        state.isTest = true;
+        state.testId = testId;
+        
+        try {
+          const snapshot = await database.ref('tests/' + auth.currentUser.uid + '/' + testId).once('value');
+          const test = snapshot.val();
+          
+          if (!test) {
+            throw new Error('Test not found');
+          }
+          
+          // Set quiz info
+          elements.quizInfoTitle.textContent = test.name;
+          elements.quizInfoDetails.innerHTML = `
+            ${test.subject === 'all' ? 'All Subjects' : test.subject.charAt(0).toUpperCase() + test.subject.slice(1)} | 
+            ${test.questions} questions | 
+            ${test.time} minutes
+          `;
+          elements.quizInfo.style.display = 'block';
+          state.timeLimit = test.time * 60;
+          
+          // Load questions for this test
+          if (test.subject === 'all') {
+            // Load from all subjects
+            const allQuestions = [];
+            for (const subject of ['biology', 'chemistry', 'physics']) {
+              const data = await loadSubjectData(subject);
+              const subjectQuestions = data.filter(q => 
+                test.chapters.some(chapter => {
+                  if (chapter.includes(':')) {
+                    const [chapSubject, chapName] = chapter.split(':');
+                    return chapSubject === subject && q.chapter_name === chapName;
+                  }
+                  return q.chapter_name === chapter;
+                })
+              );
+              allQuestions.push(...subjectQuestions);
+            }
+            state.questions = allQuestions.sort(() => Math.random() - 0.5).slice(0, test.questions);
+          } else {
+            // Load from single subject
+            const data = await loadSubjectData(test.subject);
+            state.questions = data.filter(q => 
+              test.chapters.some(chapter => q.chapter_name === chapter)
+              .sort(() => Math.random() - 0.5)
+              .slice(0, test.questions);
+          }
+          
+          if (state.questions.length === 0) {
+            throw new Error('No questions found for this test');
+          }
+          
+          startQuiz();
+        } catch (error) {
+          console.error('Error loading test:', error);
+          showError('Failed to load test. ' + error.message);
+          resetSelections('subject');
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      function showLoading(show) {
+        if (elements.loadingModal) {
+          elements.loadingModal.style.display = show ? 'flex' : 'none';
+        }
+      }
+
+      function showScreen(screenName) {
+        const screens = ['subject', 'chapter', 'unit', 'topic', 'quizType', 'quiz'];
+        screens.forEach(screen => {
+          const element = elements[`${screen}Screen`];
+          if (element) {
+            element.style.display = screen === screenName ? 'block' : 'none';
+          }
+        });
+        if (elements.resetBtn) {
+          elements.resetBtn.style.display = screenName === 'quiz' ? 'block' : 'none';
+        }
+      }
+
+      function createListItem(text, value, count) {
+        const li = document.createElement('li');
+        li.className = 'list-item';
+        li.dataset.value = value;
+        li.innerHTML = `
+          <div>
+            <div>${text} <span class="badge badge-primary">${count} Qs</span></div>
+          </div>
+          <i class="fas fa-chevron-right list-item-icon"></i>
+        `;
+        return li;
+      }
+
+      async function loadSubjectData(subject) {
+        if (state.subjectData[subject].length > 0) return state.subjectData[subject];
+        showLoading(true);
+        try {
+          const questions = [];
+          const chaptersSnapshot = await firestore.collection('subjects').doc(subject)
+            .collection('chapters').get();
+          for (const chapterDoc of chaptersSnapshot.docs) {
+            const unitsSnapshot = await chapterDoc.ref.collection('units').get();
+            for (const unitDoc of unitsSnapshot.docs) {
+              const topicsSnapshot = await unitDoc.ref.collection('topics').get();
+              for (const topicDoc of topicsSnapshot.docs) {
+                const questionsSnapshot = await topicDoc.ref.collection('questions').get();
+                questionsSnapshot.forEach(questionDoc => {
+                  questions.push({
+                    ...questionDoc.data(),
+                    chapter_name: chapterDoc.id,
+                    unit_name: unitDoc.id,
+                    topic_name: topicDoc.id
+                  });
+                });
+              }
+            }
+          }
+          state.subjectData[subject] = questions;
+          return questions;
+        } catch (error) {
+          console.error('Error loading subject data:', error);
+          showError('Failed to load data. Please try again.');
+          resetSelections('subject');
+          return null;
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      async function handleSubjectSelect(subject) {
+        state.currentSubject = subject;
+        if (elements.subjectCard) elements.subjectCard.classList.add('hidden');
+        const data = await loadSubjectData(subject);
+        if (!data) return;
+        const chaptersSnapshot = await firestore.collection('subjects').doc(subject).collection('chapters').get();
+        const chapters = chaptersSnapshot.docs.map(doc => doc.id).sort();
+        if (elements.chapterList) {
+          elements.chapterList.innerHTML = '';
+          if (chapters.length === 0) {
+            elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
+          } else {
+            for (const chapter of chapters) {
+              const count = data.filter(q => q.chapter_name === chapter).length;
+              const li = createListItem(chapter, chapter, count);
+              li.addEventListener('click', () => handleChapterSelect(chapter));
+              elements.chapterList.appendChild(li);
+            }
+          }
+        }
+        showScreen('chapter');
+      }
+
+      async function handleChapterSelect(chapter) {
+        state.currentChapter = chapter;
+        if (elements.chapterCard) elements.chapterCard.classList.add('hidden');
+        const data = state.subjectData[state.currentSubject];
+        const unitsSnapshot = await firestore.collection('subjects').doc(state.currentSubject)
+          .collection('chapters').doc(chapter).collection('units').get();
+        const units = unitsSnapshot.docs.map(doc => doc.id).sort();
+        if (elements.unitList) {
+          elements.unitList.innerHTML = '';
+          if (units.length === 0) {
+            elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
+          } else {
+            for (const unit of units) {
+              const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === unit).length;
+              const li = createListItem(unit, unit, count);
+              li.addEventListener('click', () => handleUnitSelect(unit));
+              elements.unitList.appendChild(li);
+            }
+          }
+        }
+        showScreen('unit');
+      }
+
+      async function handleUnitSelect(unit) {
+        state.currentUnit = unit;
+        if (elements.unitCard) elements.unitCard.classList.add('hidden');
+        const data = state.subjectData[state.currentSubject];
+        const topicsSnapshot = await firestore.collection('subjects').doc(state.currentSubject)
+          .collection('chapters').doc(state.currentChapter)
+          .collection('units').doc(unit).collection('topics').get();
+        const topics = topicsSnapshot.docs.map(doc => doc.id).sort();
+        if (elements.topicList) {
+          elements.topicList.innerHTML = '';
+          if (topics.length === 0) {
+            elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
+          } else {
+            for (const topic of topics) {
+              const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === topic).length;
+              const li = createListItem(topic, topic, count);
+              li.addEventListener('click', () => handleTopicSelect(topic));
+              elements.topicList.appendChild(li);
+            }
+          }
+        }
+        showScreen('topic');
+      }
+
+      async function handleTopicSelect(topic) {
+        state.currentTopic = topic;
+        if (elements.topicCard) elements.topicCard.classList.add('hidden');
+        const data = state.subjectData[state.currentSubject];
+        const quizTypes = [...new Set(data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === topic).map(q => q.quiz_type))].filter(Boolean).sort();
+        if (elements.quizTypeList) {
+          elements.quizTypeList.innerHTML = '';
+          if (quizTypes.length === 0) {
+            elements.quizTypeList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No quiz types found</div></div>';
+          } else {
+            quizTypes.forEach(type => {
+              const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === state.currentTopic && q.quiz_type === type).length;
+              const li = createListItem(type, type, count);
+              li.addEventListener('click', () => handleQuizTypeSelect(type));
+              elements.quizTypeList.appendChild(li);
+            });
+          }
+        }
+        if (elements.startQuizBtn) {
+          elements.startQuizBtn.style.display = 'block';
+        }
+        showScreen('quizType');
+      }
+
+      function handleQuizTypeSelect(quizType) {
+        state.currentQuizType = quizType;
+        if (elements.quizTypeCard) elements.quizTypeCard.classList.add('hidden');
+        if (elements.startQuizBtn) elements.startQuizBtn.disabled = false;
+      }
+
+      async function startQuiz() {
+        if (!state.isDPP && !state.isTest) {
+          const data = state.subjectData[state.currentSubject];
+          if (!data || data.length === 0) {
+            showError('No data available. Please select a subject again.');
+            resetSelections('subject');
+            return;
+          }
+          state.questions = data.filter(q => {
+            return (
+              q.chapter_name === state.currentChapter &&
+              q.unit_name === state.currentUnit &&
+              q.topic_name === state.currentTopic &&
+              (!state.currentQuizType || q.quiz_type === state.currentQuizType)
+            );
+          });
+          if (state.questions.length === 0) {
+            showError('No questions found for the selected filters.');
+            return;
+          }
+          if (state.questions.length > 1) {
+            state.questions = state.questions.sort(() => Math.random() - 0.5);
+          }
         }
         
-        // Initialize your quiz app here
-        // ... (copy all your quiz JavaScript code) ...
+        state.currentQuestionIndex = 0;
+        state.score = 0;
+        state.totalAnswered = 0;
+        state.matchSelections = {};
+        state.startTime = Date.now();
+        updateScore();
+        if (elements.totalQuestions) {
+          elements.totalQuestions.textContent = state.questions.length;
+        }
+        if (elements.startQuizBtn) {
+          elements.startQuizBtn.style.display = 'none';
+        }
+        showScreen('quiz');
+        showQuestion(state.questions[0]);
+        startTimer();
       }
-    });
 
-    // Handle logout
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      auth.signOut().then(() => {
-        window.location.href = 'index.html';
+      function showQuestion(question) {
+        if (!question) return;
+        updateProgress();
+        ['mcqContent', 'fillupContent', 'flashcardContent', 'matchContent', 'videoContent'].forEach(id => {
+          if (elements[id]) elements[id].style.display = 'none';
+        });
+        if (elements.explanationContainer) elements.explanationContainer.style.display = 'none';
+        if (elements.prevBtn) elements.prevBtn.disabled = state.currentQuestionIndex === 0;
+        if (elements.nextQuestionBtn) {
+          elements.nextQuestionBtn.disabled = false;
+          elements.nextQuestionBtn.textContent = state.currentQuestionIndex === state.questions.length - 1 ? 'See Results' : 'Next';
+        }
+        if (elements.currentQuestion) {
+          elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
+        }
+        if (elements.questionText) {
+          elements.questionText.innerHTML = question.question || 'No question text available';
+        }
+        if (question.explanation && elements.explanationText) {
+          elements.explanationText.innerHTML = question.explanation;
+        }
+        switch (question.quiz_type) {
+          case 'mcq':
+            showMCQQuestion(question);
+            break;
+          case 'fillup':
+            showFillupQuestion(question);
+            break;
+          case 'flashcard':
+            showFlashcardQuestion(question);
+            break;
+          case 'match':
+            showMatchQuestion(question);
+            break;
+          case 'video':
+            showVideoQuestion(question);
+            break;
+          default:
+            showSimpleQuestion(question);
+        }
+      }
+
+      function showMCQQuestion(question) {
+        if (elements.mcqContent) elements.mcqContent.style.display = 'block';
+        if (elements.optionsContainer) {
+          elements.optionsContainer.innerHTML = '';
+          const options = [
+            { letter: 'A', text: question.option_a },
+            { letter: 'B', text: question.option_b },
+            { letter: 'C', text: question.option_c },
+            { letter: 'D', text: question.option_d }
+          ].filter(opt => opt.text);
+          options.forEach(opt => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.innerHTML = `<strong>${opt.letter}.</strong> ${opt.text}`;
+            button.dataset.option = opt.text;
+            button.addEventListener('click', () => checkMCQAnswer(button, question.answer));
+            elements.optionsContainer.appendChild(button);
+          });
+        }
+      }
+
+      function showFillupQuestion(question) {
+        if (elements.fillupContent) elements.fillupContent.style.display = 'block';
+        if (elements.fillupInput) {
+          elements.fillupInput.value = '';
+          elements.fillupInput.classList.remove('correct', 'incorrect');
+          elements.fillupInput.disabled = false;
+        }
+        if (elements.submitFillupBtn) {
+          elements.submitFillupBtn.disabled = false;
+          elements.submitFillupBtn.onclick = () => checkFillupAnswer(question.answer);
+        }
+      }
+
+      function showFlashcardQuestion(question) {
+        if (elements.flashcardContent) elements.flashcardContent.style.display = 'block';
+        if (elements.flashcardAnswer) {
+          elements.flashcardAnswer.innerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
+          elements.flashcardAnswer.style.display = 'none';
+        }
+        if (elements.revealAnswerBtn) {
+          elements.revealAnswerBtn.disabled = false;
+          elements.revealAnswerBtn.onclick = () => {
+            elements.flashcardAnswer.style.display = 'block';
+            elements.revealAnswerBtn.disabled = true;
+            state.totalAnswered++;
+            state.score++;
+            updateScore();
+            if (question.explanation && elements.explanationContainer) {
+              elements.explanationContainer.style.display = 'block';
+            }
+            clearInterval(timerInterval);
+          };
+        }
+      }
+
+      function showMatchQuestion(question) {
+        if (elements.matchContent) elements.matchContent.style.display = 'block';
+        if (elements.matchContainer) {
+          elements.matchContainer.innerHTML = '';
+          state.matchSelections = {};
+          const options = [
+            question.option_a,
+            question.option_b,
+            question.option_c,
+            question.option_d
+          ].filter(opt => opt).map(opt => opt.split(','));
+          const leftItems = options.map(opt => opt[0]);
+          const rightItems = options.map(opt => opt[1]).sort(() => Math.random() - 0.5);
+          const leftColumn = document.createElement('div');
+          leftColumn.className = 'match-column';
+          const rightColumn = document.createElement('div');
+          rightColumn.className = 'match-column';
+          leftItems.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'match-item';
+            div.textContent = item;
+            div.dataset.id = index;
+            div.addEventListener('click', () => selectMatchItem(div, 'left'));
+            leftColumn.appendChild(div);
+          });
+          rightItems.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'match-item';
+            div.textContent = item;
+            div.dataset.id = index;
+            div.addEventListener('click', () => selectMatchItem(div, 'right'));
+            rightColumn.appendChild(div);
+          });
+          elements.matchContainer.appendChild(leftColumn);
+          elements.matchContainer.appendChild(rightColumn);
+        }
+        if (elements.submitMatchBtn) {
+          elements.submitMatchBtn.disabled = false;
+          elements.submitMatchBtn.onclick = () => checkMatchAnswer(question);
+        }
+      }
+
+      function showVideoQuestion(question) {
+        if (elements.videoContent) elements.videoContent.style.display = 'block';
+        if (elements.videoFrame) {
+          const videoId = question.question?.trim();
+          elements.videoFrame.src = videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+        }
+        if (question.explanation && elements.explanationContainer) {
+          elements.explanationContainer.style.display = 'block';
+        }
+        state.totalAnswered++;
+        state.score++;
+        updateScore();
+        clearInterval(timerInterval);
+      }
+
+      function showSimpleQuestion(question) {
+        if (elements.flashcardContent) elements.flashcardContent.style.display = 'block';
+        if (elements.flashcardAnswer) {
+          let answerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
+          if (question.option_a) answerHTML += `<br><strong>Option A:</strong> ${question.option_a}`;
+          if (question.option_b) answerHTML += `<br><strong>Option B:</strong> ${question.option_b}`;
+          elements.flashcardAnswer.innerHTML = answerHTML;
+          elements.flashcardAnswer.style.display = 'block';
+        }
+        if (question.explanation && elements.explanationContainer) {
+          elements.explanationContainer.style.display = 'block';
+        }
+        state.totalAnswered++;
+        state.score++;
+        updateScore();
+        clearInterval(timerInterval);
+      }
+
+      function checkMCQAnswer(button, correctAnswer) {
+        const buttons = elements.optionsContainer?.querySelectorAll('.option-btn') || [];
+        state.totalAnswered++;
+        if (button.dataset.option === correctAnswer) {
+          state.score++;
+          button.classList.add('correct');
+        } else {
+          button.classList.add('incorrect');
+          buttons.forEach(btn => {
+            if (btn.dataset.option === correctAnswer) {
+              btn.classList.add('correct');
+            }
+          });
+        }
+        updateScore();
+        buttons.forEach(btn => btn.disabled = true);
+        if (elements.explanationContainer) {
+          elements.explanationContainer.style.display = 'block';
+        }
+        clearInterval(timerInterval);
+      }
+
+      function checkFillupAnswer(correctAnswer) {
+        const input = elements.fillupInput;
+        if (!input) return;
+        state.totalAnswered++;
+        const userAnswer = input.value.trim().toLowerCase();
+        if (userAnswer === correctAnswer.toLowerCase()) {
+          state.score++;
+          input.classList.add('correct');
+        } else {
+          input.classList.add('incorrect');
+        }
+        updateScore();
+        input.disabled = true;
+        if (elements.submitFillupBtn) elements.submitFillupBtn.disabled = true;
+        if (elements.explanationContainer) {
+          elements.explanationContainer.style.display = 'block';
+        }
+        clearInterval(timerInterval);
+      }
+
+      function selectMatchItem(item, side) {
+        const id = item.dataset.id;
+        const items = item.parentElement.querySelectorAll('.match-item');
+        items.forEach(i => i.classList.remove('selected'));
+        item.classList.add('selected');
+        state.matchSelections[side] = id;
+        if (elements.submitMatchBtn) {
+          elements.submitMatchBtn.disabled = !state.matchSelections.left || !state.matchSelections.right;
+        }
+      }
+
+      function checkMatchAnswer(question) {
+        const options = [
+          question.option_a,
+          question.option_b,
+          question.option_c,
+          question.option_d
+        ].filter(opt => opt).map(opt => opt.split(','));
+        const correctPairs = options.reduce((acc, [left, right], index) => ({ ...acc, [index]: index }), {});
+        const leftItems = elements.matchContainer.querySelectorAll('.match-column:first-child .match-item');
+        const rightItems = elements.matchContainer.querySelectorAll('.match-column:last-child .match-item');
+        state.totalAnswered++;
+        if (state.matchSelections.left === state.matchSelections.right) {
+          state.score++;
+          leftItems[state.matchSelections.left].classList.add('correct');
+          rightItems[state.matchSelections.right].classList.add('correct');
+        } else {
+          leftItems[state.matchSelections.left].classList.add('incorrect');
+          rightItems[state.matchSelections.right].classList.add('incorrect');
+          Object.keys(correctPairs).forEach(i => {
+            leftItems[i].classList.add('correct');
+            rightItems[correctPairs[i]].classList.add('correct');
+          });
+        }
+        updateScore();
+        leftItems.forEach(item => item.style.pointerEvents = 'none');
+        rightItems.forEach(item => item.style.pointerEvents = 'none');
+        if (elements.submitMatchBtn) elements.submitMatchBtn.disabled = true;
+        if (elements.explanationContainer) {
+          elements.explanationContainer.style.display = 'block';
+        }
+        clearInterval(timerInterval);
+      }
+
+      function showResults() {
+        const quizResult = {
+          date: Date.now(),
+          subject: state.currentSubject || (state.isDPP ? 'dpp' : 'test'),
+          chapter: state.currentChapter,
+          unit: state.currentUnit,
+          topic: state.currentTopic,
+          quizType: state.currentQuizType,
+          score: state.score,
+          total: state.questions.length,
+          timeTaken: Math.floor((Date.now() - state.startTime) / 1000),
+          dppId: state.dppId,
+          testId: state.testId
+        };
+        
+        // Save quiz result to database
+        if (auth.currentUser) {
+          const newResultRef = database.ref('quizHistory/' + auth.currentUser.uid).push();
+          newResultRef.set(quizResult);
+        }
+        
+        if (elements.quizContent) elements.quizContent.style.display = 'none';
+        if (elements.quizResults) elements.quizResults.style.display = 'block';
+        if (elements.scoreValue) elements.scoreValue.textContent = state.score;
+        if (elements.totalScore) elements.totalScore.textContent = state.questions.length;
+        clearInterval(timerInterval);
+      }
+
+      function startTimer() {
+        timeLeft = state.timeLimit;
+        if (elements.timerDisplay) {
+          elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
+        }
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          if (elements.timerDisplay) {
+            elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
+          }
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            state.totalAnswered++;
+            updateScore();
+            disableInputs();
+            if (elements.explanationContainer) {
+              elements.explanationContainer.style.display = 'block';
+            }
+          }
+        }, 1000);
+      }
+
+      function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      }
+
+      function disableInputs() {
+        if (elements.optionsContainer) {
+          elements.optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+        }
+        if (elements.fillupInput) elements.fillupInput.disabled = true;
+        if (elements.submitFillupBtn) elements.submitFillupBtn.disabled = true;
+        if (elements.revealAnswerBtn) elements.revealAnswerBtn.disabled = true;
+        if (elements.matchContainer) {
+          elements.matchContainer.querySelectorAll('.match-item').forEach(item => item.style.pointerEvents = 'none');
+        }
+        if (elements.submitMatchBtn) elements.submitMatchBtn.disabled = true;
+      }
+
+      function updateScore() {
+        if (elements.scoreDisplay) {
+          elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
+        }
+      }
+
+      function updateProgress() {
+        const progress = ((state.currentQuestionIndex + 1) / state.questions.length) * 100;
+        if (elements.progressFill) {
+          elements.progressFill.style.width = `${progress}%`;
+        }
+      }
+
+      function showError(message) {
+        const currentScreen = elements.quizScreen?.style.display === 'block' ? elements.quizScreen : elements.subjectScreen;
+        if (currentScreen && elements.quizContent) {
+          elements.quizContent.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle empty-state-icon"></i><div>${message}</div></div>`;
+          currentScreen.style.display = 'block';
+        }
+        if (elements.nextQuestionBtn) {
+          elements.nextQuestionBtn.style.display = 'none';
+        }
+      }
+
+      function resetSelections(level) {
+        const levels = ['subject', 'chapter', 'unit', 'topic', 'quizType'];
+        const index = levels.indexOf(level);
+        for (let i = index; i < levels.length; i++) {
+          state[`current${levels[i].charAt(0).toUpperCase() + levels[i].slice(1)}`] = null;
+          const card = elements[`${levels[i]}Card`];
+          const list = elements[`${levels[i]}List`];
+          if (card) card.classList.add('hidden');
+          if (list) list.innerHTML = '';
+        }
+        if (elements.startQuizBtn) {
+          elements.startQuizBtn.style.display = 'none';
+          elements.startQuizBtn.disabled = true;
+        }
+        if (elements.quizScreen) elements.quizScreen.style.display = 'none';
+        if (elements.quizContent) elements.quizContent.innerHTML = '';
+        if (elements.nextQuestionBtn) elements.nextQuestionBtn.style.display = 'none';
+        clearInterval(timerInterval);
+        timeLeft = 60;
+        if (elements.timerDisplay) elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
+        if (elements.progressFill) elements.progressFill.style.width = '0%';
+        if (level === 'subject') {
+          if (elements.subjectCard) elements.subjectCard.classList.remove('hidden');
+        } else {
+          const prevLevel = levels[index - 1];
+          if (prevLevel && elements[`${prevLevel}Card`]) {
+            elements[`${prevLevel}Card`].classList.remove('hidden');
+          }
+        }
+        showScreen(level);
+      }
+
+      // Initialize event listeners
+      function initEventListeners() {
+        elements.subjectItems.forEach(item => {
+          item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
+        });
+
+        if (elements.backToSubjects) {
+          elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
+        }
+        if (elements.backToChapters) {
+          elements.backToChapters.addEventListener('click', () => {
+            if (elements.subjectCard) elements.subjectCard.classList.remove('hidden');
+            resetSelections('chapter');
+          });
+        }
+        if (elements.backToUnits) {
+          elements.backToUnits.addEventListener('click', () => {
+            if (elements.chapterCard) elements.chapterCard.classList.remove('hidden');
+            resetSelections('unit');
+          });
+        }
+        if (elements.backToTopics) {
+          elements.backToTopics.addEventListener('click', () => {
+            if (elements.unitCard) elements.unitCard.classList.remove('hidden');
+            resetSelections('topic');
+          });
+        }
+
+        if (elements.startQuizBtn) {
+          elements.startQuizBtn.addEventListener('click', startQuiz);
+        }
+
+        if (elements.nextQuestionBtn) {
+          elements.nextQuestionBtn.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timeLeft = state.timeLimit;
+            if (state.currentQuestionIndex < state.questions.length - 1) {
+              state.currentQuestionIndex++;
+              showQuestion(state.questions[state.currentQuestionIndex]);
+              startTimer();
+            } else {
+              showResults();
+            }
+          });
+        }
+
+        if (elements.prevBtn) {
+          elements.prevBtn.addEventListener('click', () => {
+            if (state.currentQuestionIndex > 0) {
+              clearInterval(timerInterval);
+              timeLeft = state.timeLimit;
+              state.currentQuestionIndex--;
+              showQuestion(state.questions[state.currentQuestionIndex]);
+              startTimer();
+            }
+          });
+        }
+
+        if (elements.restartQuizBtn) {
+          elements.restartQuizBtn.addEventListener('click', () => {
+            state.currentQuestionIndex = 0;
+            state.score = 0;
+            state.totalAnswered = 0;
+            state.matchSelections = {};
+            state.startTime = Date.now();
+            updateScore();
+            if (elements.quizContent) elements.quizContent.style.display = 'block';
+            if (elements.quizResults) elements.quizResults.style.display = 'none';
+            showQuestion(state.questions[0]);
+            startTimer();
+          });
+        }
+
+        if (elements.newQuizBtn) {
+          elements.newQuizBtn.addEventListener('click', () => {
+            if (state.isDPP || state.isTest) {
+              window.location.href = state.isDPP ? 'dpp.html' : 'tests.html';
+            } else {
+              resetSelections('subject');
+            }
+          });
+        }
+
+        if (elements.resetBtn) {
+          elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
+        }
+
+        // User menu interactions
+        if (elements.userAvatar) {
+          elements.userAvatar.addEventListener('click', () => {
+            elements.dropdownMenu.classList.toggle('show');
+          });
+        }
+
+        if (elements.logoutBtn) {
+          elements.logoutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+              window.location.href = 'index.html';
+            });
+          });
+        }
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', (e) => {
+          if (!elements.userMenu.contains(e.target)) {
+            elements.dropdownMenu.classList.remove('show');
+          }
+        });
+      }
+
+      // Initialize auth state listener
+      auth.onAuthStateChanged((user) => {
+        if (!user) {
+          window.location.href = 'index.html';
+        } else {
+          // Set user avatar
+          if (user.photoURL) {
+            elements.userAvatar.style.backgroundImage = `url(${user.photoURL})`;
+            elements.userAvatar.textContent = '';
+          } else {
+            elements.userAvatar.textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U';
+          }
+          
+          // Initialize the app
+          initEventListeners();
+          checkUrlParams();
+          
+          // Load user's quiz history
+          database.ref('quizHistory/' + user.uid).once('value').then((snapshot) => {
+            state.quizHistory = snapshot.val() ? Object.values(snapshot.val()) : [];
+          });
+        }
       });
-    });
-
-    // Toggle dropdown menu
-    document.getElementById('userAvatar').addEventListener('click', () => {
-      document.getElementById('dropdownMenu').classList.toggle('show');
-    });
-
-    // Close dropdown when clicking outside
-    window.addEventListener('click', (e) => {
-      if (!document.getElementById('userMenu').contains(e.target)) {
-        document.getElementById('dropdownMenu').classList.remove('show');
-      }
     });
   </script>
 </body>

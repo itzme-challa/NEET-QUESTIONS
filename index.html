@@ -442,31 +442,13 @@
     </main>
   </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Initialize Firebase
-      const firebaseConfig = {
-        apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
-        authDomain: "community-604af.firebaseapp.com",
-        databaseURL: "https://community-604af-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "community-604af",
-        storageBucket: "community-604af.appspot.com",
-        messagingSenderId: "735063146170",
-        appId: "1:735063146170:web:725bce2c3c64afc0f30c83",
-        measurementId: "G-7YD8RLH33Q"
-      };
+<!-- Add this to import firebase.js -->
+<script type="module" src="jsfirebase.js"></script>
 
-      firebase.initializeApp(firebaseConfig);
-      const auth = firebase.auth();
-      const database = firebase.database();
-      const firestore = firebase.firestore();
-
+<!-- Update the main script -->
+<script type="module">
+  import { auth, database, firestore } from './js/firebase.js';
+document.addEventListener('DOMContentLoaded', () => {
       const elements = {
         authScreen: document.getElementById('authScreen'),
         dashboardScreen: document.getElementById('dashboardScreen'),

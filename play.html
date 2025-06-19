@@ -1808,6 +1808,7 @@
 
       function showResults() {
         const quizResult = {
+          id: state.historyId,
           date: Date.now(),
           subject: state.currentSubject || (state.isDPP ? 'dpp' : 'test'),
           chapter: state.currentChapter,

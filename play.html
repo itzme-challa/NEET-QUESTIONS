@@ -58,7 +58,43 @@
   <script>
     // Initialize Firebase (same config as index.html)
     // ... (copy Firebase initialization from index.html) ...
+document.addEventListener('DOMContentLoaded', () => {
+      // Initialize Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
+        authDomain: "community-604af.firebaseapp.com",
+        databaseURL: "https://community-604af-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "community-604af",
+        storageBucket: "community-604af.appspot.com",
+        messagingSenderId: "735063146170",
+        appId: "1:735063146170:web:725bce2c3c64afc0f30c83",
+        measurementId: "G-7YD8RLH33Q"
+      };
 
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const database = firebase.database();
+      const firestore = firebase.firestore();
+
+      const elements = {
+        authScreen: document.getElementById('authScreen'),
+        dashboardScreen: document.getElementById('dashboardScreen'),
+        authTitle: document.getElementById('authTitle'),
+        authForm: document.getElementById('authForm'),
+        nameGroup: document.getElementById('nameGroup'),
+        email: document.getElementById('email'),
+        password: document.getElementById('password'),
+        authSubmit: document.getElementById('authSubmit'),
+        authFooterText: document.getElementById('authFooterText'),
+        authToggle: document.getElementById('authToggle'),
+        googleAuth: document.getElementById('googleAuth'),
+        loginBtn: document.getElementById('loginBtn'),
+        userMenu: document.getElementById('userMenu'),
+        userAvatar: document.getElementById('userAvatar'),
+        dropdownMenu: document.getElementById('dropdownMenu'),
+        logoutBtn: document.getElementById('logoutBtn')
+      };
+ 
     // Add auth state listener
     auth.onAuthStateChanged((user) => {
       if (!user) {

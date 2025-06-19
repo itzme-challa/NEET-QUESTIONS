@@ -8,21 +8,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary-color: #4361ee;
-      --primary-dark: #3a0ca3;
-      --secondary-color: #4cc9f0;
-      --success-color: #4ade80;
-      --error-color: #f87171;
-      --warning-color: #fbbf24;
+      --primary: #3b82f6;
+      --primary-dark: #1d4ed8;
+      --secondary: #4cc9f0;
+      --success: #4ade80;
+      --error: #f87171;
+      --warning: #fbbf24;
       --text-dark: #1f2937;
       --text-medium: #6b7280;
       --text-light: #9ca3af;
+      --background: #f3f4f6;
       --bg-light: #f9fafb;
-      --border-color: #e5e7eb;
+      --border-color: #d1d5db;
       --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-      --radius-sm: 0.375rem;
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --radius-sm: 0.25rem;
       --radius-md: 0.5rem;
       --radius-lg: 0.75rem;
     }
@@ -34,11 +35,10 @@
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background-color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--background);
       color: var(--text-dark);
       line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
       min-height: 100vh;
     }
 
@@ -72,7 +72,7 @@
 
     .logo-icon {
       font-size: 1.5rem;
-      color: var(--primary-color);
+      color: var(--primary);
     }
 
     .nav-buttons {
@@ -93,7 +93,7 @@
     }
 
     .btn-primary {
-      background-color: var(--primary-color);
+      background-color: var(--primary);
       color: white;
     }
 
@@ -220,7 +220,7 @@
 
     .progress-fill {
       height: 100%;
-      background: var(--primary-color);
+      background: var(--primary);
       transition: width 0.3s ease;
     }
 
@@ -327,7 +327,7 @@
 
     .quiz-result-icon {
       font-size: 3rem;
-      color: var(--primary-color);
+      color: var(--primary);
       margin-bottom: 1rem;
     }
 
@@ -383,7 +383,7 @@
       height: 2rem;
       border: 3px solid rgba(0, 0, 0, 0.1);
       border-radius: 50%;
-      border-top-color: var(--primary-color);
+      border-top-color: var(--primary);
       animation: spin 1s linear infinite;
     }
 
@@ -478,7 +478,7 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background-color: var(--primary-color);
+      background-color: var(--primary);
       color: white;
       display: flex;
       align-items: center;
@@ -901,7 +901,6 @@
         } else if (testId) {
           loadTest(testId);
         } else {
-          // Regular quiz mode
           showScreen('subject');
         }
       }
@@ -913,7 +912,7 @@
         state.dppId = dppId;
         
         try {
-          const snapshot = await database.ref('dpps/' + auth.currentUser.uid + '/' + dppId).once('value');
+          const snapshot = await database.ref(`dpps/${auth.currentUser.uid}/${dppId}`).once('value');
           const dpp = snapshot.val();
           
           if (!dpp) {
@@ -959,7 +958,7 @@
         state.testId = testId;
         
         try {
-          const snapshot = await database.ref('tests/' + auth.currentUser.uid + '/' + testId).once('value');
+          const snapshot = await database.ref(`tests/${auth.currentUser.uid}/${testId}`).once('value');
           const test = snapshot.val();
           
           if (!test) {
@@ -978,7 +977,6 @@
           
           // Load questions for this test
           if (test.subject === 'all') {
-            // Load from all subjects
             const allQuestions = [];
             for (const subject of ['biology', 'chemistry', 'physics']) {
               const data = await loadSubjectData(subject);
@@ -995,10 +993,9 @@
             }
             state.questions = allQuestions.sort(() => Math.random() - 0.5).slice(0, test.questions);
           } else {
-            // Load from single subject
             const data = await loadSubjectData(test.subject);
-            state.questions = data.filter(q => 
-              test.chapters.some(chapter => q.chapter_name === chapter)
+            state.questions = data
+              .filter(q => test.chapters.some(chapter => q.chapter_name === chapter))
               .sort(() => Math.random() - 0.5)
               .slice(0, test.questions);
           }
@@ -1018,22 +1015,15 @@
       }
 
       function showLoading(show) {
-        if (elements.loadingModal) {
-          elements.loadingModal.style.display = show ? 'flex' : 'none';
-        }
+        elements.loadingModal.style.display = show ? 'flex' : 'none';
       }
 
       function showScreen(screenName) {
         const screens = ['subject', 'chapter', 'unit', 'topic', 'quizType', 'quiz'];
         screens.forEach(screen => {
-          const element = elements[`${screen}Screen`];
-          if (element) {
-            element.style.display = screen === screenName ? 'block' : 'none';
-          }
+          elements[`${screen}Screen`].style.display = screen === screenName ? 'block' : 'none';
         });
-        if (elements.resetBtn) {
-          elements.resetBtn.style.display = screenName === 'quiz' ? 'block' : 'none';
-        }
+        elements.resetBtn.style.display = screenName === 'quiz' ? 'block' : 'none';
       }
 
       function createListItem(text, value, count) {
@@ -1079,7 +1069,7 @@
           console.error('Error loading subject data:', error);
           showError('Failed to load data. Please try again.');
           resetSelections('subject');
-          return null;
+          return [];
         } finally {
           showLoading(false);
         }
@@ -1087,22 +1077,20 @@
 
       async function handleSubjectSelect(subject) {
         state.currentSubject = subject;
-        if (elements.subjectCard) elements.subjectCard.classList.add('hidden');
+        elements.subjectCard.classList.add('hidden');
         const data = await loadSubjectData(subject);
-        if (!data) return;
+        if (!data.length) return;
         const chaptersSnapshot = await firestore.collection('subjects').doc(subject).collection('chapters').get();
         const chapters = chaptersSnapshot.docs.map(doc => doc.id).sort();
-        if (elements.chapterList) {
-          elements.chapterList.innerHTML = '';
-          if (chapters.length === 0) {
-            elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
-          } else {
-            for (const chapter of chapters) {
-              const count = data.filter(q => q.chapter_name === chapter).length;
-              const li = createListItem(chapter, chapter, count);
-              li.addEventListener('click', () => handleChapterSelect(chapter));
-              elements.chapterList.appendChild(li);
-            }
+        elements.chapterList.innerHTML = '';
+        if (chapters.length === 0) {
+          elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
+        } else {
+          for (const chapter of chapters) {
+            const count = data.filter(q => q.chapter_name === chapter).length;
+            const li = createListItem(chapter, chapter, count);
+            li.addEventListener('click', () => handleChapterSelect(chapter));
+            elements.chapterList.appendChild(li);
           }
         }
         showScreen('chapter');
@@ -1110,22 +1098,20 @@
 
       async function handleChapterSelect(chapter) {
         state.currentChapter = chapter;
-        if (elements.chapterCard) elements.chapterCard.classList.add('hidden');
+        elements.chapterCard.classList.add('hidden');
         const data = state.subjectData[state.currentSubject];
         const unitsSnapshot = await firestore.collection('subjects').doc(state.currentSubject)
           .collection('chapters').doc(chapter).collection('units').get();
         const units = unitsSnapshot.docs.map(doc => doc.id).sort();
-        if (elements.unitList) {
-          elements.unitList.innerHTML = '';
-          if (units.length === 0) {
-            elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
-          } else {
-            for (const unit of units) {
-              const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === unit).length;
-              const li = createListItem(unit, unit, count);
-              li.addEventListener('click', () => handleUnitSelect(unit));
-              elements.unitList.appendChild(li);
-            }
+        elements.unitList.innerHTML = '';
+        if (units.length === 0) {
+          elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
+        } else {
+          for (const unit of units) {
+            const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === unit).length;
+            const li = createListItem(unit, unit, count);
+            li.addEventListener('click', () => handleUnitSelect(unit));
+            elements.unitList.appendChild(li);
           }
         }
         showScreen('unit');
@@ -1133,23 +1119,21 @@
 
       async function handleUnitSelect(unit) {
         state.currentUnit = unit;
-        if (elements.unitCard) elements.unitCard.classList.add('hidden');
+        elements.unitCard.classList.add('hidden');
         const data = state.subjectData[state.currentSubject];
         const topicsSnapshot = await firestore.collection('subjects').doc(state.currentSubject)
           .collection('chapters').doc(state.currentChapter)
           .collection('units').doc(unit).collection('topics').get();
         const topics = topicsSnapshot.docs.map(doc => doc.id).sort();
-        if (elements.topicList) {
-          elements.topicList.innerHTML = '';
-          if (topics.length === 0) {
-            elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
-          } else {
-            for (const topic of topics) {
-              const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === topic).length;
-              const li = createListItem(topic, topic, count);
-              li.addEventListener('click', () => handleTopicSelect(topic));
-              elements.topicList.appendChild(li);
-            }
+        elements.topicList.innerHTML = '';
+        if (topics.length === 0) {
+          elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
+        } else {
+          for (const topic of topics) {
+            const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === topic).length;
+            const li = createListItem(topic, topic, count);
+            li.addEventListener('click', () => handleTopicSelect(topic));
+            elements.topicList.appendChild(li);
           }
         }
         showScreen('topic');
@@ -1157,32 +1141,39 @@
 
       async function handleTopicSelect(topic) {
         state.currentTopic = topic;
-        if (elements.topicCard) elements.topicCard.classList.add('hidden');
+        elements.topicCard.classList.add('hidden');
         const data = state.subjectData[state.currentSubject];
-        const quizTypes = [...new Set(data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === topic).map(q => q.quiz_type))].filter(Boolean).sort();
-        if (elements.quizTypeList) {
-          elements.quizTypeList.innerHTML = '';
-          if (quizTypes.length === 0) {
-            elements.quizTypeList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No quiz types found</div></div>';
-          } else {
-            quizTypes.forEach(type => {
-              const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === state.currentTopic && q.quiz_type === type).length;
-              const li = createListItem(type, type, count);
-              li.addEventListener('click', () => handleQuizTypeSelect(type));
-              elements.quizTypeList.appendChild(li);
-            });
-          }
+        const quizTypes = [...new Set(data.filter(q => 
+          q.chapter_name === state.currentChapter && 
+          q.unit_name === state.currentUnit && 
+          q.topic_name === topic
+        ).map(q => q.quiz_type))].filter(Boolean).sort();
+        elements.quizTypeList.innerHTML = '';
+        if (quizTypes.length === 0) {
+          elements.quizTypeList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No quiz types found</div></div>';
+        } else {
+          quizTypes.forEach(type => {
+            const count = data.filter(q => 
+              q.chapter_name === state.currentChapter && 
+              q.unit_name === state.currentUnit && 
+              q.topic_name === state.currentTopic && 
+              q.quiz_type === type
+            ).length;
+            const li = createListItem(type, type, count);
+            li.addEventListener('click', () => handleQuizTypeSelect(type));
+            elements.quizTypeList.appendChild(li);
+          });
         }
-        if (elements.startQuizBtn) {
-          elements.startQuizBtn.style.display = 'block';
-        }
+        elements.startQuizBtn.style.display = 'block';
         showScreen('quizType');
       }
 
       function handleQuizTypeSelect(quizType) {
         state.currentQuizType = quizType;
-        if (elements.quizTypeCard) elements.quizTypeCard.classList.add('hidden');
-        if (elements.startQuizBtn) elements.startQuizBtn.disabled = false;
+        elements.quizTypeList.querySelectorAll('.list-item').forEach(item => {
+          item.classList.toggle('active', item.dataset.value === quizType);
+        });
+        elements.startQuizBtn.disabled = false;
       }
 
       async function startQuiz() {
@@ -1193,16 +1184,15 @@
             resetSelections('subject');
             return;
           }
-          state.questions = data.filter(q => {
-            return (
-              q.chapter_name === state.currentChapter &&
-              q.unit_name === state.currentUnit &&
-              q.topic_name === state.currentTopic &&
-              (!state.currentQuizType || q.quiz_type === state.currentQuizType)
-            );
-          });
+          state.questions = data.filter(q => 
+            q.chapter_name === state.currentChapter &&
+            q.unit_name === state.currentUnit &&
+            q.topic_name === state.currentTopic &&
+            (!state.currentQuizType || q.quiz_type === state.currentQuizType)
+          );
           if (state.questions.length === 0) {
             showError('No questions found for the selected filters.');
+            resetSelections('topic');
             return;
           }
           if (state.questions.length > 1) {
@@ -1216,12 +1206,8 @@
         state.matchSelections = {};
         state.startTime = Date.now();
         updateScore();
-        if (elements.totalQuestions) {
-          elements.totalQuestions.textContent = state.questions.length;
-        }
-        if (elements.startQuizBtn) {
-          elements.startQuizBtn.style.display = 'none';
-        }
+        elements.totalQuestions.textContent = state.questions.length;
+        elements.startQuizBtn.style.display = 'none';
         showScreen('quiz');
         showQuestion(state.questions[0]);
         startTimer();
@@ -1231,24 +1217,16 @@
         if (!question) return;
         updateProgress();
         ['mcqContent', 'fillupContent', 'flashcardContent', 'matchContent', 'videoContent'].forEach(id => {
-          if (elements[id]) elements[id].style.display = 'none';
+          elements[id].style.display = 'none';
         });
-        if (elements.explanationContainer) elements.explanationContainer.style.display = 'none';
-        if (elements.prevBtn) elements.prevBtn.disabled = state.currentQuestionIndex === 0;
-        if (elements.nextQuestionBtn) {
-          elements.nextQuestionBtn.disabled = false;
-          elements.nextQuestionBtn.textContent = state.currentQuestionIndex === state.questions.length - 1 ? 'See Results' : 'Next';
-        }
-        if (elements.currentQuestion) {
-          elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
-        }
-        if (elements.questionText) {
-          elements.questionText.innerHTML = question.question || 'No question text available';
-        }
-        if (question.explanation && elements.explanationText) {
-          elements.explanationText.innerHTML = question.explanation;
-        }
-        switch (question.quiz_type) {
+        elements.explanationContainer.style.display = 'none';
+        elements.prevBtn.disabled = state.currentQuestionIndex === 0;
+        elements.nextQuestionBtn.disabled = false;
+        elements.nextQuestionBtn.textContent = state.currentQuestionIndex === state.questions.length - 1 ? 'See Results' : 'Next';
+        elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
+        elements.questionText.innerHTML = question.question || 'No question text available';
+        elements.explanationText.innerHTML = question.explanation || 'No explanation provided';
+        switch (question.quiz_type?.toLowerCase()) {
           case 'mcq':
             showMCQQuestion(question);
             break;
@@ -1270,112 +1248,92 @@
       }
 
       function showMCQQuestion(question) {
-        if (elements.mcqContent) elements.mcqContent.style.display = 'block';
-        if (elements.optionsContainer) {
-          elements.optionsContainer.innerHTML = '';
-          const options = [
-            { letter: 'A', text: question.option_a },
-            { letter: 'B', text: question.option_b },
-            { letter: 'C', text: question.option_c },
-            { letter: 'D', text: question.option_d }
-          ].filter(opt => opt.text);
-          options.forEach(opt => {
-            const button = document.createElement('button');
-            button.className = 'option-btn';
-            button.innerHTML = `<strong>${opt.letter}.</strong> ${opt.text}`;
-            button.dataset.option = opt.text;
-            button.addEventListener('click', () => checkMCQAnswer(button, question.answer));
-            elements.optionsContainer.appendChild(button);
-          });
-        }
+        elements.mcqContent.style.display = 'block';
+        elements.optionsContainer.innerHTML = '';
+        const options = [
+          { letter: 'A', text: question.option_a },
+          { letter: 'B', text: question.option_b },
+          { letter: 'C', text: question.option_c },
+          { letter: 'D', text: question.option_d }
+        ].filter(opt => opt.text);
+        options.forEach(opt => {
+          const button = document.createElement('button');
+          button.className = 'option-btn';
+          button.innerHTML = `<strong>${opt.letter}.</strong> ${opt.text}`;
+          button.dataset.option = opt.text;
+          button.addEventListener('click', () => checkMCQAnswer(button, question.answer));
+          elements.optionsContainer.appendChild(button);
+        });
       }
 
       function showFillupQuestion(question) {
-        if (elements.fillupContent) elements.fillupContent.style.display = 'block';
-        if (elements.fillupInput) {
-          elements.fillupInput.value = '';
-          elements.fillupInput.classList.remove('correct', 'incorrect');
-          elements.fillupInput.disabled = false;
-        }
-        if (elements.submitFillupBtn) {
-          elements.submitFillupBtn.disabled = false;
-          elements.submitFillupBtn.onclick = () => checkFillupAnswer(question.answer);
-        }
+        elements.fillupContent.style.display = 'block';
+        elements.fillupInput.value = '';
+        elements.fillupInput.classList.remove('correct', 'incorrect');
+        elements.fillupInput.disabled = false;
+        elements.submitFillupBtn.disabled = false;
+        elements.submitFillupBtn.onclick = () => checkFillupAnswer(question.answer);
       }
 
       function showFlashcardQuestion(question) {
-        if (elements.flashcardContent) elements.flashcardContent.style.display = 'block';
-        if (elements.flashcardAnswer) {
-          elements.flashcardAnswer.innerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
-          elements.flashcardAnswer.style.display = 'none';
-        }
-        if (elements.revealAnswerBtn) {
-          elements.revealAnswerBtn.disabled = false;
-          elements.revealAnswerBtn.onclick = () => {
-            elements.flashcardAnswer.style.display = 'block';
-            elements.revealAnswerBtn.disabled = true;
-            state.totalAnswered++;
-            state.score++;
-            updateScore();
-            if (question.explanation && elements.explanationContainer) {
-              elements.explanationContainer.style.display = 'block';
-            }
-            clearInterval(timerInterval);
-          };
-        }
+        elements.flashcardContent.style.display = 'block';
+        elements.flashcardAnswer.innerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
+        elements.flashcardAnswer.style.display = 'none';
+        elements.revealAnswerBtn.disabled = false;
+        elements.revealAnswerBtn.onclick = () => {
+          elements.flashcardAnswer.style.display = 'block';
+          elements.revealAnswerBtn.disabled = true;
+          state.totalAnswered++;
+          state.score++;
+          updateScore();
+          elements.explanationContainer.style.display = 'block';
+          clearInterval(timerInterval);
+        };
       }
 
       function showMatchQuestion(question) {
-        if (elements.matchContent) elements.matchContent.style.display = 'block';
-        if (elements.matchContainer) {
-          elements.matchContainer.innerHTML = '';
-          state.matchSelections = {};
-          const options = [
-            question.option_a,
-            question.option_b,
-            question.option_c,
-            question.option_d
-          ].filter(opt => opt).map(opt => opt.split(','));
-          const leftItems = options.map(opt => opt[0]);
-          const rightItems = options.map(opt => opt[1]).sort(() => Math.random() - 0.5);
-          const leftColumn = document.createElement('div');
-          leftColumn.className = 'match-column';
-          const rightColumn = document.createElement('div');
-          rightColumn.className = 'match-column';
-          leftItems.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'match-item';
-            div.textContent = item;
-            div.dataset.id = index;
-            div.addEventListener('click', () => selectMatchItem(div, 'left'));
-            leftColumn.appendChild(div);
-          });
-          rightItems.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'match-item';
-            div.textContent = item;
-            div.dataset.id = index;
-            div.addEventListener('click', () => selectMatchItem(div, 'right'));
-            rightColumn.appendChild(div);
-          });
-          elements.matchContainer.appendChild(leftColumn);
-          elements.matchContainer.appendChild(rightColumn);
-        }
-        if (elements.submitMatchBtn) {
-          elements.submitMatchBtn.disabled = false;
-          elements.submitMatchBtn.onclick = () => checkMatchAnswer(question);
-        }
+        elements.matchContent.style.display = 'block';
+        elements.matchContainer.innerHTML = '';
+        state.matchSelections = {};
+        const options = [
+          question.option_a,
+          question.option_b,
+          question.option_c,
+          question.option_d
+        ].filter(opt => opt).map(opt => opt.split(','));
+        const leftItems = options.map(opt => opt[0]);
+        const rightItems = options.map(opt => opt[1]).sort(() => Math.random() - 0.5);
+        const leftColumn = document.createElement('div');
+        leftColumn.className = 'match-column';
+        const rightColumn = document.createElement('div');
+        rightColumn.className = 'match-column';
+        leftItems.forEach((item, index) => {
+          const div = document.createElement('div');
+          div.className = 'match-item';
+          div.textContent = item;
+          div.dataset.id = index;
+          div.addEventListener('click', () => selectMatchItem(div, 'left'));
+          leftColumn.appendChild(div);
+        });
+        rightItems.forEach((item, index) => {
+          const div = document.createElement('div');
+          div.className = 'match-item';
+          div.textContent = item;
+          div.dataset.id = index;
+          div.addEventListener('click', () => selectMatchItem(div, 'right'));
+          rightColumn.appendChild(div);
+        });
+        elements.matchContainer.appendChild(leftColumn);
+        elements.matchContainer.appendChild(rightColumn);
+        elements.submitMatchBtn.disabled = false;
+        elements.submitMatchBtn.onclick = () => checkMatchAnswer(question);
       }
 
       function showVideoQuestion(question) {
-        if (elements.videoContent) elements.videoContent.style.display = 'block';
-        if (elements.videoFrame) {
-          const videoId = question.question?.trim();
-          elements.videoFrame.src = videoId ? `https://www.youtube.com/embed/${videoId}` : '';
-        }
-        if (question.explanation && elements.explanationContainer) {
-          elements.explanationContainer.style.display = 'block';
-        }
+        elements.videoContent.style.display = 'block';
+        const videoId = question.question?.trim();
+        elements.videoFrame.src = videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+        elements.explanationContainer.style.display = 'block';
         state.totalAnswered++;
         state.score++;
         updateScore();
@@ -1383,17 +1341,13 @@
       }
 
       function showSimpleQuestion(question) {
-        if (elements.flashcardContent) elements.flashcardContent.style.display = 'block';
-        if (elements.flashcardAnswer) {
-          let answerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
-          if (question.option_a) answerHTML += `<br><strong>Option A:</strong> ${question.option_a}`;
-          if (question.option_b) answerHTML += `<br><strong>Option B:</strong> ${question.option_b}`;
-          elements.flashcardAnswer.innerHTML = answerHTML;
-          elements.flashcardAnswer.style.display = 'block';
-        }
-        if (question.explanation && elements.explanationContainer) {
-          elements.explanationContainer.style.display = 'block';
-        }
+        elements.flashcardContent.style.display = 'block';
+        let answerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
+        if (question.option_a) answerHTML += `<br><strong>Option A:</strong> ${question.option_a}`;
+        if (question.option_b) answerHTML += `<br><strong>Option B:</strong> ${question.option_b}`;
+        elements.flashcardAnswer.innerHTML = answerHTML;
+        elements.flashcardAnswer.style.display = 'block';
+        elements.explanationContainer.style.display = 'block';
         state.totalAnswered++;
         state.score++;
         updateScore();
@@ -1401,7 +1355,7 @@
       }
 
       function checkMCQAnswer(button, correctAnswer) {
-        const buttons = elements.optionsContainer?.querySelectorAll('.option-btn') || [];
+        const buttons = elements.optionsContainer.querySelectorAll('.option-btn');
         state.totalAnswered++;
         if (button.dataset.option === correctAnswer) {
           state.score++;
@@ -1416,18 +1370,15 @@
         }
         updateScore();
         buttons.forEach(btn => btn.disabled = true);
-        if (elements.explanationContainer) {
-          elements.explanationContainer.style.display = 'block';
-        }
+        elements.explanationContainer.style.display = 'block';
         clearInterval(timerInterval);
       }
 
       function checkFillupAnswer(correctAnswer) {
         const input = elements.fillupInput;
-        if (!input) return;
         state.totalAnswered++;
         const userAnswer = input.value.trim().toLowerCase();
-        if (userAnswer === correctAnswer.toLowerCase()) {
+        if (userAnswer === correctAnswer?.toLowerCase()) {
           state.score++;
           input.classList.add('correct');
         } else {
@@ -1435,10 +1386,8 @@
         }
         updateScore();
         input.disabled = true;
-        if (elements.submitFillupBtn) elements.submitFillupBtn.disabled = true;
-        if (elements.explanationContainer) {
-          elements.explanationContainer.style.display = 'block';
-        }
+        elements.submitFillupBtn.disabled = true;
+        elements.explanationContainer.style.display = 'block';
         clearInterval(timerInterval);
       }
 
@@ -1448,9 +1397,7 @@
         items.forEach(i => i.classList.remove('selected'));
         item.classList.add('selected');
         state.matchSelections[side] = id;
-        if (elements.submitMatchBtn) {
-          elements.submitMatchBtn.disabled = !state.matchSelections.left || !state.matchSelections.right;
-        }
+        elements.submitMatchBtn.disabled = !state.matchSelections.left || !state.matchSelections.right;
       }
 
       function checkMatchAnswer(question) {
@@ -1479,10 +1426,8 @@
         updateScore();
         leftItems.forEach(item => item.style.pointerEvents = 'none');
         rightItems.forEach(item => item.style.pointerEvents = 'none');
-        if (elements.submitMatchBtn) elements.submitMatchBtn.disabled = true;
-        if (elements.explanationContainer) {
-          elements.explanationContainer.style.display = 'block';
-        }
+        elements.submitMatchBtn.disabled = true;
+        elements.explanationContainer.style.display = 'block';
         clearInterval(timerInterval);
       }
 
@@ -1501,37 +1446,30 @@
           testId: state.testId
         };
         
-        // Save quiz result to database
         if (auth.currentUser) {
-          const newResultRef = database.ref('quizHistory/' + auth.currentUser.uid).push();
+          const newResultRef = database.ref(`quizHistory/${auth.currentUser.uid}`).push();
           newResultRef.set(quizResult);
         }
         
-        if (elements.quizContent) elements.quizContent.style.display = 'none';
-        if (elements.quizResults) elements.quizResults.style.display = 'block';
-        if (elements.scoreValue) elements.scoreValue.textContent = state.score;
-        if (elements.totalScore) elements.totalScore.textContent = state.questions.length;
+        elements.quizContent.style.display = 'none';
+        elements.quizResults.style.display = 'block';
+        elements.scoreValue.textContent = state.score;
+        elements.totalScore.textContent = state.questions.length;
         clearInterval(timerInterval);
       }
 
       function startTimer() {
         timeLeft = state.timeLimit;
-        if (elements.timerDisplay) {
-          elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
-        }
+        elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
         timerInterval = setInterval(() => {
           timeLeft--;
-          if (elements.timerDisplay) {
-            elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
-          }
+          elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
           if (timeLeft <= 0) {
             clearInterval(timerInterval);
             state.totalAnswered++;
             updateScore();
             disableInputs();
-            if (elements.explanationContainer) {
-              elements.explanationContainer.style.display = 'block';
-            }
+            elements.explanationContainer.style.display = 'block';
           }
         }, 1000);
       }
@@ -1543,40 +1481,28 @@
       }
 
       function disableInputs() {
-        if (elements.optionsContainer) {
-          elements.optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
-        }
-        if (elements.fillupInput) elements.fillupInput.disabled = true;
-        if (elements.submitFillupBtn) elements.submitFillupBtn.disabled = true;
-        if (elements.revealAnswerBtn) elements.revealAnswerBtn.disabled = true;
-        if (elements.matchContainer) {
-          elements.matchContainer.querySelectorAll('.match-item').forEach(item => item.style.pointerEvents = 'none');
-        }
-        if (elements.submitMatchBtn) elements.submitMatchBtn.disabled = true;
+        elements.optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+        elements.fillupInput.disabled = true;
+        elements.submitFillupBtn.disabled = true;
+        elements.revealAnswerBtn.disabled = true;
+        elements.matchContainer.querySelectorAll('.match-item').forEach(item => item.style.pointerEvents = 'none');
+        elements.submitMatchBtn.disabled = true;
       }
 
       function updateScore() {
-        if (elements.scoreDisplay) {
-          elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
-        }
+        elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
       }
 
       function updateProgress() {
         const progress = ((state.currentQuestionIndex + 1) / state.questions.length) * 100;
-        if (elements.progressFill) {
-          elements.progressFill.style.width = `${progress}%`;
-        }
+        elements.progressFill.style.width = `${progress}%`;
       }
 
       function showError(message) {
-        const currentScreen = elements.quizScreen?.style.display === 'block' ? elements.quizScreen : elements.subjectScreen;
-        if (currentScreen && elements.quizContent) {
-          elements.quizContent.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle empty-state-icon"></i><div>${message}</div></div>`;
-          currentScreen.style.display = 'block';
-        }
-        if (elements.nextQuestionBtn) {
-          elements.nextQuestionBtn.style.display = 'none';
-        }
+        const currentScreen = elements.quizScreen.style.display === 'block' ? elements.quizScreen : elements.subjectScreen;
+        elements.quizContent.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle empty-state-icon"></i><div>${message}</div></div>`;
+        currentScreen.style.display = 'block';
+        elements.nextQuestionBtn.style.display = 'none';
       }
 
       function resetSelections(level) {
@@ -1589,19 +1515,21 @@
           if (card) card.classList.add('hidden');
           if (list) list.innerHTML = '';
         }
-        if (elements.startQuizBtn) {
-          elements.startQuizBtn.style.display = 'none';
-          elements.startQuizBtn.disabled = true;
-        }
-        if (elements.quizScreen) elements.quizScreen.style.display = 'none';
-        if (elements.quizContent) elements.quizContent.innerHTML = '';
-        if (elements.nextQuestionBtn) elements.nextQuestionBtn.style.display = 'none';
+        elements.startQuizBtn.style.display = 'none';
+        elements.startQuizBtn.disabled = true;
+        elements.quizScreen.style.display = 'none';
+        elements.quizContent.innerHTML = '';
+        elements.nextQuestionBtn.style.display = 'block';
         clearInterval(timerInterval);
-        timeLeft = 60;
-        if (elements.timerDisplay) elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
-        if (elements.progressFill) elements.progressFill.style.width = '0%';
+        timeLeft = state.timeLimit;
+        elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
+        elements.progressFill.style.width = '0%';
+        state.isDPP = false;
+        state.isTest = false;
+        state.dppId = null;
+        state.testId = null;
         if (level === 'subject') {
-          if (elements.subjectCard) elements.subjectCard.classList.remove('hidden');
+          elements.subjectCard.classList.remove('hidden');
         } else {
           const prevLevel = levels[index - 1];
           if (prevLevel && elements[`${prevLevel}Card`]) {
@@ -1617,103 +1545,78 @@
           item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
         });
 
-        if (elements.backToSubjects) {
-          elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
-        }
-        if (elements.backToChapters) {
-          elements.backToChapters.addEventListener('click', () => {
-            if (elements.subjectCard) elements.subjectCard.classList.remove('hidden');
-            resetSelections('chapter');
-          });
-        }
-        if (elements.backToUnits) {
-          elements.backToUnits.addEventListener('click', () => {
-            if (elements.chapterCard) elements.chapterCard.classList.remove('hidden');
-            resetSelections('unit');
-          });
-        }
-        if (elements.backToTopics) {
-          elements.backToTopics.addEventListener('click', () => {
-            if (elements.unitCard) elements.unitCard.classList.remove('hidden');
-            resetSelections('topic');
-          });
-        }
+        elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
+        elements.backToChapters.addEventListener('click', () => {
+          elements.subjectCard.classList.remove('hidden');
+          resetSelections('chapter');
+        });
+        elements.backToUnits.addEventListener('click', () => {
+          elements.chapterCard.classList.remove('hidden');
+          resetSelections('unit');
+        });
+        elements.backToTopics.addEventListener('click', () => {
+          elements.unitCard.classList.remove('hidden');
+          resetSelections('topic');
+        });
 
-        if (elements.startQuizBtn) {
-          elements.startQuizBtn.addEventListener('click', startQuiz);
-        }
+        elements.startQuizBtn.addEventListener('click', startQuiz);
 
-        if (elements.nextQuestionBtn) {
-          elements.nextQuestionBtn.addEventListener('click', () => {
+        elements.nextQuestionBtn.addEventListener('click', () => {
+          clearInterval(timerInterval);
+          timeLeft = state.timeLimit;
+          if (state.currentQuestionIndex < state.questions.length - 1) {
+            state.currentQuestionIndex++;
+            showQuestion(state.questions[state.currentQuestionIndex]);
+            startTimer();
+          } else {
+            showResults();
+          }
+        });
+
+        elements.prevBtn.addEventListener('click', () => {
+          if (state.currentQuestionIndex > 0) {
             clearInterval(timerInterval);
             timeLeft = state.timeLimit;
-            if (state.currentQuestionIndex < state.questions.length - 1) {
-              state.currentQuestionIndex++;
-              showQuestion(state.questions[state.currentQuestionIndex]);
-              startTimer();
-            } else {
-              showResults();
-            }
-          });
-        }
-
-        if (elements.prevBtn) {
-          elements.prevBtn.addEventListener('click', () => {
-            if (state.currentQuestionIndex > 0) {
-              clearInterval(timerInterval);
-              timeLeft = state.timeLimit;
-              state.currentQuestionIndex--;
-              showQuestion(state.questions[state.currentQuestionIndex]);
-              startTimer();
-            }
-          });
-        }
-
-        if (elements.restartQuizBtn) {
-          elements.restartQuizBtn.addEventListener('click', () => {
-            state.currentQuestionIndex = 0;
-            state.score = 0;
-            state.totalAnswered = 0;
-            state.matchSelections = {};
-            state.startTime = Date.now();
-            updateScore();
-            if (elements.quizContent) elements.quizContent.style.display = 'block';
-            if (elements.quizResults) elements.quizResults.style.display = 'none';
-            showQuestion(state.questions[0]);
+            state.currentQuestionIndex--;
+            showQuestion(state.questions[state.currentQuestionIndex]);
             startTimer();
-          });
-        }
+          }
+        });
 
-        if (elements.newQuizBtn) {
-          elements.newQuizBtn.addEventListener('click', () => {
-            if (state.isDPP || state.isTest) {
-              window.location.href = state.isDPP ? 'dpp.html' : 'tests.html';
-            } else {
-              resetSelections('subject');
-            }
-          });
-        }
+        elements.restartQuizBtn.addEventListener('click', () => {
+          state.currentQuestionIndex = 0;
+          state.score = 0;
+          state.totalAnswered = 0;
+          state.matchSelections = {};
+          state.startTime = Date.now();
+          updateScore();
+          elements.quizContent.style.display = 'block';
+          elements.quizResults.style.display = 'none';
+          showQuestion(state.questions[0]);
+          startTimer();
+        });
 
-        if (elements.resetBtn) {
-          elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
-        }
+        elements.newQuizBtn.addEventListener('click', () => {
+          if (state.isDPP || state.isTest) {
+            window.location.href = state.isDPP ? 'dpp.html' : 'tests.html';
+          } else {
+            resetSelections('subject');
+          }
+        });
+
+        elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
 
         // User menu interactions
-        if (elements.userAvatar) {
-          elements.userAvatar.addEventListener('click', () => {
-            elements.dropdownMenu.classList.toggle('show');
-          });
-        }
+        elements.userAvatar.addEventListener('click', () => {
+          elements.dropdownMenu.classList.toggle('show');
+        });
 
-        if (elements.logoutBtn) {
-          elements.logoutBtn.addEventListener('click', () => {
-            auth.signOut().then(() => {
-              window.location.href = 'index.html';
-            });
+        elements.logoutBtn.addEventListener('click', () => {
+          auth.signOut().then(() => {
+            window.location.href = 'index.html';
           });
-        }
+        });
 
-        // Close dropdown when clicking outside
         window.addEventListener('click', (e) => {
           if (!elements.userMenu.contains(e.target)) {
             elements.dropdownMenu.classList.remove('show');
@@ -1739,8 +1642,10 @@
           checkUrlParams();
           
           // Load user's quiz history
-          database.ref('quizHistory/' + user.uid).once('value').then((snapshot) => {
+          database.ref(`quizHistory/${user.uid}`).once('value').then((snapshot) => {
             state.quizHistory = snapshot.val() ? Object.values(snapshot.val()) : [];
+          }).catch(error => {
+            console.error('Error loading quiz history:', error);
           });
         }
       });

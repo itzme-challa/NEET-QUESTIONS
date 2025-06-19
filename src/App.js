@@ -1,9 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
-import CardList from './components/CardList';
-import QuizBox from './components/QuizBox';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+
+// Placeholder components (replace with your actual components)
+const CardList = ({ items, onSelect, title }) => (
+  <div>
+    <h3 className="text-2xl font-semibold text-blue-800 mb-4">{title}</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {items.map((item) => (
+        <button
+          key={item}
+          onClick={() => onSelect(item)}
+          className="bg-blue-500 text-white p-4 rounded-lg hover:bg-blue-600 transition"
+        >
+          {item}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+const QuizBox = ({ question, questionNumber, totalQuestions, onNext }) => (
+  <div className="bg-gray-100 p-6 rounded-lg">
+    <h3 className="text-xl font-bold">Question {questionNumber} of {totalQuestions}</h3>
+    <p className="my-4">{question.question || 'No question text available'}</p>
+    <button
+      onClick={onNext}
+      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+    >
+      {questionNumber < totalQuestions ? 'Next' : 'Finish'}
+    </button>
+  </div>
+);
 
 const subjectUrls = {
   biology: 'https://itzfew.github.io/NEET-Questions/data/biology.json',
@@ -18,6 +47,7 @@ const App = () => {
   const [currentQuestions, setCurrentQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Extract URL parameters
   const { subject, chapter, unit, topic } = useParams();
@@ -25,20 +55,31 @@ const App = () => {
   const queryParams = new URLSearchParams(location.search);
   const quizType = queryParams.get('type')?.toLowerCase() || '';
 
+  // Fetch data when subject changes
   useEffect(() => {
-    if (subject) {
+    if (subject && subjectUrls[subject.toLowerCase()]) {
+      setIsLoading(true);
+      console.log(`Fetching data for subject: ${subject}`);
       fetch(subjectUrls[subject.toLowerCase()])
         .then((res) => {
-          if (!res.ok) throw new Error('Failed to fetch data');
+          if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch ${subject} data`);
           return res.json();
         })
         .then((data) => {
+          console.log(`Data fetched successfully for ${subject}:`, data);
           setFullData(data);
           setError('');
         })
-        .catch(() => {
-          setError('Error loading data. Please try again.');
+        .catch((err) => {
+          console.error(`Error fetching ${subject} data:`, err);
+          setError(`Failed to load ${subject} data. Please try again.`);
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
+    } else if (subject && !subjectUrls[subject.toLowerCase()]) {
+      console.warn(`Invalid subject: ${subject}`);
+      setError('Invalid subject selected.');
     }
   }, [subject]);
 
@@ -46,11 +87,11 @@ const App = () => {
     q['Chapter Name'] ||
     q['chapter name'] ||
     q['Unique Chapter Name'] ||
-    q.topic_name.split('>>')[0]?.trim() ||
+    q.topic_name?.split('>>')[0]?.trim() ||
     '';
 
-  const getUnitName = (q) => q.topic_name.split('>>')[1]?.trim() || '';
-  const getTopicName = (q) => q.topic_name.split('>>')[2]?.trim() || '';
+  const getUnitName = (q) => q.topic_name?.split('>>')[1]?.trim() || '';
+  const getTopicName = (q) => q.topic_name?.split('>>')[2]?.trim() || '';
 
   const getListItems = (type) => {
     if (type === 'subjects') return Object.keys(subjectUrls);
@@ -63,22 +104,17 @@ const App = () => {
             .filter((q) => getChapterName(q) === chapter)
             .map(getUnitName)
         ),
-      ]
-        .filter(Boolean)
-        .sort();
+      ].filter(Boolean).sort();
     if (type === 'topics')
       return [
         ...new Set(
           fullData
             .filter(
-              (q) =>
-                getChapterName(q) === chapter && getUnitName(q) === unit
+              (q) => getChapterName(q) === chapter && getUnitName(q) === unit
             )
             .map(getTopicName)
         ),
-      ]
-        .filter(Boolean)
-        .sort();
+      ].filter(Boolean).sort();
     if (type === 'quizTypes')
       return [
         ...new Set(
@@ -91,22 +127,23 @@ const App = () => {
             )
             .map((q) => q.quiz_type)
         ),
-      ]
-        .filter(Boolean)
-        .sort();
+      ].filter(Boolean).sort();
     return [];
   };
 
   const handleSelect = (type, value) => {
-    if (type === 'subject') navigate(`/${value}`);
-    else if (type === 'chapter') navigate(`/${subject}/${value}`);
-    else if (type === 'unit') navigate(`/${subject}/${chapter}/${value}`);
-    else if (type === 'topic') navigate(`/${subject}/${chapter}/${unit}/${value}`);
+    console.log(`Navigating: ${type} = ${value}`);
+    const encodedValue = encodeURIComponent(value);
+    if (type === 'subject') navigate(`/${encodedValue}`);
+    else if (type === 'chapter') navigate(`/${subject}/${encodedValue}`);
+    else if (type === 'unit') navigate(`/${subject}/${chapter}/${encodedValue}`);
+    else if (type === 'topic') navigate(`/${subject}/${chapter}/${unit}/${encodedValue}`);
     else if (type === 'quizType')
-      navigate(`/${subject}/${chapter}/${unit}/${topic}?type=${value.toLowerCase()}`);
+      navigate(`/${subject}/${chapter}/${unit}/${topic}?type=${encodedValue.toLowerCase()}`);
   };
 
   const handleBack = () => {
+    console.log(`Navigating back from: ${location.pathname}${location.search}`);
     if (quizType) navigate(`/${subject}/${chapter}/${unit}/${topic}`);
     else if (topic) navigate(`/${subject}/${chapter}/${unit}`);
     else if (unit) navigate(`/${subject}/${chapter}`);
@@ -115,6 +152,7 @@ const App = () => {
   };
 
   const handleNext = () => {
+    console.log(`Next question: ${currentIndex + 1}/${currentQuestions.length}`);
     if (currentIndex < currentQuestions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
@@ -124,22 +162,25 @@ const App = () => {
     }
   };
 
-  // Load questions when quizType is selected
+  // Load questions for quiz
   useEffect(() => {
-    if (subject && chapter && unit && topic && quizType) {
+    if (subject && chapter && unit && topic && quizType && fullData.length) {
+      console.log(`Filtering questions for ${subject}/${chapter}/${unit}/${topic}?type=${quizType}`);
       const questions = fullData.filter(
         (q) =>
-          getChapterName(q) === chapter &&
-          getUnitName(q) === unit &&
-          getTopicName(q) === topic &&
-          q.quiz_type.toLowerCase() === quizType
+          getChapterName(q) === decodeURIComponent(chapter) &&
+          getUnitName(q) === decodeURIComponent(unit) &&
+          getTopicName(q) === decodeURIComponent(topic) &&
+          q.quiz_type?.toLowerCase() === quizType
       );
+      console.log(`Found ${questions.length} questions`);
       setCurrentQuestions(questions);
       setCurrentIndex(0);
     }
   }, [subject, chapter, unit, topic, quizType, fullData]);
 
   const renderView = () => {
+    if (isLoading) return <p className="text-blue-600 text-center">Loading...</p>;
     if (error) return <p className="text-red-600 text-center">{error}</p>;
 
     if (!subject)

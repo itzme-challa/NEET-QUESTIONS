@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Generate DPP - NEET Quiz Explorer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --primary-dark: #3a0ca3;
+      --bg-light: #f9fafb;
+      --border-color: #e5e7eb;
+      --radius-sm: 0.375rem;
+    }
+
+    .backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .modal {
+      background-color: white;
+      border-radius: var(--radius-sm);
+      width: 90%;
+      max-width: 400px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .spinner {
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+  <div id="app" class="min-h-screen flex flex-col">
+    <header class="bg-white shadow-sm sticky top-0 z-10 px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <i class="fas fa-atom text-2xl text-blue-500"></i>
+        <span class="font-semibold text-xl text-gray-800">NEET Quiz Explorer</span>
+      </div>
+      <div class="flex gap-2">
+        <a href="index.html" class="btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Home</a>
+        <button id="logoutBtn" class="btn bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+      </div>
+    </header>
+
+    <main class="flex-1 p-6 max-w-4xl mx-auto w-full">
+      <div id="subjectScreen">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 class="text-xl font-semibold mb-4">Select Subject</h2>
+          <ul class="list-none" id="subjectList"></ul>
+        </div>
+      </div>
+
+      <div id="chapterScreen" class="hidden">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div class="flex items-center mb-4">
+            <button id="backToSubjects" class="mr-4 text-blue-500 hover:text-blue-600"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="text-xl font-semibold">Select Chapter</h2>
+          </div>
+          <div id="chapterList"></div>
+        </div>
+      </div>
+
+      <div id="unitScreen" class="hidden">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div class="flex items-center mb-4">
+            <button id="backToChapters" class="mr-4 text-blue-500 hover:text-blue-600"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="text-xl font-semibold">Select Unit</h2>
+          </div>
+          <div id="unitList"></div>
+        </div>
+      </div>
+
+      <div id="topicScreen" class="hidden">
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div class="flex items-center mb-4">
+            <button id="backToUnits" class="mr-4 text-blue-500 hover:text-blue-600"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="text-xl font-semibold">Select Topic</h2>
+          </div>
+          <div id="topicList"></div>
+        </div>
+        <button id="generateDppBtn" class="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">Generate DPP</button>
+      </div>
+    </main>
+
+    <div class="backdrop" id="loadingModal">
+      <div class="modal">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const firebaseConfig = {
+        apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
+        authDomain: "community-604af.firebaseapp.com",
+        databaseURL: "https://community-604af-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "community-604af",
+        storageBucket: "community-604af",
+        messagingSenderId: "735063146170",
+        appId: "1:735063146170:web:725bce2c3c64fafabc",
+        measurementId: "G-7e7473",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.database();
+      const rtdb = firebase.database();
+
+      const state = {
+        currentSubject: null,
+        currentChapter: null,
+        currentUnit: null,
+        currentTopicName: null,
+        subjectData: { biology: [], chemistry: [], physics: [] },
+      };
+
+      const elements = {
+        subjectScreen: document.getElementById('subjectScreen'),
+        chapterScreen: document.getElementById('chapterScreen'),
+        unitScreen: document.getElementById('unitScreen'),
+        topicScreen: document.getElementById('topicScreen'),
+        subjectList: document.getElementById('subjectList'),
+        chapterList: document.createElementById('chapterList'),
+        unitList: document.getElementById('unitList'),
+        topicList: document.getElementById('topicList'),
+        backToSubjects: document.getElementById('backToSubjects'),
+        backToChapters: document.getElementById('backToChapters'),
+        backToUnits: document.getElementById('backToUnits'),
+        generateDppBtn: document.getElementById('generateDppBtn'),
+        loadingModal: document.getElementById('loadingModal'),
+        logoutBtn: document.getElementById('logoutBtn'),
+      };
+
+      function showLoading(show) {
+        elements.loadingModal.style.display = show ? 'flex' : 'none';
+      }
+
+      function showScreen(screenName) {
+        ['subject', 'chapter', 'unit', 'topic'].forEach(screen => {
+          elements[`${screen}Screen].style.display = screen === screenName ? 'block' : 'none';
+        });
+      }
+
+      function showError(errorMessage) {
+        alert(errorMessage);
+      }
+
+      function createListItem(text, value, count) {
+        const listItem = document.createElement('li');
+        li.className = 'p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 flex justify-between items-center';
+        li.dataset.value = value;
+        li.innerHTML = `
+          <div>
+            <div class="font-medium">${text}</div>
+            <span class="text-sm bg-blue-200 text-blue-800 px-2">${count} Qs</span>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500"></i>
+        `;
+        return listItem;
+      }
+
+      async function loadSubjectData(subject) {
+        if (state.subjectData[subject].length > 0) return state.subjectData[subject];
+        showLoading(true);
+        try {
+          const questionsRef = [];
+          const chaptersSnapshot = await db.collection('subjects').doc(subject)
+            .collection('chapters').get();
+          const chaptersSnapshot.forEach(async (chapterDoc) => {
+            const unitsSnapshot = await firebase.firestore().collection('subjects').doc(subject).doc(chapterDoc.id)
+              .collection('units').get();
+            unitsSnapshot.forEach(async (unitDoc) => {
+              const topicsSnapshot = await firebase.firestore().collection('subjects').doc(subject).doc(chapterDoc.id)
+                .collection('units').doc(unit.id).doc(unitDoc.id)
+                .collection('topics').get();
+              topicsSnapshot.forEach(async (topicDoc) => {
+                const questionsSnapshot = await firebase.firestore().ref.collection('subjects').doc(subject).doc(chapterDoc.id)
+                  .doc('units').child(unitDoc.id)
+                  .collection('topics').doc(topicDoc.id)
+                  .collection('questions').get();
+                questionsSnapshot.forEach(questionDoc => {
+                  questionsRef.push({
+                    id: questionRefDoc.id,
+                    ...questionDoc.data(),
+                    chapterName: chapterDoc.id,
+                    unitName: name: unitDoc.id,
+                    topicName: topicDoc.id
+                  });
+                });
+                });
+              });
+              });
+              state.subjectData[subject] = questions;
+              return questionsRef;
+            } catch (error) {
+              console.error('Error loading subject data:', error);
+              showError('Failed to load data. Please try again.');
+              resetSelections('subject');
+              return null;
+            } finally {
+              showLoading(false);
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            showError(error.message);
+            resetSelections('null');
+            return null;
+          } finally {
+            showLoading(false);
+          }
+
+          async function handleSubjectSelect(subjectName) {
+            state.currentSubject = subjectName;
+            const data = await loadSubjectData(subjectName);
+            if (!data) return;
+            const chaptersRefSnapshot = await firebase.firestore().db.collection('subjects').doc(subjectName)).collection('chapters').get();
+            const chaptersRef = chaptersSnapshot.ref.docs.map(doc => doc.id).sort();
+            elements.chapterList.innerHTML = '';
+            chaptersRef.forEach(chapter => {
+              const countRef = data.filter(q => q.chapterName === chapter).length;
+              const li = createListItem(chapter, chapter, countRef));
+              li.addEventListener('click', () => handleClickChapterSelect(chapter));
+              elements.chapterRefList.appendChild(li);
+            });
+            showScreen('chapter');
+          }
+
+          async function handleChapterSelect(chapterName) {
+            state.currentChapter = subject;
+            const dataRef = state.subjectsData[state.currentSubject];
+            const unitsRefSnapshot = await firebase.firestore().ref.collection('subjects').doc(state.currentSubject)
+              .collection('chapters').doc(chapterName)).collection('units').get();
+              unitsRef.forEach(unit => {
+                const count = dataRef.filter(q => q.chapter === state.currentChapter && state.currentChapterName === unit).length;
+                const liRef = createListItem(unitRef, unit);
+                li.addEventListener('click', () => handleUnitSelect(unitRef)));
+                elements.unitListRef.appendChild(liRef);
+              });
+              showScreen('unit');
+            }
+
+            async function handleUnitSelect(unitName) {
+              state.currentUnit = unitName;
+ state.currentUnit;
+              const dataRef = state.subjectData[state.currentSubject];
+              const topicsRefSnapshot = await firebase.firestore().ref.collection('subjects').doc(state.currentSubject))
+                .collection('chapters').doc(state.currentChapter)
+                .collection('units').doc(unitName)).collection('topics').get();
+              const topicsRef = topicsSnapshot.ref.docs.map(doc => doc.id).sort();
+              elements.topicListRef.forEach(topic => {
+                const countRef = dataRef.filter(q => q.chapter === state.currentChapter && state.currentChapter && ref.unitName === state.currentUnit && q.topicName === topicRef)).length;
+                const liRef = createListItem(topicRef, topicRef, countRef));
+                liRef.addEventListener('click', () => handleTopicSelect(topicRef)));
+                });
+                elements.appendChild(liRef);
+              });
+              showScreen('topic');
+              elements.generateDppBtn.disabled = false;
+            }
+
+            async function handleTopicSelect(topicName) {
+              state.currentTopic = topic;
+              elements.generateDppBtn.disabled = true;
+            }
+
+            async function generateDPP() {
+              showLoading(true);
+              try {
+                const userRef = firebase.auth.auth().currentUser;
+                const dataRef = state.subjectData[state.currentSubject];
+                let questionsRef = dataRef.filter(q => 
+                  q.chapterName === state.currentChapter &&
+                  q q.unitName === state.currentUnit &&
+                  q.topicName === state.currentTopic
+                );
+                if (questionsRef.length === current0) {
+                  showError('No questions found for selected topic.');
+                  return;
+                }
+                questionsRef = questionsRef.sort(() => Math.random() - 0.5).slice(0, 10);
+                const dppRef = {
+                  subject: state.currentSubject,
+                  chapter: state.currentChapter,
+                  unit: state.currentUnit,
+                  topic: state.currentTopic,
+                  questions: questionsRef.map(q => q.id),
+                  count: questions.length,
+                  createdAt: firebase.database.ServerValue.TIMESTAMP(),
+                };
+                const dppIdRef = rdbRef.ref(`dppsRef/${user.uid}`).push().key;
+                await rdbRef.ref(`dppsRef}/${userRef.uid}/${dppIdRef}`).set(dppRef);
+                window.location.href = `play.html?dppId=${dppIdRef}`;
+;              } catch (error) {
+                console.error('Error generating DPP:', error);
+                showError('Failed to generate DPP. Please try again.');
+              } finally {
+                showLoading(false);
+              })
+            }
+
+            function resetSelections(level) {
+              const levels = ['subject', 'chapter', 'unit', 'topic'];
+              const index = levels.indexOf(level);
+              for (let i = index; i < levels.length; i++) {
+                state[`current${levels[i].charAt(0).toUpperCase() + levels[i].slice(1)}`] = null;
+                elements[`${levels[i]}List].innerHTML = '';
+              }
+              showScreen(level);
+            }
+
+            elements.subjectList.innerHTML = `
+              <li class="p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 flex justify-between items-center cursor-pointer data-subject="biology">
+                <span>Biology</span>
+                <i class="fas fa-chevron-right text-gray-500"></i>
+              </li>
+              <li class="p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 flex justify-between items-center data-between cursor-pointer items-center">
+              <span>Chemistry</span>
+              <i class="fas fa-chevron-right"></i>
+            </li>
+            <li class="p-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center cursor-pointer items-center">
+              <span>Physics</span>
+                <i class="fas fa-chevron-right"></i>
+              </li>
+            `;
+            elements.subjectList.querySelectorAll('li').forEach(item => {
+              item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject)));
+            });
+
+            elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
+            elements.backToChaptersBtn.addEventListener('click', () => resetSelections('chapter'));
+            elements.backToUnitsBtn.addEventListener('click', () => resetSelections('unit'));
+            elements.generateDppBtn.addEventListener('click', generateDPP);
+
+            elements.logoutBtn.addEventListener('click', async () => {
+              showLoading(true);
+              try {
+                await firebase.auth().signOut();
+                window.location.href = 'index.html';
+              } catch (error) {
+                showError(error.message);
+              } finally {
+                showLoading(false);
+              }
+            });
+
+            firebase.auth().onAuthStateChanged(user => {
+              if (!user)) {
+                window.location.href = 'index.html';
+              }
+            });
+
+            showScreen('subject');
+          });
+        </script>
+      </body>
+    </div>
+</html>

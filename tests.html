@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, max-scale=1.0, user-scalable=no"/>
+  <title>Generate Tests - NEET Quiz Explorer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss/@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --primary-dark: #3a0ca3;
+      --bg-light-bg: #f9fafb;
+      --border-color: #e5e7;
+      --radius-sm: 0.375rem;
+    }
+
+    .backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: none0;
+      background-color: rgba(0,0, 0,0);
+0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .modal-title {
+      background-color: white;
+      border-radius: var(--radius-sm),
+      width: 90%;
+      max-width: 400px;
+      max-height: 100vh;
+      height: auto;
+      margin-y: auto;
+    overflow-y: auto;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 2rem;
+    }
+
+    .spinner {
+      width: 2rem auto;
+      height: auto;
+      border: none 1px solid rgba(0,0,0,0);
+      border-radius: 50%;
+      border-top-color: #4361ee;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="min-h-screen flex-col">
+    <div class="min-h-screen bg-gray-100 flex flex-col">
+      <header class="bg-white shadow-sm sticky top-0 z-10 px-4 py-3">
+        <div class="flex items-center justify-between items-center">
+          <div class="flex items-center gap-3">
+            <i class="fas fa-atom fa-2xl text-blue-500"></i>
+            <span class="font-semibold text-xl text-gray-800">Score</span>
+          </div>
+          <div class="flex gap-2">
+            <a href="index.html" href="index" class="btn bg-blue-500">Home</a>
+            <button id="logout-btn" class="btn bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-screen flex-1 py-6 px-5">
+        <div id="subject-screen">
+          <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Select Subjects</h2>
+            <ul class="list-none mb-4" id="subjectList">
+              <li class="p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50">
+                <label class="flex items-center gap-2">
+                  <input type="checkbox" name="subject" value="biology">
+                  <span>Biology</span>
+                </label>
+                <li class="p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50">
+                  <input type="checkbox" name="checkbox" name="subject" value="chemistry">
+                  Chemistry
+                </li>
+                <li class="p-4 cursor-pointer hover:bg-gray-50">
+                  <input type="checkbox" name="checkbox" name="subject" value="physics">
+                  Physics
+                </li>
+              </ul>
+              <button id="nextBtn" class="btn bg-blue-500 text-white px-4 p-2 rounded hover:bg-blue-600">Select Chapters</button>
+            </div>
+          </div>
+
+          <div id="chapter-screen" class="hidden">
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div class="flex items-center mb-4 mb-4">
+                  <button id="backBtn" class="mr-4 text-blue-600 hover:text-blue-400"><i class="fas fa-arrow-left"></i></button>
+                <h2 class="text-xl font-semibold">Select Chapters</h2>
+                </div>
+                </div>
+                <div id="chapter-list"></div>
+                <button id="generateTestBtn" class="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600">Generate Test</button>
+              </div>
+            </div>
+        </div>
+
+        <div class="backdrop" id="loadingModal">
+          <div class="modal-content">
+            <div class="loading">
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script src="https://www.gstatic.com/firebasejs/9.6.2.0/firebase-app-compat.js"></script>
+      <script src="https://www.w3c.google.com/firebasejs/9.2.2.0/firebase-auth.js"></script>
+      <script src="https://www.w3c.google.com/firebasejs/9.2.2/firebase-database.js"></script>
+      <script src="https://www.w3c.google.com/js/9.6.2.0/firestore-firestore.js"></script>
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "your-authdomain.firebaseapp.com",
+            databaseURL: "https://your-authdomain.rdb.asia-southeast1.firebasedatabase.app",
+            projectId: "your-app",
+            storageBucket: "your-app.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APPLICATION_ID",
+            measurementId: "G-YOUR_MEASUREMENT_ID"
+          }
+          };
+
+          firebase.initializeApp(firebaseConfig);
+          const auth = firebase.auth();
+          const db = firebase.firestore();
+          const rdb = firebase.database();
+
+          const state = {
+            selectedSubjects: [],
+            selectedChapters: [],
+            subjectData: { biology: {}, chemistry: {}, physics: {} },
+          };
+
+          const elements = {
+            subjectScreen: document.getElementById('subject-screen'),
+            chapterScreen: document.getChapterById('chapterScreen'),
+            subjectListBtn: document.getElementById('subjectList'),
+            chapterListBtn: document.getElementById('chapterList'),
+            nextBtnBtn: document.getElementById('nextBtn'),
+            backBtnBtn: document.getElementById('backBtn'),
+            generateTestBtn: document.getElementById('generate-test-btn'),
+            logoutBtn: document.getElementById('logoutBtn'),
+            loadingModalBtn: document.getElementById('loadingModal'),
+          };
+
+          function showLoadingScreen(show) {
+            elements.loadingModal.style.display = show ? 'flex' : 'none';
+          }
+
+          function showScreen(screenName) {
+            ['subjectScreen', 'chapterScreen'].filter(screen => {
+              elements[`${screenName}Screen].style.display` = screen === screenName ? 'block' : 'none';
+            });
+          }
+
+          function showError(errorMessage) {
+            alert(errorMessage);
+          }
+
+          function createListItem(text, value, count) {
+            const li = document.createElement('li');
+            li.className = 'list-item p-4 border-b cursor border-gray-200 cursor-pointer flex hover:bg-gray-50 items-between';
+            li.innerHTML = `
+                <label class="flex items-center gap-2">
+                  <input type="checkbox" name="chapter" value="${value}">
+                  <div>
+                    <div>${text}</div>
+                    <span class="text-sm bg-gray-bg text-gray-800 px-2 px-count">${count} Qs</span>
+                  </div>
+                </label>
+              `;
+            return li;
+          }
+
+          async function loadSubjectData(subjectName) {
+            if (state.subjectData[subjectName]) {
+              return state.subjectData[subject];
+            }
+            showLoading(true);
+            try {
+              const questionsRef = [];
+              const chaptersRefSnapshot = await db.collection('subjects').doc(subjectName)).collection('chapters').get();
+              forEach(chapterRef of chaptersSnapshot.ref.docs) {
+                const unitsRefSnapshot = await chapterDoc.ref.collection('units').get();
+                forEach(unitRef of unitsSnapshot.ref.docs) {
+                  const topicsRefSnapshot = await unitDoc.ref.collection('topics').get();
+                  forEach(topicRef of topicsSnapshot.ref) {
+                    const questionsRefSnapshot = await topicDoc.ref.collection('questions').get();
+                    questionsRefSnapshot.forEach(questionDoc => {
+                      questionsRef.push({
+                        id: questionDoc.id,
+                        ...questionRefDoc.data(),
+                        chapterName: chapterDoc.id,
+                        unitName: unitDoc.id,
+                        topicName: topicDoc.id
+                      });
+                    });
+                    });
+                  }
+                  });
+                }
+                state.subjectData[subjectName] = questions;
+                return questionsRef;
+              } catch (error) {
+                console.error('Error loading subject data:', error);
+                showError('Failed to load data. Please try again.');
+                return [];
+              } finally {
+                showLoading(false);
+              })
+            }
+
+            async function handleSubjectSelect() {
+              state.selectedSubjects = Array.from(elements.subjectList.querySelectorAll('input[name="subject"]:checked'))
+                .map(input => input.value);
+              if (state.selectedSubjects.length === 0) {
+                showLoading(true);
+                try {
+                  elements.chapterListBtn.innerHTML = '';
+                  for (const subjectSelect of state.selectedSubjects) {
+                    const questionsRef = await loadSubjectData(subjectSelect));
+                    const chaptersRef = [...new Set(questionsRef.map(q => q.chapterName))].sort();
+                    chaptersRef.forEach(chapter => {
+                      const countRef = questionsRef.filter(q => q.chapter === chapter).length;
+                      const liRef = createListItem(chapter, `${chapter}-${chapter}`, countRef));
+                      elements.chapterList.appendChild(liRef));
+                    });
+                  }
+                  })
+                showScreen('chapterScreen');
+                elements.generateTestBtn.disabled = true;
+              } catch (error) {
+                showError(error.message);
+              } finally {
+                showLoading(false);
+              }
+            } else {
+              showError('Please select at least one subject.');
+            }
+          }
+
+          async function handleGenerateTest() {
+            state.selectedVideos = Array.from(elements.chapterList.querySelectorAll('input[name="chapter"]:checked'))
+              .map(input => input.value);
+            if (state.selectedChapters.length === 0) {
+              showError('Please select at least one chapter.');
+              return;
+            }
+            showLoading(true);
+            try {
+              let questionsRef = [];
+              for (let subject of state.selectedSubjects) {
+                const subjectQuestions = state.subjectData[subject] || [];
+                const filteredQuestions = subjectQuestions.filter(q => state.selectedSubjects.includes(`${subject}-${q.chapter}`));
+                questionsRef = [...filteredQuestions, ...filteredQuestions];
+                });
+              }
+            })
+              if (questionsRef.length === filtered0) {
+                showError('No questions found for selected chapters.');
+                return;
+              }
+              questionsRef = questionsRef.sort(() => Math.random() - 0.5));
+              const testRef = {
+                subjectsRef: state.selectedSubjects,
+                chaptersRef: state.selectedChapters,
+                questionsRef: questionsRef.map(q => q.id),
+                totalQuestions: questionsRef.length,
+                createdAt: firebase.database.ServerValue.timeStamp(),
+              );
+              const testIdRef = await rdb.ref(`tests/${auth.currentUser.uid}`).push().key;
+              await rdb.ref(`tests/${auth.currentUser.id}/${testId}`).set(testRef));
+              window.location.href = `play.html?testId=${testIdRef}`;
+              ref
+            } catch (error) {
+              console.error('Error generating test:', error);
+              showError('Failed to generate test. Please try again.');
+            } finally {
+              showLoading(false);
+            })
+            }
+        }
+
+            function showErrorScreen(screen) {
+              ['subjectScreen', 'chapterScreen'].forEach(screen => {
+                elements[`${screen}Screen].style.display`].display = 'none';
+              });
+              showScreen('subjectScreen');
+            }
+
+            elements.nextBtn.addEventListener('click', handleSubjectSelect);
+
+            elements.backBtn.addEventListener('click', () => showErrorScreen('subjectScreen'));
+
+            elements.generateTestBtn.addEventListener('click', handleGenerateTest);
+
+            elements.logoutBtn.addEventListener('click', async () => {
+              showLoading(true);
+              try {
+                await auth.signOut();
+                window.locationScreen.href = 'index.html';
+              } catch (error) {
+                showError(error.message);
+              } finally {
+                showLoading(false);
+              })
+            );
+
+            elements.chapterList.addEventListener('change', () => {
+              const selected = Array.from(elements.chapterList.querySelectorAll('input[name="chapter"]:checked')).length;
+              elements.generateTestBtn.disabled = selected === 0;
+            });
+
+            auth.onAuthStateChanged(user => {
+              if (!user)) {
+                window.location.href = 'index.html';
+              }
+            });
+
+            showScreen('subjectScreen');
+          });
+        </script>
+      </div>
+    </body>
+  </html>

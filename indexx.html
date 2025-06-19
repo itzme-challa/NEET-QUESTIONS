@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>NEET Quiz Explorer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --primary-dark: #3a0ca3;
+      --secondary-color: #4cc9f0;
+      --success-color: #4ade80;
+      --error-color: #f87171;
+      --warning-color: #fbbf24;
+      --text-dark: #1f2937;
+      --text-medium: #6b7280;
+      --text-light: #9ca3af;
+      --bg-light: #f9fafb;
+      --border-color: #e5e7eb;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #f3f4f6;
+      color: var(--text-dark);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    #app {
+      max-width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background-color: white;
+      padding: 1rem;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+
+    .logo-icon {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-medium);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--bg-light);
+    }
+
+    .btn-icon {
+      padding: 0.5rem;
+      border-radius: 50%;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 1.5rem;
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      transition: opacity 0.3s ease, height 0.3s ease;
+    }
+
+    .card.hidden {
+      opacity: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .list-group {
+      list-style: none;
+    }
+
+    .list-item {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .list-item:hover {
+      background-color: var(--bg-light);
+    }
+
+    .list-item.active {
+      background-color: #e0e7ff;
+    }
+
+    .list-item-icon {
+      color: var(--text-light);
+    }
+
+    .backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .modal {
+      background-color: white;
+      border-radius: var(--radius-md);
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .spinner {
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+      background-color: var(--bg-light);
+      color: var(--text-medium);
+    }
+
+    .badge-primary {
+      background-color: #e0e7ff;
+      color: var(--primary-dark);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-medium);
+    }
+
+    .empty-state-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--text-light);
+    }
+
+    .quiz-container {
+      margin-bottom: 1.5rem;
+    }
+
+    .question-card {
+      background-color: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .question-text {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    .options-list {
+      list-style: none;
+      margin-bottom: 1rem;
+    }
+
+    .option-item {
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .option-item:hover {
+      background-color: var(--bg-light);
+    }
+
+    .option-item.selected {
+      background-color: #e0e7ff;
+      border-color: var(--primary-color);
+    }
+
+    .option-item.correct {
+      background-color: #dcfce7;
+      border-color: var(--success-color);
+    }
+
+    .option-item.incorrect {
+      background-color: #fee2e2;
+      border-color: var(--error-color);
+    }
+
+    .option-prefix {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+
+    .explanation {
+      padding: 1rem;
+      background-color: var(--bg-light);
+      border-radius: var(--radius-sm);
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .explanation-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .quiz-nav {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+
+    .quiz-info {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      color: var(--text-medium);
+      font-size: 0.875rem;
+    }
+
+    .quiz-type-badge {
+      background-color: #e0f2fe;
+      color: #0369a1;
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .difficulty-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .difficulty-easy {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+
+    .difficulty-medium {
+      background-color: #fef9c3;
+      color: #854d0e;
+    }
+
+    .difficulty-hard {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    @media (max-width: 640px) {
+      .main-content {
+        padding: 1rem;
+      }
+      
+      .card-body {
+        padding: 1rem;
+      }
+      
+      .list-item {
+        padding: 0.75rem 1rem;
+      }
+      
+      .question-card {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <div class="logo">
+        <i class="fas fa-atom logo-icon"></i>
+        <span>NEET Quiz Explorer</span>
+      </div>
+      <div class="nav-buttons">
+        <button id="resetBtn" class="btn btn-outline" style="display: none;">
+          <i class="fas fa-home"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div id="subjectScreen">
+        <div class="card" id="subjectCard">
+          <div class="card-header">
+            <h2 class="card-title">Select Subject</h2>
+          </div>
+          <div class="card-body">
+            <ul class="list-group">
+              <li class="list-item" data-subject="biology">
+                <div>
+                  <div>Biology</div>
+                  <small class="text-muted">Study of living organisms and life processes</small>
+                </div>
+                <i class="fas fa-chevron-right list-item-icon"></i>
+              </li>
+              <li class="list-item" data-subject="chemistry">
+                <div>
+                  <div>Chemistry</div>
+                  <small class="text-muted">Study of matter and its transformations</small>
+                </div>
+                <i class="fas fa-chevron-right list-item-icon"></i>
+              </li>
+              <li class="list-item" data-subject="physics">
+                <div>
+                  <div>Physics</div>
+                  <small class="text-muted">Study of matter, energy, and their interactions</small>
+                </div>
+                <i class="fas fa-chevron-right list-item-icon"></i>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div id="chapterScreen" style="display: none;">
+        <div class="card" id="chapterCard">
+          <div class="card-header">
+            <button id="backToSubjects" class="btn btn-icon btn-outline">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2 class="card-title">Select Chapter</h2>
+          </div>
+          <div class="card-body">
+            <div id="chapterList" class="list-group"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="unitScreen" style="display: none;">
+        <div class="card" id="unitCard">
+          <div class="card-header">
+            <button id="backToChapters" class="btn btn-icon btn-outline">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2 class="card-title">Select Unit</h2>
+          </div>
+          <div class="card-body">
+            <div id="unitList" class="list-group"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="topicScreen" style="display: none;">
+        <div class="card" id="topicCard">
+          <div class="card-header">
+            <button id="backToUnits" class="btn btn-icon btn-outline">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2 class="card-title">Select Topic</h2>
+          </div>
+          <div class="card-body">
+            <div id="topicList" class="list-group"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="quizScreen" style="display: none;">
+        <div class="card" id="quizCard">
+          <div class="card-header">
+            <button id="backToTopics" class="btn btn-icon btn-outline">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2 class="card-title" id="quizTitle">Questions</h2>
+          </div>
+          <div class="card-body">
+            <div id="quizContainer" class="quiz-container"></div>
+            <div id="quizNav" class="quiz-nav" style="display: none;">
+              <button id="prevQuestionBtn" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Previous
+              </button>
+              <div class="quiz-info">
+                <span id="questionCounter">Question 1 of 10</span>
+              </div>
+              <button id="nextQuestionBtn" class="btn btn-primary">
+                Next <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="backdrop" id="loadingModal">
+      <div class="modal">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="backdrop" id="errorModal">
+      <div class="modal">
+        <div class="card-header">
+          <h2 class="card-title">Error</h2>
+          <button id="closeErrorModal" class="btn btn-icon btn-outline">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="empty-state">
+            <i class="fas fa-exclamation-circle empty-state-icon"></i>
+            <div id="errorMessage"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
+    import { getFirestore, collection, getDocs, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
+
+    // Firebase configuration (same as admin version)
+    const firebaseConfig = {
+      apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
+      authDomain: "community-604af.firebaseapp.com",
+      databaseURL: "https://community-604af-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "community-604af",
+      storageBucket: "community-604af.appspot.com",
+      messagingSenderId: "735063146170",
+      appId: "1:735063146170:web:725bce2c3c64afc0f30c83",
+      measurementId: "G-7YD8RLH33Q"
+    };
+
+    // Initialize Firebase
+    let app, db;
+    try {
+      app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+    } catch (error) {
+      console.error('Error initializing Firebase:', error);
+      showError('Failed to initialize Firebase. Please check your configuration.');
+    }
+
+    const state = {
+      currentSubject: null,
+      currentChapter: null,
+      currentUnit: null,
+      currentTopic: null,
+      questions: [],
+      currentQuestionIndex: 0,
+      selectedOptions: {}
+    };
+
+    const elements = {
+      subjectScreen: document.getElementById('subjectScreen'),
+      chapterScreen: document.getElementById('chapterScreen'),
+      unitScreen: document.getElementById('unitScreen'),
+      topicScreen: document.getElementById('topicScreen'),
+      quizScreen: document.getElementById('quizScreen'),
+      resetBtn: document.getElementById('resetBtn'),
+      backToSubjects: document.getElementById('backToSubjects'),
+      backToChapters: document.getElementById('backToChapters'),
+      backToUnits: document.getElementById('backToUnits'),
+      backToTopics: document.getElementById('backToTopics'),
+      subjectCard: document.getElementById('subjectCard'),
+      chapterCard: document.getElementById('chapterCard'),
+      unitCard: document.getElementById('unitCard'),
+      topicCard: document.getElementById('topicCard'),
+      quizCard: document.getElementById('quizCard'),
+      subjectItems: document.querySelectorAll('.list-item[data-subject]'),
+      chapterList: document.getElementById('chapterList'),
+      unitList: document.getElementById('unitList'),
+      topicList: document.getElementById('topicList'),
+      quizContainer: document.getElementById('quizContainer'),
+      quizTitle: document.getElementById('quizTitle'),
+      quizNav: document.getElementById('quizNav'),
+      prevQuestionBtn: document.getElementById('prevQuestionBtn'),
+      nextQuestionBtn: document.getElementById('nextQuestionBtn'),
+      questionCounter: document.getElementById('questionCounter'),
+      loadingModal: document.getElementById('loadingModal'),
+      errorModal: document.getElementById('errorModal'),
+      errorMessage: document.getElementById('errorMessage'),
+      closeErrorModal: document.getElementById('closeErrorModal')
+    };
+
+    function showLoading(show) {
+      if (elements.loadingModal) {
+        elements.loadingModal.style.display = show ? 'flex' : 'none';
+      }
+    }
+
+    function showError(message) {
+      if (elements.errorMessage && message) {
+        elements.errorMessage.textContent = message;
+      }
+      if (elements.errorModal) {
+        elements.errorModal.style.display = 'flex';
+      }
+    }
+
+    function showScreen(screenName) {
+      const screens = ['subject', 'chapter', 'unit', 'topic', 'quiz'];
+      screens.forEach(screen => {
+        const element = elements[`${screen}Screen`];
+        if (element) {
+          element.style.display = screen === screenName ? 'block' : 'none';
+        }
+      });
+      if (elements.resetBtn) {
+        elements.resetBtn.style.display = screenName === 'quiz' ? 'block' : 'none';
+      }
+    }
+
+    function createListItem(text, value, count) {
+      const li = document.createElement('li');
+      li.className = 'list-item';
+      li.dataset.value = value;
+      li.innerHTML = `
+        <div>
+          <div>${text} <span class="badge badge-primary">${count}</span></div>
+        </div>
+        <i class="fas fa-chevron-right list-item-icon"></i>
+      `;
+      return li;
+    }
+
+    async function getCollectionCount(collectionPath) {
+      try {
+        const colRef = collection(db, ...collectionPath);
+        const snapshot = await getDocs(colRef);
+        return snapshot.size;
+      } catch (error) {
+        console.error('Error getting collection count:', error);
+        return 0;
+      }
+    }
+
+    async function handleSubjectSelect(subject) {
+      state.currentSubject = subject;
+      if (elements.subjectCard) elements.subjectCard.classList.add('hidden');
+      showLoading(true);
+      try {
+        const chaptersRef = collection(db, 'subjects', subject, 'chapters');
+        const chaptersSnapshot = await getDocs(chaptersRef);
+        
+        if (elements.chapterList) {
+          elements.chapterList.innerHTML = '';
+          
+          if (chaptersSnapshot.empty) {
+            elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
+          } else {
+            const chapters = [];
+            for (const chapterDoc of chaptersSnapshot.docs) {
+              const chapterName = chapterDoc.id;
+              const unitsRef = collection(db, 'subjects', subject, 'chapters', chapterName, 'units');
+              const unitsSnapshot = await getDocs(unitsRef);
+              chapters.push({
+                name: chapterName,
+                count: unitsSnapshot.size
+              });
+            }
+            
+            chapters.forEach(chapter => {
+              const li = createListItem(chapter.name, chapter.name, chapter.count);
+              li.addEventListener('click', () => handleChapterSelect(chapter.name));
+              elements.chapterList.appendChild(li);
+            });
+          }
+        }
+        showScreen('chapter');
+      } catch (error) {
+        console.error('Error loading chapters:', error);
+        showError('Failed to load chapters. Please try again.');
+        resetSelections('subject');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function handleChapterSelect(chapter) {
+      state.currentChapter = chapter;
+      if (elements.chapterCard) elements.chapterCard.classList.add('hidden');
+      showLoading(true);
+      try {
+        const unitsRef = collection(db, 'subjects', state.currentSubject, 'chapters', chapter, 'units');
+        const unitsSnapshot = await getDocs(unitsRef);
+        
+        if (elements.unitList) {
+          elements.unitList.innerHTML = '';
+          
+          if (unitsSnapshot.empty) {
+            elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
+          } else {
+            const units = [];
+            for (const unitDoc of unitsSnapshot.docs) {
+              const unitName = unitDoc.id;
+              const topicsRef = collection(db, 'subjects', state.currentSubject, 'chapters', chapter, 'units', unitName, 'topics');
+              const topicsSnapshot = await getDocs(topicsRef);
+              units.push({
+                name: unitName,
+                count: topicsSnapshot.size
+              });
+            }
+            
+            units.forEach(unit => {
+              const li = createListItem(unit.name, unit.name, unit.count);
+              li.addEventListener('click', () => handleUnitSelect(unit.name));
+              elements.unitList.appendChild(li);
+            });
+          }
+        }
+        showScreen('unit');
+      } catch (error) {
+        console.error('Error loading units:', error);
+        showError('Failed to load units. Please try again.');
+        resetSelections('chapter');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function handleUnitSelect(unit) {
+      state.currentUnit = unit;
+      if (elements.unitCard) elements.unitCard.classList.add('hidden');
+      showLoading(true);
+      try {
+        const topicsRef = collection(db, 'subjects', state.currentSubject, 'chapters', state.currentChapter, 'units', unit, 'topics');
+        const topicsSnapshot = await getDocs(topicsRef);
+        
+        if (elements.topicList) {
+          elements.topicList.innerHTML = '';
+          
+          if (topicsSnapshot.empty) {
+            elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
+          } else {
+            const topics = [];
+            for (const topicDoc of topicsSnapshot.docs) {
+              const topicName = topicDoc.id;
+              const questionsRef = collection(db, 'subjects', state.currentSubject, 'chapters', state.currentChapter, 'units', unit, 'topics', topicName, 'questions');
+              const questionsSnapshot = await getDocs(questionsRef);
+              topics.push({
+                name: topicName,
+                count: questionsSnapshot.size
+              });
+            }
+            
+            topics.forEach(topic => {
+              const li = createListItem(topic.name, topic.name, topic.count);
+              li.addEventListener('click', () => handleTopicSelect(topic.name));
+              elements.topicList.appendChild(li);
+            });
+          }
+        }
+        showScreen('topic');
+      } catch (error) {
+        console.error('Error loading topics:', error);
+        showError('Failed to load topics. Please try again.');
+        resetSelections('unit');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function handleTopicSelect(topic) {
+      state.currentTopic = topic;
+      if (elements.topicCard) elements.topicCard.classList.add('hidden');
+      showLoading(true);
+      try {
+        const questionsRef = collection(
+          db, 
+          'subjects', state.currentSubject, 
+          'chapters', state.currentChapter, 
+          'units', state.currentUnit, 
+          'topics', topic, 
+          'questions'
+        );
+        const questionsSnapshot = await getDocs(questionsRef);
+        
+        state.questions = [];
+        questionsSnapshot.forEach(doc => {
+          state.questions.push({ id: doc.id, ...doc.data() });
+        });
+        
+        if (state.questions.length === 0) {
+          showError('No questions found for this topic.');
+          resetSelections('topic');
+          return;
+        }
+        
+        // Reset quiz state
+        state.currentQuestionIndex = 0;
+        state.selectedOptions = {};
+        
+        // Update UI
+        if (elements.quizTitle) {
+          elements.quizTitle.textContent = `${state.currentSubject} > ${state.currentChapter} > ${state.currentUnit} > ${topic}`;
+        }
+        
+        if (elements.quizNav) {
+          elements.quizNav.style.display = 'flex';
+        }
+        
+        renderQuestion();
+        showScreen('quiz');
+      } catch (error) {
+        console.error('Error loading questions:', error);
+        showError('Failed to load questions. Please try again.');
+        resetSelections('topic');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function renderQuestion() {
+      if (!state.questions || state.questions.length === 0) return;
+      
+      const question = state.questions[state.currentQuestionIndex];
+      const selectedOption = state.selectedOptions[state.currentQuestionIndex];
+      
+      if (elements.quizContainer) {
+        elements.quizContainer.innerHTML = `
+          <div class="question-card">
+            <div class="quiz-info">
+              ${question.quiz_type ? `<span class="quiz-type-badge">${question.quiz_type}</span>` : ''}
+              ${question.difficulty_level ? `<span class="difficulty-badge difficulty-${question.difficulty_level.toLowerCase()}">${question.difficulty_level}</span>` : ''}
+            </div>
+            
+            <div class="question-text">${state.currentQuestionIndex + 1}. ${question.question}</div>
+            
+            <ul class="options-list">
+              ${question.option_a ? `
+                <li class="option-item ${selectedOption === 'a' ? 'selected' : ''}" data-option="a">
+                  <span class="option-prefix">A.</span> ${question.option_a}
+                </li>` : ''}
+              ${question.option_b ? `
+                <li class="option-item ${selectedOption === 'b' ? 'selected' : ''}" data-option="b">
+                  <span class="option-prefix">B.</span> ${question.option_b}
+                </li>` : ''}
+              ${question.option_c ? `
+                <li class="option-item ${selectedOption === 'c' ? 'selected' : ''}" data-option="c">
+                  <span class="option-prefix">C.</span> ${question.option_c}
+                </li>` : ''}
+              ${question.option_d ? `
+                <li class="option-item ${selectedOption === 'd' ? 'selected' : ''}" data-option="d">
+                  <span class="option-prefix">D.</span> ${question.option_d}
+                </li>` : ''}
+            </ul>
+            
+            ${question.explanation ? `
+              <div class="explanation" style="${selectedOption ? 'display: block;' : ''}">
+                <div class="explanation-title">Explanation:</div>
+                <div>${question.explanation}</div>
+              </div>` : ''}
+          </div>
+        `;
+        
+        // Add event listeners to options
+        const optionItems = elements.quizContainer.querySelectorAll('.option-item');
+        optionItems.forEach(item => {
+          item.addEventListener('click', () => {
+            const option = item.dataset.option;
+            state.selectedOptions[state.currentQuestionIndex] = option;
+            
+            // Update UI
+            optionItems.forEach(opt => {
+              opt.classList.remove('selected', 'correct', 'incorrect');
+              
+              if (opt.dataset.option === option) {
+                opt.classList.add('selected');
+                
+                // Show if answer is correct
+                if (question.answer && question.answer.toLowerCase() === option) {
+                  opt.classList.add('correct');
+                } else {
+                  opt.classList.add('incorrect');
+                }
+              }
+              
+              // Highlight correct answer if wrong option selected
+              if (question.answer && question.answer.toLowerCase() === opt.dataset.option) {
+                opt.classList.add('correct');
+              }
+            });
+            
+            // Show explanation
+            const explanation = elements.quizContainer.querySelector('.explanation');
+            if (explanation) {
+              explanation.style.display = 'block';
+            }
+          });
+        });
+      }
+      
+      // Update question counter
+      if (elements.questionCounter) {
+        elements.questionCounter.textContent = `Question ${state.currentQuestionIndex + 1} of ${state.questions.length}`;
+      }
+      
+      // Update nav buttons
+      if (elements.prevQuestionBtn) {
+        elements.prevQuestionBtn.disabled = state.currentQuestionIndex === 0;
+      }
+      if (elements.nextQuestionBtn) {
+        elements.nextQuestionBtn.textContent = state.currentQuestionIndex === state.questions.length - 1 ? 'Finish' : 'Next';
+      }
+    }
+
+    function resetSelections(level) {
+      const levels = ['subject', 'chapter', 'unit', 'topic', 'quiz'];
+      const index = levels.indexOf(level);
+      for (let i = index; i < levels.length; i++) {
+        state[`current${levels[i].charAt(0).toUpperCase() + levels[i].slice(1)}`] = null;
+        const card = elements[`${levels[i]}Card`];
+        const list = elements[`${levels[i]}List`];
+        if (card) card.classList.remove('hidden');
+        if (list) list.innerHTML = '';
+      }
+      state.questions = [];
+      state.currentQuestionIndex = 0;
+      state.selectedOptions = {};
+      
+      if (level !== 'subject' && elements.subjectCard) {
+        elements.subjectCard.classList.remove('hidden');
+      }
+      showScreen(level);
+    }
+
+    // Event listeners
+    elements.subjectItems.forEach(item => {
+      item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
+    });
+
+    if (elements.backToSubjects) {
+      elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
+    }
+    if (elements.backToChapters) {
+      elements.backToChapters.addEventListener('click', () => resetSelections('chapter'));
+    }
+    if (elements.backToUnits) {
+      elements.backToUnits.addEventListener('click', () => resetSelections('unit'));
+    }
+    if (elements.backToTopics) {
+      elements.backToTopics.addEventListener('click', () => resetSelections('topic'));
+    }
+
+    if (elements.prevQuestionBtn) {
+      elements.prevQuestionBtn.addEventListener('click', () => {
+        if (state.currentQuestionIndex > 0) {
+          state.currentQuestionIndex--;
+          renderQuestion();
+        }
+      });
+    }
+
+    if (elements.nextQuestionBtn) {
+      elements.nextQuestionBtn.addEventListener('click', () => {
+        if (state.currentQuestionIndex < state.questions.length - 1) {
+          state.currentQuestionIndex++;
+          renderQuestion();
+        } else {
+          // Quiz finished
+          alert('Quiz completed!');
+          resetSelections('subject');
+        }
+      });
+    }
+
+    if (elements.closeErrorModal) {
+      elements.closeErrorModal.addEventListener('click', () => {
+        if (elements.errorModal) elements.errorModal.style.display = 'none';
+      });
+    }
+
+    if (elements.resetBtn) {
+      elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
+    }
+
+    // Check Firebase initialization on load
+    if (!app || !db) {
+      showError('Firebase failed to initialize. Please check the Firebase scripts and configuration.');
+    } else {
+      showScreen('subject');
+    }
+  </script>
+</body>
+</html>

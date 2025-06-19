@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import CardList from './components/CardList';
 import QuizBox from './components/QuizBox';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -11,22 +12,22 @@ const subjectUrls = {
 };
 
 const App = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [fullData, setFullData] = useState([]);
   const [currentQuestions, setCurrentQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [currentSelection, setCurrentSelection] = useState({
-    subject: '',
-    chapter: '',
-    unit: '',
-    topic: '',
-    quizType: '',
-  });
   const [error, setError] = useState('');
-  const [view, setView] = useState('subjects');
+
+  // Extract URL parameters
+  const { subject, chapter, unit, topic } = useParams();
+  // Extract quiz type from query parameter
+  const queryParams = new URLSearchParams(location.search);
+  const quizType = queryParams.get('type')?.toLowerCase() || '';
 
   useEffect(() => {
-    if (currentSelection.subject) {
-      fetch(subjectUrls[currentSelection.subject])
+    if (subject) {
+      fetch(subjectUrls[subject.toLowerCase()])
         .then((res) => {
           if (!res.ok) throw new Error('Failed to fetch data');
           return res.json();
@@ -39,7 +40,7 @@ const App = () => {
           setError('Error loading data. Please try again.');
         });
     }
-  }, [currentSelection.subject]);
+  }, [subject]);
 
   const getChapterName = (q) =>
     q['Chapter Name'] ||
@@ -59,7 +60,7 @@ const App = () => {
       return [
         ...new Set(
           fullData
-            .filter((q) => getChapterName(q) === currentSelection.chapter)
+            .filter((q) => getChapterName(q) === chapter)
             .map(getUnitName)
         ),
       ]
@@ -71,8 +72,7 @@ const App = () => {
           fullData
             .filter(
               (q) =>
-                getChapterName(q) === currentSelection.chapter &&
-                getUnitName(q) === currentSelection.unit
+                getChapterName(q) === chapter && getUnitName(q) === unit
             )
             .map(getTopicName)
         ),
@@ -85,9 +85,9 @@ const App = () => {
           fullData
             .filter(
               (q) =>
-                getChapterName(q) === currentSelection.chapter &&
-                getUnitName(q) === currentSelection.unit &&
-                getTopicName(q) === currentSelection.topic
+                getChapterName(q) === chapter &&
+                getUnitName(q) === unit &&
+                getTopicName(q) === topic
             )
             .map((q) => q.quiz_type)
         ),
@@ -98,61 +98,104 @@ const App = () => {
   };
 
   const handleSelect = (type, value) => {
-    setCurrentSelection((prev) => ({
-      ...prev,
-      [type]: value,
-    }));
-    setView(
-      type === 'subject'
-        ? 'chapters'
-        : type === 'chapter'
-        ? 'units'
-        : type === 'unit'
-        ? 'topics'
-        : type === 'topic'
-        ? 'quizTypes'
-        : 'quiz'
-    );
-    if (type === 'quizType') {
-      const questions = fullData.filter(
-        (q) =>
-          getChapterName(q) === currentSelection.chapter &&
-          getUnitName(q) === currentSelection.unit &&
-          getTopicName(q) === currentSelection.topic &&
-          (!value || q.quiz_type === value)
-      );
-      setCurrentQuestions(questions);
-      setCurrentIndex(0);
-    }
+    if (type === 'subject') navigate(`/${value}`);
+    else if (type === 'chapter') navigate(`/${subject}/${value}`);
+    else if (type === 'unit') navigate(`/${subject}/${chapter}/${value}`);
+    else if (type === 'topic') navigate(`/${subject}/${chapter}/${unit}/${value}`);
+    else if (type === 'quizType')
+      navigate(`/${subject}/${chapter}/${unit}/${topic}?type=${value.toLowerCase()}`);
   };
 
   const handleBack = () => {
-    if (view === 'quiz') {
-      setView('quizTypes');
-      setCurrentQuestions([]);
-    } else if (view === 'quizTypes') {
-      setView('topics');
-      setCurrentSelection((prev) => ({ ...prev, quizType: '' }));
-    } else if (view === 'topics') {
-      setView('units');
-      setCurrentSelection((prev) => ({ ...prev, topic: '' }));
-    } else if (view === 'units') {
-      setView('chapters');
-      setCurrentSelection((prev) => ({ ...prev, unit: '' }));
-    } else if (view === 'chapters') {
-      setView('subjects');
-      setCurrentSelection((prev) => ({ ...prev, subject: '', chapter: '' }));
-      setFullData([]);
-    }
+    if (quizType) navigate(`/${subject}/${chapter}/${unit}/${topic}`);
+    else if (topic) navigate(`/${subject}/${chapter}/${unit}`);
+    else if (unit) navigate(`/${subject}/${chapter}`);
+    else if (chapter) navigate(`/${subject}`);
+    else if (subject) navigate('/');
   };
 
   const handleNext = () => {
     if (currentIndex < currentQuestions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      setView('quizTypes');
+      navigate(`/${subject}/${chapter}/${unit}/${topic}`);
       setCurrentQuestions([]);
+      setCurrentIndex(0);
     }
+  };
+
+  // Load questions when quizType is selected
+  useEffect(() => {
+    if (subject && chapter && unit && topic && quizType) {
+      const questions = fullData.filter(
+        (q) =>
+          getChapterName(q) === chapter &&
+          getUnitName(q) === unit &&
+          getTopicName(q) === topic &&
+          q.quiz_type.toLowerCase() === quizType
+      );
+      setCurrentQuestions(questions);
+      setCurrentIndex(0);
+    }
+  }, [subject, chapter, unit, topic, quizType, fullData]);
+
+  const renderView = () => {
+    if (error) return <p className="text-red-600 text-center">{error}</p>;
+
+    if (!subject)
+      return (
+        <CardList
+          items={getListItems('subjects').map(
+            (s) => s.charAt(0).toUpperCase() + s.slice(1)
+          )}
+          onSelect={(item) => handleSelect('subject', item.toLowerCase())}
+          title="Subjects"
+        />
+      );
+    if (!chapter)
+      return (
+        <CardList
+          items={getListItems('chapters')}
+          onSelect={(item) => handleSelect('chapter', item)}
+          title="Chapters"
+        />
+      );
+    if (!unit)
+      return (
+        <CardList
+          items={getListItems('units')}
+          onSelect={(item) => handleSelect('unit', item)}
+          title="Units"
+        />
+      );
+    if (!topic)
+      return (
+        <CardList
+          items={getListItems('topics')}
+          onSelect={(item) => handleSelect('topic', item)}
+          title="Topics"
+        />
+      );
+    if (!quizType)
+      return (
+        <CardList
+          items={getListItems('quizTypes').map(
+            (t) => t.charAt(0).toUpperCase() + t.slice(1)
+          )}
+          onSelect={(item) => handleSelect('quizType', item.toLowerCase())}
+          title="Quiz Types"
+        />
+      );
+    if (currentQuestions.length > 0)
+      return (
+        <QuizBox
+          question={currentQuestions[currentIndex]}
+          questionNumber={currentIndex + 1}
+          totalQuestions={currentQuestions.length}
+          onNext={handleNext}
+        />
+      );
+    return <p className="text-red-600 text-center">No questions found for selected filters.</p>;
   };
 
   return (
@@ -160,7 +203,7 @@ const App = () => {
       <h2 className="text-3xl font-bold text-center text-blue-900 mb-6">
         NEET Topic-Wise Quiz Explorer
       </h2>
-      {view !== 'subjects' && (
+      {subject && (
         <button
           onClick={handleBack}
           className="bg-gray-500 text-white px-4 py-2 rounded-lg mb-6 hover:bg-gray-600 transition duration-300"
@@ -168,53 +211,7 @@ const App = () => {
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" /> Back
         </button>
       )}
-      {error && <p className="text-red-600 text-center">{error}</p>}
-      {view === 'subjects' && (
-        <CardList
-          items={getListItems('subjects').map((s) => s.charAt(0).toUpperCase() + s.slice(1))}
-          onSelect={(item) => handleSelect('subject', item.toLowerCase())}
-          title="Subjects"
-        />
-      )}
-      {view === 'chapters' && (
-        <CardList
-          items={getListItems('chapters')}
-          onSelect={(item) => handleSelect('chapter', item)}
-          title="Chapters"
-        />
-      )}
-      {view === 'units' && (
-        <CardList
-          items={getListItems('units')}
-          onSelect={(item) => handleSelect('unit', item)}
-          title="Units"
-        />
-      )}
-      {view === 'topics' && (
-        <CardList
-          items={getListItems('topics')}
-          onSelect={(item) => handleSelect('topic', item)}
-          title="Topics"
-        />
-      )}
-      {view === 'quizTypes' && (
-        <CardList
-          items={getListItems('quizTypes').map((t) => t.charAt(0).toUpperCase() + t.slice(1))}
-          onSelect={(item) => handleSelect('quizType', item.toLowerCase())}
-          title="Quiz Types"
-        />
-      )}
-      {view === 'quiz' && currentQuestions.length > 0 && (
-        <QuizBox
-          question={currentQuestions[currentIndex]}
-          questionNumber={currentIndex + 1}
-          totalQuestions={currentQuestions.length}
-          onNext={handleNext}
-        />
-      )}
-      {view === 'quiz' && currentQuestions.length === 0 && (
-        <p className="text-red-600 text-center">No questions found for selected filters.</p>
-      )}
+      {renderView()}
     </div>
   );
 };

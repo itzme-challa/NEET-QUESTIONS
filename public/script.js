@@ -155,4 +155,109 @@ function getUniqueUnits(data, chapter) {
 }
 
 // Render units for a chapter
-window.renderUnits = async
+window.renderUnits = async function(subject, quizType, chapter) {
+  const app = document.getElementById('app');
+  app.innerHTML = '<p>Loading...</p>';
+  
+  const data = await fetchSubjectData(subject);
+  const decodedChapter = decodeURIComponent(chapter);
+  const units = getUniqueUnits(data, decodedChapter);
+  
+  app.innerHTML = `
+    <a href="#subject/${subject}/${quizType}" class="back-button">← Back to Chapters</a>
+    <h2>${decodedChapter} Units</h2>
+    <div class="card-grid" id="units-container">
+      ${units.map(unit => `
+        <div class="card" onclick="navigateTo('#subject/${subject}/${quizType}/${encodeURIComponent(chapter)}/${encodeURIComponent(unit)}')">
+          <h2>${unit}</h2>
+          <p>Click to view topics</p>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Extract unique topics from data for a unit
+function getUniqueTopics(data, chapter, unit) {
+  const topics = new Set();
+  data.forEach(item => {
+    const chapterMatch = item['Chapter Name'] === chapter || item['Unique Chapter Name'] === chapter;
+    if (chapterMatch && item.topic_name) {
+      const parts = item.topic_name.split('>>');
+      if (parts.length > 2 && parts[1].trim() === unit) {
+        topics.add(parts[2].trim());
+      }
+    }
+  });
+  return Array.from(topics).sort();
+}
+
+// Render topics for a unit
+window.renderTopics = async function(subject, quizType, chapter, unit) {
+  const app = document.getElementById('app');
+  app.innerHTML = '<p>Loading...</p>';
+  
+  const data = await fetchSubjectData(subject);
+  const decodedChapter = decodeURIComponent(chapter);
+  const decodedUnit = decodeURIComponent(unit);
+  const topics = getUniqueTopics(data, decodedChapter, decodedUnit);
+  
+  // Filter questions for this topic
+  const questions = data.filter(item => {
+    const chapterMatch = item['Chapter Name'] === decodedChapter || item['Unique Chapter Name'] === decodedChapter;
+    if (!chapterMatch || !item.topic_name) return false;
+    
+    const parts = item.topic_name.split('>>');
+    return parts.length > 2 && 
+           parts[1].trim() === decodedUnit && 
+           topics.includes(parts[2].trim());
+  });
+  
+  // Group by topic
+  const topicsWithQuestions = topics.map(topic => {
+    const topicQuestions = questions.filter(item => {
+      const parts = item.topic_name.split('>>');
+      return parts[2].trim() === topic;
+    });
+    return { name: topic, count: topicQuestions.length };
+  });
+  
+  app.innerHTML = `
+    <a href="#subject/${subject}/${quizType}/${encodeURIComponent(chapter)}" class="back-button">← Back to Units</a>
+    <h2>${decodedUnit} Topics</h2>
+    <div class="card-grid" id="topics-container">
+      ${topicsWithQuestions.map(topic => `
+        <div class="card" onclick="navigateTo('#play/${topic.name}')">
+          <h2>${topic.name}</h2>
+          <p>${topic.count} questions available</p>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Render quiz question
+window.renderQuizQuestion = async function(topic) {
+  const app = document.getElementById('app');
+  app.innerHTML = '<p>Loading...</p>';
+  
+  // For simplicity, we'll just show a single question here
+  // In a real app, you would implement full quiz functionality
+  app.innerHTML = `
+    <a href="#" class="back-button" onclick="navigateTo('#')">← Back to Topics</a>
+    <div class="quiz-container">
+      <h2>Quiz: ${topic}</h2>
+      <div class="quiz-question">Sample question would appear here</div>
+      <div class="quiz-options">
+        <div class="quiz-option">Option A</div>
+        <div class="quiz-option">Option B</div>
+        <div class="quiz-option">Option C</div>
+        <div class="quiz-option">Option D</div>
+      </div>
+      <div class="quiz-navigation">
+        <button class="quiz-button" disabled>Previous</button>
+        <button class="quiz-button">Next</button>
+      </div>
+    </div>
+  `;
+}

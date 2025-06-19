@@ -2026,13 +2026,14 @@
       }
 
       if (elements.viewResultsBtn) {
-        elements.viewResultsBtn.addEventListener('click', () => {
-          const resultKey = elements.viewResultsBtn.dataset.resultKey;
-          if (resultKey) {
-            window.location.href = `results.html?result=${resultKey}`;
-          }
-        });
-      }
+  elements.viewResultsBtn.addEventListener('click', () => {
+    const resultKey = elements.viewResultsBtn.dataset.resultKey;
+    if (resultKey) {
+      window.location.href = `results.html?result=${resultKey}`;
+    }
+  });
+}
+
 
       if (elements.resetBtn) {
         elements.resetBtn.addEventListener('click', () => resetSelections('subject'));

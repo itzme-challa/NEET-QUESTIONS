@@ -416,6 +416,58 @@
       color: var(--text-light);
     }
 
+    .fillup-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .fillup-input.correct {
+      border-color: #86efac;
+      background-color: #dcfce7;
+    }
+
+    .fillup-input.incorrect {
+      border-color: #fca5a5;
+      background-color: #fee2e2;
+    }
+
+    .match-container {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .match-column {
+      flex: 1;
+    }
+
+    .match-item {
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      background-color: white;
+    }
+
+    .match-item.selected {
+      background-color: #e0e7ff;
+    }
+
+    .match-item.correct {
+      border-color: #86efac;
+      background-color: #dcfce7;
+    }
+
+    .match-item.incorrect {
+      border-color: #fca5a5;
+      background-color: #fee2e2;
+    }
+
     @media (max-width: 640px) {
       .main-content {
         padding: 1rem;
@@ -440,6 +492,10 @@
       .score-timer {
         flex-direction: column;
         gap: 0.5rem;
+      }
+
+      .match-container {
+        flex-direction: column;
       }
     }
   </style>
@@ -568,12 +624,23 @@
             <div id="quizContent">
               <div class="quiz-question" id="questionText"></div>
               
-              <div id="mcqContent">
+              <div id="mcqContent" style="display: none;">
                 <div class="quiz-options" id="optionsContainer"></div>
               </div>
               
+              <div id="fillupContent" style="display: none;">
+                <input type="text" id="fillupInput" class="fillup-input" placeholder="Type your answer...">
+                <button id="submitFillupBtn" class="btn btn-primary">Submit</button>
+              </div>
+              
               <div id="flashcardContent" style="display: none;">
-                <div class="quiz-answer" id="flashcardAnswer"></div>
+                <button id="revealAnswerBtn" class="btn btn-primary">Reveal Answer</button>
+                <div class="quiz-answer" id="flashcardAnswer" style="display: none;"></div>
+              </div>
+              
+              <div id="matchContent" style="display: none;">
+                <div class="match-container" id="matchContainer"></div>
+                <button id="submitMatchBtn" class="btn btn-primary">Submit</button>
               </div>
               
               <div id="videoContent" style="display: none;">
@@ -699,7 +766,8 @@
         biology: 'https://itzfew.github.io/NEET-Questions/data/biology.json',
         chemistry: 'https://itzfew.github.io/NEET-Questions/data/chemistry.json',
         physics: 'https://itzfew.github.io/NEET-Questions/data/physics.json'
-      }
+      },
+      matchSelections: {}
     };
 
     const elements = {
@@ -729,14 +797,21 @@
       totalQuestions: document.getElementById('totalQuestions'),
       questionText: document.getElementById('questionText'),
       optionsContainer: document.getElementById('optionsContainer'),
+      fillupInput: document.getElementById('fillupInput'),
+      submitFillupBtn: document.getElementById('submitFillupBtn'),
+      revealAnswerBtn: document.getElementById('revealAnswerBtn'),
       flashcardAnswer: document.getElementById('flashcardAnswer'),
+      matchContainer: document.getElementById('matchContainer'),
+      submitMatchBtn: document.getElementById('submitMatchBtn'),
       videoFrame: document.getElementById('videoFrame'),
       explanationContainer: document.getElementById('explanationContainer'),
       explanationText: document.getElementById('explanationText'),
       prevBtn: document.getElementById('prevBtn'),
       nextQuestionBtn: document.getElementById('nextQuestionBtn'),
       mcqContent: document.getElementById('mcqContent'),
+      fillupContent: document.getElementById('fillupContent'),
       flashcardContent: document.getElementById('flashcardContent'),
+      matchContent: document.getElementById('matchContent'),
       videoContent: document.getElementById('videoContent'),
       quizResults: document.getElementById('quizResults'),
       scoreValue: document.getElementById('scoreValue'),
@@ -946,6 +1021,7 @@
       state.currentQuestionIndex = 0;
       state.score = 0;
       state.totalAnswered = 0;
+      state.matchSelections = {};
       updateScore();
       if (elements.totalQuestions) {
         elements.totalQuestions.textContent = state.questions.length;
@@ -961,9 +1037,9 @@
     function showQuestion(question) {
       if (!question) return;
       updateProgress();
-      if (elements.mcqContent) elements.mcqContent.style.display = 'none';
-      if (elements.flashcardContent) elements.flashcardContent.style.display = 'none';
-      if (elements.videoContent) elements.videoContent.style.display = 'none';
+      ['mcqContent', 'fillupContent', 'flashcardContent', 'matchContent', 'videoContent'].forEach(id => {
+        if (elements[id]) elements[id].style.display = 'none';
+      });
       if (elements.explanationContainer) elements.explanationContainer.style.display = 'none';
       if (elements.prevBtn) elements.prevBtn.disabled = state.currentQuestionIndex === 0;
       if (elements.nextQuestionBtn) {
@@ -974,27 +1050,29 @@
         elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
       }
       if (elements.questionText) {
-        elements.questionText.innerHTML = question.question;
+        elements.questionText.innerHTML = question.question || 'No question text available';
+      }
+      if (question.explanation && elements.explanationText) {
+        elements.explanationText.innerHTML = question.explanation;
       }
       switch (question.quiz_type) {
         case 'mcq':
           showMCQQuestion(question);
           break;
+        case 'fillup':
+          showFillupQuestion(question);
+          break;
         case 'flashcard':
           showFlashcardQuestion(question);
+          break;
+        case 'match':
+          showMatchQuestion(question);
           break;
         case 'video':
           showVideoQuestion(question);
           break;
-        case 'fillup':
-        case 'match':
-          showSimpleQuestion(question);
-          break;
         default:
           showSimpleQuestion(question);
-      }
-      if (question.explanation && elements.explanationText) {
-        elements.explanationText.innerHTML = question.explanation;
       }
     }
 
@@ -1013,48 +1091,124 @@
           button.className = 'option-btn';
           button.innerHTML = `<strong>${opt.letter}.</strong> ${opt.text}`;
           button.dataset.option = opt.text;
-          button.addEventListener('click', () => checkAnswer(button, question.answer));
+          button.addEventListener('click', () => checkMCQAnswer(button, question.answer));
           elements.optionsContainer.appendChild(button);
         });
+      }
+    }
+
+    function showFillupQuestion(question) {
+      if (elements.fillupContent) elements.fillupContent.style.display = 'block';
+      if (elements.fillupInput) {
+        elements.fillupInput.value = '';
+        elements.fillupInput.classList.remove('correct', 'incorrect');
+        elements.fillupInput.disabled = false;
+      }
+      if (elements.submitFillupBtn) {
+        elements.submitFillupBtn.disabled = false;
+        elements.submitFillupBtn.onclick = () => checkFillupAnswer(question.answer);
       }
     }
 
     function showFlashcardQuestion(question) {
       if (elements.flashcardContent) elements.flashcardContent.style.display = 'block';
       if (elements.flashcardAnswer) {
-        elements.flashcardAnswer.innerHTML = `<strong>Answer:</strong> ${question.answer}`;
+        elements.flashcardAnswer.innerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
+        elements.flashcardAnswer.style.display = 'none';
       }
-      if (question.explanation && elements.explanationContainer) {
-        elements.explanationContainer.style.display = 'block';
+      if (elements.revealAnswerBtn) {
+        elements.revealAnswerBtn.disabled = false;
+        elements.revealAnswerBtn.onclick = () => {
+          elements.flashcardAnswer.style.display = 'block';
+          elements.revealAnswerBtn.disabled = true;
+          state.totalAnswered++;
+          state.score++; // Flashcards auto-score as correct on reveal
+          updateScore();
+          if (question.explanation && elements.explanationContainer) {
+            elements.explanationContainer.style.display = 'block';
+          }
+          clearInterval(timerInterval);
+        };
+      }
+    }
+
+    function showMatchQuestion(question) {
+      if (elements.matchContent) elements.matchContent.style.display = 'block';
+      if (elements.matchContainer) {
+        elements.matchContainer.innerHTML = '';
+        state.matchSelections = {};
+        const options = [
+          question.option_a,
+          question.option_b,
+          question.option_c,
+          question.option_d
+        ].filter(opt => opt).map(opt => opt.split(','));
+        const leftItems = options.map(opt => opt[0]);
+        const rightItems = options.map(opt => opt[1]).sort(() => Math.random() - 0.5);
+        const leftColumn = document.createElement('div');
+        leftColumn.className = 'match-column';
+        const rightColumn = document.createElement('div');
+        rightColumn.className = 'match-column';
+        leftItems.forEach((item, index) => {
+          const div = document.createElement('div');
+          div.className = 'match-item';
+          div.textContent = item;
+          div.dataset.id = index;
+          div.addEventListener('click', () => selectMatchItem(div, 'left'));
+          leftColumn.appendChild(div);
+        });
+        rightItems.forEach((item, index) => {
+          const div = document.createElement('div');
+          div.className = 'match-item';
+          div.textContent = item;
+          div.dataset.id = index;
+          div.addEventListener('click', () => selectMatchItem(div, 'right'));
+          rightColumn.appendChild(div);
+        });
+        elements.matchContainer.appendChild(leftColumn);
+        elements.matchContainer.appendChild(rightColumn);
+      }
+      if (elements.submitMatchBtn) {
+        elements.submitMatchBtn.disabled = false;
+        elements.submitMatchBtn.onclick = () => checkMatchAnswer(question);
       }
     }
 
     function showVideoQuestion(question) {
       if (elements.videoContent) elements.videoContent.style.display = 'block';
       if (elements.videoFrame) {
-        elements.videoFrame.src = `https://www.youtube.com/embed/${question.question}`;
+        const videoId = question.question?.trim();
+        elements.videoFrame.src = videoId ? `https://www.youtube.com/embed/${videoId}` : '';
       }
       if (question.explanation && elements.explanationContainer) {
         elements.explanationContainer.style.display = 'block';
       }
+      state.totalAnswered++;
+      state.score++; // Videos auto-score as correct on view
+      updateScore();
+      clearInterval(timerInterval);
     }
 
     function showSimpleQuestion(question) {
       if (elements.flashcardContent) elements.flashcardContent.style.display = 'block';
       if (elements.flashcardAnswer) {
-        let answerHTML = `<strong>Answer:</strong> ${question.answer}`;
+        let answerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
         if (question.option_a) answerHTML += `<br><strong>Option A:</strong> ${question.option_a}`;
         if (question.option_b) answerHTML += `<br><strong>Option B:</strong> ${question.option_b}`;
         elements.flashcardAnswer.innerHTML = answerHTML;
+        elements.flashcardAnswer.style.display = 'block';
       }
       if (question.explanation && elements.explanationContainer) {
         elements.explanationContainer.style.display = 'block';
       }
+      state.totalAnswered++;
+      state.score++; // Simple questions auto-score as correct
+      updateScore();
+      clearInterval(timerInterval);
     }
 
-    function checkAnswer(button, correctAnswer) {
+    function checkMCQAnswer(button, correctAnswer) {
       const buttons = elements.optionsContainer?.querySelectorAll('.option-btn') || [];
-      const explanation = elements.explanationContainer;
       state.totalAnswered++;
       if (button.dataset.option === correctAnswer) {
         state.score++;
@@ -1069,8 +1223,72 @@
       }
       updateScore();
       buttons.forEach(btn => btn.disabled = true);
-      if (explanation) {
-        explanation.style.display = 'block';
+      if (elements.explanationContainer) {
+        elements.explanationContainer.style.display = 'block';
+      }
+      clearInterval(timerInterval);
+    }
+
+    function checkFillupAnswer(correctAnswer) {
+      const input = elements.fillupInput;
+      if (!input) return;
+      state.totalAnswered++;
+      const userAnswer = input.value.trim().toLowerCase();
+      if (userAnswer === correctAnswer.toLowerCase()) {
+        state.score++;
+        input.classList.add('correct');
+      } else {
+        input.classList.add('incorrect');
+      }
+      updateScore();
+      input.disabled = true;
+      if (elements.submitFillupBtn) elements.submitFillupBtn.disabled = true;
+      if (elements.explanationContainer) {
+        elements.explanationContainer.style.display = 'block';
+      }
+      clearInterval(timerInterval);
+    }
+
+    function selectMatchItem(item, side) {
+      const id = item.dataset.id;
+      const items = item.parentElement.querySelectorAll('.match-item');
+      items.forEach(i => i.classList.remove('selected'));
+      item.classList.add('selected');
+      state.matchSelections[side] = id;
+      if (elements.submitMatchBtn) {
+        elements.submitMatchBtn.disabled = !state.matchSelections.left || !state.matchSelections.right;
+      }
+    }
+
+    function checkMatchAnswer(question) {
+      const options = [
+        question.option_a,
+        question.option_b,
+        question.option_c,
+        question.option_d
+      ].filter(opt => opt).map(opt => opt.split(','));
+      const correctPairs = options.reduce((acc, [left, right], index) => ({ ...acc, [index]: index }), {});
+      const leftItems = elements.matchContainer.querySelectorAll('.match-column:first-child .match-item');
+      const rightItems = elements.matchContainer.querySelectorAll('.match-column:last-child .match-item');
+      state.totalAnswered++;
+      if (state.matchSelections.left === state.matchSelections.right) {
+        state.score++;
+        leftItems[state.matchSelections.left].classList.add('correct');
+        rightItems[state.matchSelections.right].classList.add('correct');
+      } else {
+        leftItems[state.matchSelections.left].classList.add('incorrect');
+        rightItems[state.matchSelections.right].classList.add('incorrect');
+        Object.keys(correctPairs).forEach(i => {
+          leftItems[i].classList.add('correct');
+          rightItems[correctPairs[i]].classList.add('correct');
+        });
+      }
+      updateScore();
+      leftItems.forEach(item => item.style.pointerEvents = 'none');
+      rightItems.forEach(item => item.style.pointerEvents = 'none');
+      if (elements.submitMatchBtn) elements.submitMatchBtn.disabled = true;
+      if (elements.explanationContainer) {
+        elements.explanationContainer.style.display = 'block';
       }
       clearInterval(timerInterval);
     }
@@ -1143,13 +1361,25 @@
           clearInterval(timerInterval);
           state.totalAnswered++;
           updateScore();
-          const buttons = elements.optionsContainer?.querySelectorAll('.option-btn') || [];
-          buttons.forEach(btn => btn.disabled = true);
+          disableInputs();
           if (elements.explanationContainer) {
             elements.explanationContainer.style.display = 'block';
           }
         }
       }, 1000);
+    }
+
+    function disableInputs() {
+      if (elements.optionsContainer) {
+        elements.optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+      }
+      if (elements.fillupInput) elements.fillupInput.disabled = true;
+      if (elements.submitFillupBtn) elements.submitFillupBtn.disabled = true;
+      if (elements.revealAnswerBtn) elements.revealAnswerBtn.disabled = true;
+      if (elements.matchContainer) {
+        elements.matchContainer.querySelectorAll('.match-item').forEach(item => item.style.pointerEvents = 'none');
+      }
+      if (elements.submitMatchBtn) elements.submitMatchBtn.disabled = true;
     }
 
     function updateScore() {
@@ -1269,6 +1499,7 @@
         state.currentQuestionIndex = 0;
         state.score = 0;
         state.totalAnswered = 0;
+        state.matchSelections = {};
         updateScore();
         if (elements.quizContent) elements.quizContent.style.display = 'block';
         if (elements.quizResults) elements.quizResults.style.display = 'none';

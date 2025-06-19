@@ -273,6 +273,11 @@
       animation: wrongAnswer 0.3s ease;
     }
 
+    .option-btn.selected {
+      background-color: #e0e7ff;
+      border-color: var(--primary);
+    }
+
     @keyframes correctAnswer {
       0% { transform: scale(1); }
       50% { transform: scale(1.05); }
@@ -364,6 +369,7 @@
       max-height: 90vh;
       overflow-y: auto;
       animation: fadeIn 0.3s ease;
+      padding: 1.5rem;
     }
 
     @keyframes fadeIn {
@@ -538,6 +544,47 @@
       font-size: 0.875rem;
     }
 
+    .report-container {
+      margin-top: 1rem;
+      text-align: right;
+    }
+
+    .report-btn {
+      background: none;
+      border: none;
+      color: var(--warning);
+      cursor: pointer;
+      font-size: 0.875rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .report-btn:hover {
+      color: var(--primary-dark);
+    }
+
+    .report-modal-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .report-modal-content textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      resize: vertical;
+    }
+
+    .report-modal-content .btn-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
     @media (max-width: 640px) {
       .main-content {
         padding: 1rem;
@@ -690,7 +737,7 @@
             <div id="quizTypeList" class="list-group"></div>
           </div>
         </div>
-        <button id="startQuizBtn" class="btn btn-primary" style="width: 100%; display: none;">Start Quiz</button>
+        <button id="startQuizBtn" class="btn btn-primary" style="width: 100%; display: none;" disabled>Start Quiz</button>
       </div>
 
       <div id="quizScreen" class="quiz-container">
@@ -738,6 +785,12 @@
                 </div>
               </div>
               
+              <div class="report-container">
+                <button id="reportBtn" class="report-btn">
+                  <i class="fas fa-exclamation-triangle"></i> Report Question
+                </button>
+              </div>
+              
               <div class="quiz-explanation" id="explanationContainer">
                 <div class="quiz-explanation-title">Explanation</div>
                 <div id="explanationText"></div>
@@ -778,868 +831,1178 @@
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Initialize Firebase
-      const firebaseConfig = {
-        apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
-        authDomain: "community-604af.firebaseapp.com",
-        databaseURL: "https://community-604af-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "community-604af",
-        storageBucket: "community-604af.appspot.com",
-        messagingSenderId: "735063146170",
-        appId: "1:735063146170:web:725bce2c3c64afc0f30c83",
-        measurementId: "G-7YD8RLH33Q"
-      };
-
-      firebase.initializeApp(firebaseConfig);
-      const auth = firebase.auth();
-      const database = firebase.database();
-      const firestore = firebase.firestore();
-
-      const state = {
-        currentSubject: null,
-        currentChapter: null,
-        currentUnit: null,
-        currentTopic: null,
-        currentQuizType: null,
-        questions: [],
-        currentQuestionIndex: 0,
-        score: 0,
-        totalAnswered: 0,
-        quizHistory: [],
-        subjectData: { biology: [], chemistry: [], physics: [] },
-        matchSelections: {},
-        isDPP: false,
-        isTest: false,
-        dppId: null,
-        testId: null,
-        timeLimit: 60,
-        startTime: null
-      };
-
-      const elements = {
-        subjectScreen: document.getElementById('subjectScreen'),
-        chapterScreen: document.getElementById('chapterScreen'),
-        unitScreen: document.getElementById('unitScreen'),
-        topicScreen: document.getElementById('topicScreen'),
-        quizTypeScreen: document.getElementById('quizTypeScreen'),
-        quizScreen: document.getElementById('quizScreen'),
-        resetBtn: document.getElementById('resetBtn'),
-        backToSubjects: document.getElementById('backToSubjects'),
-        backToChapters: document.getElementById('backToChapters'),
-        backToUnits: document.getElementById('backToUnits'),
-        backToTopics: document.getElementById('backToTopics'),
-        subjectCard: document.getElementById('subjectCard'),
-        chapterCard: document.getElementById('chapterCard'),
-        unitCard: document.getElementById('unitCard'),
-        topicCard: document.getElementById('topicCard'),
-        quizTypeCard: document.getElementById('quizTypeCard'),
-        subjectItems: document.querySelectorAll('.list-item[data-subject]'),
-        chapterList: document.getElementById('chapterList'),
-        unitList: document.getElementById('unitList'),
-        topicList: document.getElementById('topicList'),
-        quizTypeList: document.getElementById('quizTypeList'),
-        startQuizBtn: document.getElementById('startQuizBtn'),
-        currentQuestion: document.getElementById('currentQuestion'),
-        totalQuestions: document.getElementById('totalQuestions'),
-        questionText: document.getElementById('questionText'),
-        optionsContainer: document.getElementById('optionsContainer'),
-        fillupInput: document.getElementById('fillupInput'),
-        submitFillupBtn: document.getElementById('submitFillupBtn'),
-        revealAnswerBtn: document.getElementById('revealAnswerBtn'),
-        flashcardAnswer: document.getElementById('flashcardAnswer'),
-        matchContainer: document.getElementById('matchContainer'),
-        submitMatchBtn: document.getElementById('submitMatchBtn'),
-        videoFrame: document.getElementById('videoFrame'),
-        explanationContainer: document.getElementById('explanationContainer'),
-        explanationText: document.getElementById('explanationText'),
-        prevBtn: document.getElementById('prevBtn'),
-        nextQuestionBtn: document.getElementById('nextQuestionBtn'),
-        mcqContent: document.getElementById('mcqContent'),
-        fillupContent: document.getElementById('fillupContent'),
-        flashcardContent: document.getElementById('flashcardContent'),
-        matchContent: document.getElementById('matchContent'),
-        videoContent: document.getElementById('videoContent'),
-        quizResults: document.getElementById('quizResults'),
-        scoreValue: document.getElementById('scoreValue'),
-        totalScore: document.getElementById('totalScore'),
-        restartQuizBtn: document.getElementById('restartQuizBtn'),
-        newQuizBtn: document.getElementById('newQuizBtn'),
-        loadingModal: document.getElementById('loadingModal'),
-        scoreDisplay: document.getElementById('scoreDisplay'),
-        timerDisplay: document.getElementById('timerDisplay'),
-        progressFill: document.getElementById('progressFill'),
-        quizInfo: document.getElementById('quizInfo'),
-        quizInfoTitle: document.getElementById('quizInfoTitle'),
-        quizInfoDetails: document.getElementById('quizInfoDetails'),
-        userMenu: document.getElementById('userMenu'),
-        userAvatar: document.getElementById('userAvatar'),
-        dropdownMenu: document.getElementById('dropdownMenu'),
-        logoutBtn: document.getElementById('logoutBtn')
-      };
-
-      let timerInterval;
-      let timeLeft = 60;
-
-      // Check URL parameters for DPP or test ID
-      function checkUrlParams() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const dppId = urlParams.get('dppId');
-        const testId = urlParams.get('testId');
-        
-        if (dppId) {
-          loadDPP(dppId);
-        } else if (testId) {
-          loadTest(testId);
-        } else {
-          showScreen('subject');
-        }
-      }
-
-      // Load DPP from database
-      async function loadDPP(dppId) {
-        showLoading(true);
-        state.isDPP = true;
-        state.dppId = dppId;
-        
-        try {
-          const snapshot = await database.ref(`dpps/${auth.currentUser.uid}/${dppId}`).once('value');
-          const dpp = snapshot.val();
-          
-          if (!dpp) {
-            throw new Error('DPP not found');
-          }
-          
-          // Set quiz info
-          elements.quizInfoTitle.textContent = dpp.name;
-          elements.quizInfoDetails.innerHTML = `
-            ${dpp.subject.charAt(0).toUpperCase() + dpp.subject.slice(1)} | 
-            ${dpp.chapter} | 
-            ${dpp.unit} | 
-            ${dpp.topic}
-          `;
-          elements.quizInfo.style.display = 'block';
-          
-          // Load questions for this DPP
-          const data = await loadSubjectData(dpp.subject);
-          state.questions = data.filter(q => 
-            q.chapter_name === dpp.chapter && 
-            q.unit_name === dpp.unit && 
-            q.topic_name === dpp.topic
-          ).slice(0, dpp.questions);
-          
-          if (state.questions.length === 0) {
-            throw new Error('No questions found for this DPP');
-          }
-          
-          startQuiz();
-        } catch (error) {
-          console.error('Error loading DPP:', error);
-          showError('Failed to load DPP. ' + error.message);
-          resetSelections('subject');
-        } finally {
-          showLoading(false);
-        }
-      }
-
-      // Load Test from database
-      async function loadTest(testId) {
-        showLoading(true);
-        state.isTest = true;
-        state.testId = testId;
-        
-        try {
-          const snapshot = await database.ref(`tests/${auth.currentUser.uid}/${testId}`).once('value');
-          const test = snapshot.val();
-          
-          if (!test) {
-            throw new Error('Test not found');
-          }
-          
-          // Set quiz info
-          elements.quizInfoTitle.textContent = test.name;
-          elements.quizInfoDetails.innerHTML = `
-            ${test.subject === 'all' ? 'All Subjects' : test.subject.charAt(0).toUpperCase() + test.subject.slice(1)} | 
-            ${test.questions} questions | 
-            ${test.time} minutes
-          `;
-          elements.quizInfo.style.display = 'block';
-          state.timeLimit = test.time * 60;
-          
-          // Load questions for this test
-          if (test.subject === 'all') {
-            const allQuestions = [];
-            for (const subject of ['biology', 'chemistry', 'physics']) {
-              const data = await loadSubjectData(subject);
-              const subjectQuestions = data.filter(q => 
-                test.chapters.some(chapter => {
-                  if (chapter.includes(':')) {
-                    const [chapSubject, chapName] = chapter.split(':');
-                    return chapSubject === subject && q.chapter_name === chapName;
-                  }
-                  return q.chapter_name === chapter;
-                })
-              );
-              allQuestions.push(...subjectQuestions);
-            }
-            state.questions = allQuestions.sort(() => Math.random() - 0.5).slice(0, test.questions);
-          } else {
-            const data = await loadSubjectData(test.subject);
-            state.questions = data
-              .filter(q => test.chapters.some(chapter => q.chapter_name === chapter))
-              .sort(() => Math.random() - 0.5)
-              .slice(0, test.questions);
-          }
-          
-          if (state.questions.length === 0) {
-            throw new Error('No questions found for this test');
-          }
-          
-          startQuiz();
-        } catch (error) {
-          console.error('Error loading test:', error);
-          showError('Failed to load test. ' + error.message);
-          resetSelections('subject');
-        } finally {
-          showLoading(false);
-        }
-      }
-
-      function showLoading(show) {
-        elements.loadingModal.style.display = show ? 'flex' : 'none';
-      }
-
-      function showScreen(screenName) {
-        const screens = ['subject', 'chapter', 'unit', 'topic', 'quizType', 'quiz'];
-        screens.forEach(screen => {
-          elements[`${screen}Screen`].style.display = screen === screenName ? 'block' : 'none';
-        });
-        elements.resetBtn.style.display = screenName === 'quiz' ? 'block' : 'none';
-      }
-
-      function createListItem(text, value, count) {
-        const li = document.createElement('li');
-        li.className = 'list-item';
-        li.dataset.value = value;
-        li.innerHTML = `
-          <div>
-            <div>${text} <span class="badge badge-primary">${count} Qs</span></div>
+    <div class="backdrop" id="reportModal" style="display: none;">
+      <div class="modal">
+        <div class="report-modal-content">
+          <h3>Report Question</h3>
+          <textarea id="reportReason" placeholder="Describe the issue with this question..."></textarea>
+          <div class="btn-group">
+            <button id="cancelReportBtn" class="btn btn-outline">Cancel</button>
+            <button id="submitReportBtn" class="btn btn-primary">Submit</button>
           </div>
-          <i class="fas fa-chevron-right list-item-icon"></i>
-        `;
-        return li;
-      }
+        </div>
+      </div>
+    </div>
 
-      async function loadSubjectData(subject) {
-        if (state.subjectData[subject].length > 0) return state.subjectData[subject];
-        showLoading(true);
-        try {
-          const questions = [];
-          const chaptersSnapshot = await firestore.collection('subjects').doc(subject)
-            .collection('chapters').get();
-          for (const chapterDoc of chaptersSnapshot.docs) {
-            const unitsSnapshot = await chapterDoc.ref.collection('units').get();
-            for (const unitDoc of unitsSnapshot.docs) {
-              const topicsSnapshot = await unitDoc.ref.collection('topics').get();
-              for (const topicDoc of topicsSnapshot.docs) {
-                const questionsSnapshot = await topicDoc.ref.collection('questions').get();
-                questionsSnapshot.forEach(questionDoc => {
-                  questions.push({
-                    ...questionDoc.data(),
-                    chapter_name: chapterDoc.id,
-                    unit_name: unitDoc.id,
-                    topic_name: topicDoc.id
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Initialize Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
+          authDomain: "community-604af.firebaseapp.com",
+          databaseURL: "https://community-604af-default-rtdb.asia-southeast1.firebasedatabase.app",
+          projectId: "community-604af",
+          storageBucket: "community-604af.appspot.com",
+          messagingSenderId: "735063146170",
+          appId: "1:735063146170:web:725bce2c3c64afc0f30c83",
+          measurementId: "G-7YD8RLH33Q"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        const firestore = firebase.firestore();
+
+        const state = {
+          currentSubject: null,
+          currentChapter: null,
+          currentUnit: null,
+          currentTopic: null,
+          currentQuizType: null,
+          questions: [],
+          currentQuestionIndex: 0,
+          score: 0,
+          totalAnswered: 0,
+          quizHistory: [],
+          subjectData: { biology: [], chemistry: [], physics: [] },
+          matchSelections: {},
+          userSelections: {}, // Store user selections per question
+          isDPP: false,
+          isTest: false,
+          dppId: null,
+          testId: null,
+          timeLimit: 60,
+          startTime: null
+        };
+
+        const elements = {
+          subjectScreen: document.getElementById('subjectScreen'),
+          chapterScreen: document.getElementById('chapterScreen'),
+          unitScreen: document.getElementById('unitScreen'),
+          topicScreen: document.getElementById('topicScreen'),
+          quizTypeScreen: document.getElementById('quizTypeScreen'),
+          quizScreen: document.getElementById('quizScreen'),
+          resetBtn: document.getElementById('resetBtn'),
+          backToSubjects: document.getElementById('backToSubjects'),
+          backToChapters: document.getElementById('backToChapters'),
+          backToUnits: document.getElementById('backToUnits'),
+          backToTopics: document.getElementById('backToTopics'),
+          subjectCard: document.getElementById('subjectCard'),
+          chapterCard: document.getElementById('chapterCard'),
+          unitCard: document.getElementById('unitCard'),
+          topicCard: document.getElementById('topicCard'),
+          quizTypeCard: document.getElementById('quizTypeCard'),
+          subjectItems: document.querySelectorAll('.list-item[data-subject]'),
+          chapterList: document.getElementById('chapterList'),
+          unitList: document.getElementById('unitList'),
+          topicList: document.getElementById('topicList'),
+          quizTypeList: document.getElementById('quizTypeList'),
+          startQuizBtn: document.getElementById('startQuizBtn'),
+          currentQuestion: document.getElementById('currentQuestion'),
+          totalQuestions: document.getElementById('totalQuestions'),
+          questionText: document.getElementById('questionText'),
+          optionsContainer: document.getElementById('optionsContainer'),
+          fillupInput: document.getElementById('fillupInput'),
+          submitFillupBtn: document.getElementById('submitFillupBtn'),
+          revealAnswerBtn: document.getElementById('revealAnswerBtn'),
+          flashcardAnswer: document.getElementById('flashcardAnswer'),
+          matchContainer: document.getElementById('matchContainer'),
+          submitMatchBtn: document.getElementById('submitMatchBtn'),
+          videoFrame: document.getElementById('videoFrame'),
+          explanationContainer: document.getElementById('explanationContainer'),
+          explanationText: document.getElementById('explanationText'),
+          prevBtn: document.getElementById('prevBtn'),
+          nextQuestionBtn: document.getElementById('nextQuestionBtn'),
+          mcqContent: document.getElementById('mcqContent'),
+          fillupContent: document.getElementById('fillupContent'),
+          flashcardContent: document.getElementById('flashcardContent'),
+          matchContent: document.getElementById('matchContent'),
+          videoContent: document.getElementById('videoContent'),
+          quizResults: document.getElementById('quizResults'),
+          scoreValue: document.getElementById('scoreValue'),
+          totalScore: document.getElementById('totalScore'),
+          restartQuizBtn: document.getElementById('restartQuizBtn'),
+          newQuizBtn: document.getElementById('newQuizBtn'),
+          loadingModal: document.getElementById('loadingModal'),
+          scoreDisplay: document.getElementById('scoreDisplay'),
+          timerDisplay: document.getElementById('timerDisplay'),
+          progressFill: document.getElementById('progressFill'),
+          quizInfo: document.getElementById('quizInfo'),
+          quizInfoTitle: document.getElementById('quizInfoTitle'),
+          quizInfoDetails: document.getElementById('quizInfoDetails'),
+          userMenu: document.getElementById('userMenu'),
+          userAvatar: document.getElementById('userAvatar'),
+          dropdownMenu: document.getElementById('dropdownMenu'),
+          logoutBtn: document.getElementById('logoutBtn'),
+          reportBtn: document.getElementById('reportBtn'),
+          reportModal: document.getElementById('reportModal'),
+          reportReason: document.getElementById('reportReason'),
+          submitReportBtn: document.getElementById('submitReportBtn'),
+          cancelReportBtn: document.getElementById('cancelReportBtn')
+        };
+
+        // Validate elements
+        Object.keys(elements).forEach(key => {
+          if (!elements[key] && key !== 'subjectItems') {
+            console.warn(`Element with ID '${key}' not found in DOM.`);
+          }
+        });
+
+        let timerInterval;
+        let timeLeft = state.timeLimit;
+
+        // Check URL parameters for DPP or test ID
+        function checkUrlParams() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const dppId = urlParams.get('dppId');
+          const testId = urlParams.get('testId');
+          
+          if (dppId) {
+            loadDPP(dppId);
+          } else if (testId) {
+            loadTest(testId);
+          } else {
+            showScreen('subject');
+          }
+        }
+
+        // Load DPP from database
+        async function loadDPP(dppId) {
+          if (!elements.loadingModal) return;
+          showLoading(true);
+          state.isDPP = true;
+          state.dppId = dppId;
+          
+          try {
+            const snapshot = await database.ref(`dpps/${auth.currentUser.uid}/${dppId}`).once('value');
+            const dpp = snapshot.val();
+            
+            if (!dpp) {
+              throw new Error('DPP not found');
+            }
+            
+            if (elements.quizInfoTitle && elements.quizInfoDetails && elements.quizInfo) {
+              elements.quizInfoTitle.textContent = dpp.name || 'Daily Practice Problem';
+              elements.quizInfoDetails.innerHTML = `
+                ${dpp.subject.charAt(0).toUpperCase() + dpp.subject.slice(1)} | 
+                ${dpp.chapter} | 
+                ${dpp.unit} | 
+                ${dpp.topic}
+              `;
+              elements.quizInfo.style.display = 'block';
+            }
+            
+            const data = await loadSubjectData(dpp.subject);
+            state.questions = data.filter(q => 
+              q.chapter_name === dpp.chapter && 
+              q.unit_name === dpp.unit && 
+              q.topic_name === dpp.topic
+            ).slice(0, dpp.questions);
+            
+            if (state.questions.length === 0) {
+              throw new Error('No questions found for this DPP');
+            }
+            
+            startQuiz();
+          } catch (error) {
+            console.error('Error loading DPP:', error);
+            showError('Failed to load DPP: ' + error.message);
+            resetSelections('subject');
+          } finally {
+            showLoading(false);
+          }
+        }
+
+        // Load Test from database
+        async function loadTest(testId) {
+          if (!elements.loadingModal) return;
+          showLoading(true);
+          state.isTest = true;
+          state.testId = testId;
+          
+          try {
+            const snapshot = await database.ref(`tests/${auth.currentUser.uid}/${testId}`).once('value');
+            const test = snapshot.val();
+            
+            if (!test) {
+              throw new Error('Test not found');
+            }
+            
+            if (elements.quizInfoTitle && elements.quizInfoDetails && elements.quizInfo) {
+              elements.quizInfoTitle.textContent = test.name || 'Mock Test';
+              elements.quizInfoDetails.innerHTML = `
+                ${test.subject === 'all' ? 'All Subjects' : test.subject.charAt(0).toUpperCase() + test.subject.slice(1)} | 
+                ${test.questions} questions | 
+                ${test.time} minutes
+              `;
+              elements.quizInfo.style.display = 'block';
+            }
+            state.timeLimit = test.time * 60;
+            
+            if (test.subject === 'all') {
+              const allQuestions = [];
+              for (const subject of ['biology', 'chemistry', 'physics']) {
+                const data = await loadSubjectData(subject);
+                const subjectQuestions = data.filter(q => 
+                  test.chapters.some(chapter => {
+                    if (chapter.includes(':')) {
+                      const [chapSubject, chapName] = chapter.split(':');
+                      return chapSubject === subject && q.chapter_name === chapName;
+                    }
+                    return q.chapter_name === chapter;
+                  })
+                );
+                allQuestions.push(...subjectQuestions);
+              }
+              state.questions = allQuestions.sort(() => Math.random() - 0.5).slice(0, test.questions);
+            } else {
+              const data = await loadSubjectData(test.subject);
+              state.questions = data
+                .filter(q => test.chapters.some(chapter => q.chapter_name === chapter))
+                .sort(() => Math.random() - 0.5)
+                .slice(0, test.questions);
+            }
+            
+            if (state.questions.length === 0) {
+              throw new Error('No questions found for this test');
+            }
+            
+            startQuiz();
+          } catch (error) {
+            console.error('Error loading test:', error);
+            showError('Failed to load test: ' + error.message);
+            resetSelections('subject');
+          } finally {
+            showLoading(false);
+          }
+        }
+
+        function showLoading(show) {
+          if (elements.loadingModal) {
+            elements.loadingModal.style.display = show ? 'flex' : 'none';
+          }
+        }
+
+        function showScreen(screenName) {
+          const screens = ['subject', 'chapter', 'unit', 'topic', 'quizType', 'quiz'];
+          screens.forEach(screen => {
+            const element = elements[`${screen}Screen`];
+            if (element) {
+              element.style.display = screen === screenName ? 'block' : 'none';
+            }
+          });
+          if (elements.resetBtn) {
+            elements.resetBtn.style.display = screenName === 'quiz' ? 'block' : 'none';
+          }
+          if (elements.quizResults && elements.quizContent) {
+            elements.quizResults.style.display = 'none';
+            elements.quizContent.style.display = screenName === 'quiz' ? 'block' : 'none';
+          }
+        }
+
+        function createListItem(text, value, count) {
+          const li = document.createElement('li');
+          li.className = 'list-item';
+          li.dataset.value = value;
+          li.innerHTML = `
+            <div>
+              <div>${text} <span class="badge badge-primary">${count} Qs</span></div>
+            </div>
+            <i class="fas fa-chevron-right list-item-icon"></i>
+          `;
+          return li;
+        }
+
+        async function loadSubjectData(subject) {
+          if (state.subjectData[subject].length > 0) return state.subjectData[subject];
+          showLoading(true);
+          try {
+            const questions = [];
+            const chaptersSnapshot = await firestore.collection('subjects').doc(subject)
+              .collection('chapters').get();
+            for (const chapterDoc of chaptersSnapshot.docs) {
+              const unitsSnapshot = await chapterDoc.ref.collection('units').get();
+              for (const unitDoc of unitsSnapshot.docs) {
+                const topicsSnapshot = await unitDoc.ref.collection('topics').get();
+                for (const topicDoc of topicsSnapshot.docs) {
+                  const questionsSnapshot = await topicDoc.ref.collection('questions').get();
+                  questionsSnapshot.forEach(questionDoc => {
+                    questions.push({
+                      ...questionDoc.data(),
+                      chapter_name: chapterDoc.id,
+                      unit_name: unitDoc.id,
+                      topic_name: topicDoc.id,
+                      question_id: questionDoc.id
+                    });
                   });
-                });
+                }
               }
             }
-          }
-          state.subjectData[subject] = questions;
-          return questions;
-        } catch (error) {
-          console.error('Error loading subject data:', error);
-          showError('Failed to load data. Please try again.');
-          resetSelections('subject');
-          return [];
-        } finally {
-          showLoading(false);
-        }
-      }
-
-      async function handleSubjectSelect(subject) {
-        state.currentSubject = subject;
-        elements.subjectCard.classList.add('hidden');
-        const data = await loadSubjectData(subject);
-        if (!data.length) return;
-        const chaptersSnapshot = await firestore.collection('subjects').doc(subject).collection('chapters').get();
-        const chapters = chaptersSnapshot.docs.map(doc => doc.id).sort();
-        elements.chapterList.innerHTML = '';
-        if (chapters.length === 0) {
-          elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
-        } else {
-          for (const chapter of chapters) {
-            const count = data.filter(q => q.chapter_name === chapter).length;
-            const li = createListItem(chapter, chapter, count);
-            li.addEventListener('click', () => handleChapterSelect(chapter));
-            elements.chapterList.appendChild(li);
+            state.subjectData[subject] = questions;
+            return questions;
+          } catch (error) {
+            console.error('Error loading subject data:', error);
+            showError('Failed to load subject data: ' + error.message);
+            return [];
+          } finally {
+            showLoading(false);
           }
         }
-        showScreen('chapter');
-      }
 
-      async function handleChapterSelect(chapter) {
-        state.currentChapter = chapter;
-        elements.chapterCard.classList.add('hidden');
-        const data = state.subjectData[state.currentSubject];
-        const unitsSnapshot = await firestore.collection('subjects').doc(state.currentSubject)
-          .collection('chapters').doc(chapter).collection('units').get();
-        const units = unitsSnapshot.docs.map(doc => doc.id).sort();
-        elements.unitList.innerHTML = '';
-        if (units.length === 0) {
-          elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
-        } else {
-          for (const unit of units) {
-            const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === unit).length;
-            const li = createListItem(unit, unit, count);
-            li.addEventListener('click', () => handleUnitSelect(unit));
-            elements.unitList.appendChild(li);
+        async function handleSubjectSelect(subject) {
+          if (!subject || !elements.subjectCard || !elements.chapterList) return;
+          state.currentSubject = subject;
+          elements.subjectCard.classList.add('hidden');
+          const data = await loadSubjectData(subject);
+          if (!data.length) {
+            showError('No data available for this subject.');
+            return;
+          }
+          const chaptersSnapshot = await firestore.collection('subjects').doc(subject).collection('chapters').get();
+          const chapters = chaptersSnapshot.docs.map(doc => doc.id).sort();
+          elements.chapterList.innerHTML = '';
+          if (chapters.length === 0) {
+            elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
+          } else {
+            for (const chapter of chapters) {
+              const count = data.filter(q => q.chapter_name === chapter).length;
+              const li = createListItem(chapter, chapter, count);
+              li.addEventListener('click', () => handleChapterSelect(chapter));
+              elements.chapterList.appendChild(li);
+            }
+          }
+          showScreen('chapter');
+          if (elements.chapterCard) {
+            elements.chapterCard.classList.remove('hidden');
           }
         }
-        showScreen('unit');
-      }
 
-      async function handleUnitSelect(unit) {
-        state.currentUnit = unit;
-        elements.unitCard.classList.add('hidden');
-        const data = state.subjectData[state.currentSubject];
-        const topicsSnapshot = await firestore.collection('subjects').doc(state.currentSubject)
-          .collection('chapters').doc(state.currentChapter)
-          .collection('units').doc(unit).collection('topics').get();
-        const topics = topicsSnapshot.docs.map(doc => doc.id).sort();
-        elements.topicList.innerHTML = '';
-        if (topics.length === 0) {
-          elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
-        } else {
-          for (const topic of topics) {
-            const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === topic).length;
-            const li = createListItem(topic, topic, count);
-            li.addEventListener('click', () => handleTopicSelect(topic));
-            elements.topicList.appendChild(li);
+        async function handleChapterSelect(chapter) {
+          if (!chapter || !elements.chapterCard || !elements.unitList) return;
+          state.currentChapter = chapter;
+          elements.chapterCard.classList.add('hidden');
+          const data = state.subjectData[state.currentSubject] || [];
+          const unitsSnapshot = await firestore.collection('subjects').doc(state.currentSubject)
+            .collection('chapters').doc(chapter).collection('units').get();
+          const units = unitsSnapshot.docs.map(doc => doc.id).sort();
+          elements.unitList.innerHTML = '';
+          if (units.length === 0) {
+            elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
+          } else {
+            for (const unit of units) {
+              const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === unit).length;
+              const li = createListItem(unit, unit, count);
+              li.addEventListener('click', () => handleUnitSelect(unit));
+              elements.unitList.appendChild(li);
+            }
+          }
+          showScreen('unit');
+          if (elements.unitCard) {
+            elements.unitCard.classList.remove('hidden');
           }
         }
-        showScreen('topic');
-      }
 
-      async function handleTopicSelect(topic) {
-        state.currentTopic = topic;
-        elements.topicCard.classList.add('hidden');
-        const data = state.subjectData[state.currentSubject];
-        const quizTypes = [...new Set(data.filter(q => 
-          q.chapter_name === state.currentChapter && 
-          q.unit_name === state.currentUnit && 
-          q.topic_name === topic
-        ).map(q => q.quiz_type))].filter(Boolean).sort();
-        elements.quizTypeList.innerHTML = '';
-        if (quizTypes.length === 0) {
-          elements.quizTypeList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No quiz types found</div></div>';
-        } else {
-          quizTypes.forEach(type => {
-            const count = data.filter(q => 
-              q.chapter_name === state.currentChapter && 
-              q.unit_name === state.currentUnit && 
-              q.topic_name === state.currentTopic && 
-              q.quiz_type === type
-            ).length;
-            const li = createListItem(type, type, count);
-            li.addEventListener('click', () => handleQuizTypeSelect(type));
-            elements.quizTypeList.appendChild(li);
+        async function handleUnitSelect(unit) {
+          if (!unit || !elements.unitCard || !elements.topicList) return;
+          state.currentUnit = unit;
+          elements.unitCard.classList.add('hidden');
+          const data = state.subjectData[state.currentSubject] || [];
+          const topicsSnapshot = await firestore.collection('subjects').doc(state.currentSubject)
+            .collection('chapters').doc(state.currentChapter)
+            .collection('units').doc(unit).collection('topics').get();
+          const topics = topicsSnapshot.docs.map(doc => doc.id).sort();
+          elements.topicList.innerHTML = '';
+          if (topics.length === 0) {
+            elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
+          } else {
+            for (const topic of topics) {
+              const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === topic).length;
+              const li = createListItem(topic, topic, count);
+              li.addEventListener('click', () => handleTopicSelect(topic));
+              elements.topicList.appendChild(li);
+            }
+          }
+          showScreen('topic');
+          if (elements.topicCard) {
+            elements.topicCard.classList.remove('hidden');
+          }
+        }
+
+        async function handleTopicSelect(topic) {
+          if (!topic || !elements.topicCard || !elements.quizTypeList) return;
+          state.currentTopic = topic;
+          elements.topicCard.classList.add('hidden');
+          const data = state.subjectData[state.currentSubject] || [];
+          const quizTypes = [...new Set(data.filter(q => 
+            q.chapter_name === state.currentChapter && 
+            q.unit_name === state.currentUnit && 
+            q.topic_name === topic
+          ).map(q => q.quiz_type))].filter(type => type).sort();
+          elements.quizTypeList.innerHTML = '';
+          if (quizTypes.length === 0) {
+            elements.quizTypeList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No quiz types found</div></div>';
+            if (elements.startQuizBtn) {
+              elements.startQuizBtn.style.display = 'none';
+            }
+          } else {
+            quizTypes.forEach(type => {
+              const count = data.filter(q => 
+                q.chapter_name === state.currentChapter && 
+                q.unit_name === state.currentUnit && 
+                q.topic_name === state.currentTopic && 
+                q.quiz_type === type
+              ).length;
+              const li = createListItem(type, type, count);
+              li.addEventListener('click', () => handleQuizTypeSelect(type));
+              elements.quizTypeList.appendChild(li);
+            });
+            if (elements.startQuizBtn) {
+              elements.startQuizBtn.style.display = 'block';
+            }
+          }
+          showScreen('quizType');
+          if (elements.quizTypeCard) {
+            elements.quizTypeCard.classList.remove('hidden');
+          }
+        }
+
+        function handleQuizTypeSelect(quizType) {
+          if (!quizType || !elements.quizTypeList || !elements.startQuizBtn) return;
+          state.currentQuizType = quizType;
+          elements.quizTypeList.querySelectorAll('.list-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.value === quizType);
           });
+          elements.startQuizBtn.disabled = false;
         }
-        elements.startQuizBtn.style.display = 'block';
-        showScreen('quizType');
-      }
 
-      function handleQuizTypeSelect(quizType) {
-        state.currentQuizType = quizType;
-        elements.quizTypeList.querySelectorAll('.list-item').forEach(item => {
-          item.classList.toggle('active', item.dataset.value === quizType);
-        });
-        elements.startQuizBtn.disabled = false;
-      }
-
-      async function startQuiz() {
-        if (!state.isDPP && !state.isTest) {
-          const data = state.subjectData[state.currentSubject];
-          if (!data || data.length === 0) {
-            showError('No data available. Please select a subject again.');
-            resetSelections('subject');
-            return;
-          }
-          state.questions = data.filter(q => 
-            q.chapter_name === state.currentChapter &&
-            q.unit_name === state.currentUnit &&
-            q.topic_name === state.currentTopic &&
-            (!state.currentQuizType || q.quiz_type === state.currentQuizType)
-          );
-          if (state.questions.length === 0) {
-            showError('No questions found for the selected filters.');
-            resetSelections('topic');
-            return;
-          }
-          if (state.questions.length > 1) {
+        async function startQuiz() {
+          if (!elements.totalQuestions || !elements.startQuizBtn) return;
+          if (!state.isDPP && !state.isTest) {
+            const data = state.subjectData[state.currentSubject] || [];
+            if (!data.length) {
+              showError('No data available. Please select a subject again.');
+              resetSelections('subject');
+              return;
+            }
+            state.questions = data.filter(q => 
+              q.chapter_name === state.currentChapter &&
+              q.unit_name === state.currentUnit &&
+              q.topic_name === state.currentTopic &&
+              (!state.currentQuizType || q.quiz_type === state.currentQuizType)
+            );
+            if (state.questions.length === 0) {
+              showError('No questions found for the selected filters.');
+              resetSelections('topic');
+              return;
+            }
             state.questions = state.questions.sort(() => Math.random() - 0.5);
           }
-        }
-        
-        state.currentQuestionIndex = 0;
-        state.score = 0;
-        state.totalAnswered = 0;
-        state.matchSelections = {};
-        state.startTime = Date.now();
-        updateScore();
-        elements.totalQuestions.textContent = state.questions.length;
-        elements.startQuizBtn.style.display = 'none';
-        showScreen('quiz');
-        showQuestion(state.questions[0]);
-        startTimer();
-      }
-
-      function showQuestion(question) {
-        if (!question) return;
-        updateProgress();
-        ['mcqContent', 'fillupContent', 'flashcardContent', 'matchContent', 'videoContent'].forEach(id => {
-          elements[id].style.display = 'none';
-        });
-        elements.explanationContainer.style.display = 'none';
-        elements.prevBtn.disabled = state.currentQuestionIndex === 0;
-        elements.nextQuestionBtn.disabled = false;
-        elements.nextQuestionBtn.textContent = state.currentQuestionIndex === state.questions.length - 1 ? 'See Results' : 'Next';
-        elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
-        elements.questionText.innerHTML = question.question || 'No question text available';
-        elements.explanationText.innerHTML = question.explanation || 'No explanation provided';
-        switch (question.quiz_type?.toLowerCase()) {
-          case 'mcq':
-            showMCQQuestion(question);
-            break;
-          case 'fillup':
-            showFillupQuestion(question);
-            break;
-          case 'flashcard':
-            showFlashcardQuestion(question);
-            break;
-          case 'match':
-            showMatchQuestion(question);
-            break;
-          case 'video':
-            showVideoQuestion(question);
-            break;
-          default:
-            showSimpleQuestion(question);
-        }
-      }
-
-      function showMCQQuestion(question) {
-        elements.mcqContent.style.display = 'block';
-        elements.optionsContainer.innerHTML = '';
-        const options = [
-          { letter: 'A', text: question.option_a },
-          { letter: 'B', text: question.option_b },
-          { letter: 'C', text: question.option_c },
-          { letter: 'D', text: question.option_d }
-        ].filter(opt => opt.text);
-        options.forEach(opt => {
-          const button = document.createElement('button');
-          button.className = 'option-btn';
-          button.innerHTML = `<strong>${opt.letter}.</strong> ${opt.text}`;
-          button.dataset.option = opt.text;
-          button.addEventListener('click', () => checkMCQAnswer(button, question.answer));
-          elements.optionsContainer.appendChild(button);
-        });
-      }
-
-      function showFillupQuestion(question) {
-        elements.fillupContent.style.display = 'block';
-        elements.fillupInput.value = '';
-        elements.fillupInput.classList.remove('correct', 'incorrect');
-        elements.fillupInput.disabled = false;
-        elements.submitFillupBtn.disabled = false;
-        elements.submitFillupBtn.onclick = () => checkFillupAnswer(question.answer);
-      }
-
-      function showFlashcardQuestion(question) {
-        elements.flashcardContent.style.display = 'block';
-        elements.flashcardAnswer.innerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
-        elements.flashcardAnswer.style.display = 'none';
-        elements.revealAnswerBtn.disabled = false;
-        elements.revealAnswerBtn.onclick = () => {
-          elements.flashcardAnswer.style.display = 'block';
-          elements.revealAnswerBtn.disabled = true;
-          state.totalAnswered++;
-          state.score++;
-          updateScore();
-          elements.explanationContainer.style.display = 'block';
-          clearInterval(timerInterval);
-        };
-      }
-
-      function showMatchQuestion(question) {
-        elements.matchContent.style.display = 'block';
-        elements.matchContainer.innerHTML = '';
-        state.matchSelections = {};
-        const options = [
-          question.option_a,
-          question.option_b,
-          question.option_c,
-          question.option_d
-        ].filter(opt => opt).map(opt => opt.split(','));
-        const leftItems = options.map(opt => opt[0]);
-        const rightItems = options.map(opt => opt[1]).sort(() => Math.random() - 0.5);
-        const leftColumn = document.createElement('div');
-        leftColumn.className = 'match-column';
-        const rightColumn = document.createElement('div');
-        rightColumn.className = 'match-column';
-        leftItems.forEach((item, index) => {
-          const div = document.createElement('div');
-          div.className = 'match-item';
-          div.textContent = item;
-          div.dataset.id = index;
-          div.addEventListener('click', () => selectMatchItem(div, 'left'));
-          leftColumn.appendChild(div);
-        });
-        rightItems.forEach((item, index) => {
-          const div = document.createElement('div');
-          div.className = 'match-item';
-          div.textContent = item;
-          div.dataset.id = index;
-          div.addEventListener('click', () => selectMatchItem(div, 'right'));
-          rightColumn.appendChild(div);
-        });
-        elements.matchContainer.appendChild(leftColumn);
-        elements.matchContainer.appendChild(rightColumn);
-        elements.submitMatchBtn.disabled = false;
-        elements.submitMatchBtn.onclick = () => checkMatchAnswer(question);
-      }
-
-      function showVideoQuestion(question) {
-        elements.videoContent.style.display = 'block';
-        const videoId = question.question?.trim();
-        elements.videoFrame.src = videoId ? `https://www.youtube.com/embed/${videoId}` : '';
-        elements.explanationContainer.style.display = 'block';
-        state.totalAnswered++;
-        state.score++;
-        updateScore();
-        clearInterval(timerInterval);
-      }
-
-      function showSimpleQuestion(question) {
-        elements.flashcardContent.style.display = 'block';
-        let answerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
-        if (question.option_a) answerHTML += `<br><strong>Option A:</strong> ${question.option_a}`;
-        if (question.option_b) answerHTML += `<br><strong>Option B:</strong> ${question.option_b}`;
-        elements.flashcardAnswer.innerHTML = answerHTML;
-        elements.flashcardAnswer.style.display = 'block';
-        elements.explanationContainer.style.display = 'block';
-        state.totalAnswered++;
-        state.score++;
-        updateScore();
-        clearInterval(timerInterval);
-      }
-
-      function checkMCQAnswer(button, correctAnswer) {
-        const buttons = elements.optionsContainer.querySelectorAll('.option-btn');
-        state.totalAnswered++;
-        if (button.dataset.option === correctAnswer) {
-          state.score++;
-          button.classList.add('correct');
-        } else {
-          button.classList.add('incorrect');
-          buttons.forEach(btn => {
-            if (btn.dataset.option === correctAnswer) {
-              btn.classList.add('correct');
-            }
-          });
-        }
-        updateScore();
-        buttons.forEach(btn => btn.disabled = true);
-        elements.explanationContainer.style.display = 'block';
-        clearInterval(timerInterval);
-      }
-
-      function checkFillupAnswer(correctAnswer) {
-        const input = elements.fillupInput;
-        state.totalAnswered++;
-        const userAnswer = input.value.trim().toLowerCase();
-        if (userAnswer === correctAnswer?.toLowerCase()) {
-          state.score++;
-          input.classList.add('correct');
-        } else {
-          input.classList.add('incorrect');
-        }
-        updateScore();
-        input.disabled = true;
-        elements.submitFillupBtn.disabled = true;
-        elements.explanationContainer.style.display = 'block';
-        clearInterval(timerInterval);
-      }
-
-      function selectMatchItem(item, side) {
-        const id = item.dataset.id;
-        const items = item.parentElement.querySelectorAll('.match-item');
-        items.forEach(i => i.classList.remove('selected'));
-        item.classList.add('selected');
-        state.matchSelections[side] = id;
-        elements.submitMatchBtn.disabled = !state.matchSelections.left || !state.matchSelections.right;
-      }
-
-      function checkMatchAnswer(question) {
-        const options = [
-          question.option_a,
-          question.option_b,
-          question.option_c,
-          question.option_d
-        ].filter(opt => opt).map(opt => opt.split(','));
-        const correctPairs = options.reduce((acc, [left, right], index) => ({ ...acc, [index]: index }), {});
-        const leftItems = elements.matchContainer.querySelectorAll('.match-column:first-child .match-item');
-        const rightItems = elements.matchContainer.querySelectorAll('.match-column:last-child .match-item');
-        state.totalAnswered++;
-        if (state.matchSelections.left === state.matchSelections.right) {
-          state.score++;
-          leftItems[state.matchSelections.left].classList.add('correct');
-          rightItems[state.matchSelections.right].classList.add('correct');
-        } else {
-          leftItems[state.matchSelections.left].classList.add('incorrect');
-          rightItems[state.matchSelections.right].classList.add('incorrect');
-          Object.keys(correctPairs).forEach(i => {
-            leftItems[i].classList.add('correct');
-            rightItems[correctPairs[i]].classList.add('correct');
-          });
-        }
-        updateScore();
-        leftItems.forEach(item => item.style.pointerEvents = 'none');
-        rightItems.forEach(item => item.style.pointerEvents = 'none');
-        elements.submitMatchBtn.disabled = true;
-        elements.explanationContainer.style.display = 'block';
-        clearInterval(timerInterval);
-      }
-
-      function showResults() {
-        const quizResult = {
-          date: Date.now(),
-          subject: state.currentSubject || (state.isDPP ? 'dpp' : 'test'),
-          chapter: state.currentChapter,
-          unit: state.currentUnit,
-          topic: state.currentTopic,
-          quizType: state.currentQuizType,
-          score: state.score,
-          total: state.questions.length,
-          timeTaken: Math.floor((Date.now() - state.startTime) / 1000),
-          dppId: state.dppId,
-          testId: state.testId
-        };
-        
-        if (auth.currentUser) {
-          const newResultRef = database.ref(`quizHistory/${auth.currentUser.uid}`).push();
-          newResultRef.set(quizResult);
-        }
-        
-        elements.quizContent.style.display = 'none';
-        elements.quizResults.style.display = 'block';
-        elements.scoreValue.textContent = state.score;
-        elements.totalScore.textContent = state.questions.length;
-        clearInterval(timerInterval);
-      }
-
-      function startTimer() {
-        timeLeft = state.timeLimit;
-        elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
-        timerInterval = setInterval(() => {
-          timeLeft--;
-          elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
-          if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            state.totalAnswered++;
-            updateScore();
-            disableInputs();
-            elements.explanationContainer.style.display = 'block';
-          }
-        }, 1000);
-      }
-
-      function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-      }
-
-      function disableInputs() {
-        elements.optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
-        elements.fillupInput.disabled = true;
-        elements.submitFillupBtn.disabled = true;
-        elements.revealAnswerBtn.disabled = true;
-        elements.matchContainer.querySelectorAll('.match-item').forEach(item => item.style.pointerEvents = 'none');
-        elements.submitMatchBtn.disabled = true;
-      }
-
-      function updateScore() {
-        elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
-      }
-
-      function updateProgress() {
-        const progress = ((state.currentQuestionIndex + 1) / state.questions.length) * 100;
-        elements.progressFill.style.width = `${progress}%`;
-      }
-
-      function showError(message) {
-        const currentScreen = elements.quizScreen.style.display === 'block' ? elements.quizScreen : elements.subjectScreen;
-        elements.quizContent.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-circle empty-state-icon"></i><div>${message}</div></div>`;
-        currentScreen.style.display = 'block';
-        elements.nextQuestionBtn.style.display = 'none';
-      }
-
-      function resetSelections(level) {
-        const levels = ['subject', 'chapter', 'unit', 'topic', 'quizType'];
-        const index = levels.indexOf(level);
-        for (let i = index; i < levels.length; i++) {
-          state[`current${levels[i].charAt(0).toUpperCase() + levels[i].slice(1)}`] = null;
-          const card = elements[`${levels[i]}Card`];
-          const list = elements[`${levels[i]}List`];
-          if (card) card.classList.add('hidden');
-          if (list) list.innerHTML = '';
-        }
-        elements.startQuizBtn.style.display = 'none';
-        elements.startQuizBtn.disabled = true;
-        elements.quizScreen.style.display = 'none';
-        elements.quizContent.innerHTML = '';
-        elements.nextQuestionBtn.style.display = 'block';
-        clearInterval(timerInterval);
-        timeLeft = state.timeLimit;
-        elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
-        elements.progressFill.style.width = '0%';
-        state.isDPP = false;
-        state.isTest = false;
-        state.dppId = null;
-        state.testId = null;
-        if (level === 'subject') {
-          elements.subjectCard.classList.remove('hidden');
-        } else {
-          const prevLevel = levels[index - 1];
-          if (prevLevel && elements[`${prevLevel}Card`]) {
-            elements[`${prevLevel}Card`].classList.remove('hidden');
-          }
-        }
-        showScreen(level);
-      }
-
-      // Initialize event listeners
-      function initEventListeners() {
-        elements.subjectItems.forEach(item => {
-          item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
-        });
-
-        elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
-        elements.backToChapters.addEventListener('click', () => {
-          elements.subjectCard.classList.remove('hidden');
-          resetSelections('chapter');
-        });
-        elements.backToUnits.addEventListener('click', () => {
-          elements.chapterCard.classList.remove('hidden');
-          resetSelections('unit');
-        });
-        elements.backToTopics.addEventListener('click', () => {
-          elements.unitCard.classList.remove('hidden');
-          resetSelections('topic');
-        });
-
-        elements.startQuizBtn.addEventListener('click', startQuiz);
-
-        elements.nextQuestionBtn.addEventListener('click', () => {
-          clearInterval(timerInterval);
-          timeLeft = state.timeLimit;
-          if (state.currentQuestionIndex < state.questions.length - 1) {
-            state.currentQuestionIndex++;
-            showQuestion(state.questions[state.currentQuestionIndex]);
-            startTimer();
-          } else {
-            showResults();
-          }
-        });
-
-        elements.prevBtn.addEventListener('click', () => {
-          if (state.currentQuestionIndex > 0) {
-            clearInterval(timerInterval);
-            timeLeft = state.timeLimit;
-            state.currentQuestionIndex--;
-            showQuestion(state.questions[state.currentQuestionIndex]);
-            startTimer();
-          }
-        });
-
-        elements.restartQuizBtn.addEventListener('click', () => {
+          
           state.currentQuestionIndex = 0;
           state.score = 0;
           state.totalAnswered = 0;
           state.matchSelections = {};
+          state.userSelections = {};
           state.startTime = Date.now();
           updateScore();
-          elements.quizContent.style.display = 'block';
-          elements.quizResults.style.display = 'none';
+          elements.totalQuestions.textContent = state.questions.length;
+          elements.startQuizBtn.style.display = 'none';
+          showScreen('quiz');
           showQuestion(state.questions[0]);
           startTimer();
-        });
+        }
 
-        elements.newQuizBtn.addEventListener('click', () => {
-          if (state.isDPP || state.isTest) {
-            window.location.href = state.isDPP ? 'dpp.html' : 'tests.html';
-          } else {
-            resetSelections('subject');
+        function showQuestion(question) {
+          if (!question) {
+            if (state.questions.length > 0) {
+              showResults();
+            }
+            return;
           }
-        });
-
-        elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
-
-        // User menu interactions
-        elements.userAvatar.addEventListener('click', () => {
-          elements.dropdownMenu.classList.toggle('show');
-        });
-
-        elements.logoutBtn.addEventListener('click', () => {
-          auth.signOut().then(() => {
-            window.location.href = 'index.html';
+          if (!elements.prevBtn || !elements.nextQuestionBtn || !elements.currentQuestion || !elements.questionText || !elements.explanationText) return;
+          updateProgress();
+          ['mcqContent', 'fillupContent', 'flashcardContent', 'matchContent', 'videoContent'].forEach(id => {
+            if (elements[id]) {
+              elements[id].style.display = 'none';
+            }
           });
-        });
-
-        window.addEventListener('click', (e) => {
-          if (!elements.userMenu.contains(e.target)) {
-            elements.dropdownMenu.classList.remove('show');
+          if (elements.explanationContainer) {
+            elements.explanationContainer.style.display = 'none';
           }
-        });
-      }
+          elements.prevBtn.disabled = state.currentQuestionIndex === 0;
+          elements.nextQuestionBtn.disabled = false;
+          elements.nextQuestionBtn.textContent = state.currentQuestionIndex === state.questions.length - 1 ? 'See Results' : 'Next';
+          elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
+          elements.questionText.innerHTML = question.question || 'No question text available';
+          elements.explanationText.innerHTML = question.explanation || 'No explanation provided';
+          switch (question.quiz_type?.toLowerCase()) {
+            case 'mcq':
+              showMCQQuestion(question);
+              break;
+            case 'fillup':
+              showFillupQuestion(question);
+              break;
+            case 'flashcard':
+              showFlashcardQuestion(question);
+              break;
+            case 'match':
+              showMatchQuestion(question);
+              break;
+            case 'video':
+              showVideoQuestion(question);
+              break;
+            default:
+              showSimpleQuestion(question);
+          }
+        }
 
-      // Initialize auth state listener
-      auth.onAuthStateChanged((user) => {
-        if (!user) {
-          window.location.href = 'index.html';
-        } else {
-          // Set user avatar
-          if (user.photoURL) {
-            elements.userAvatar.style.backgroundImage = `url(${user.photoURL})`;
-            elements.userAvatar.textContent = '';
+        function showMCQQuestion(question) {
+          if (!elements.mcqContent || !elements.optionsContainer) return;
+          elements.mcqContent.style.display = 'block';
+          elements.optionsContainer.innerHTML = '';
+          const options = [
+            { letter: 'A', text: question.option_a },
+            { letter: 'B', text: question.option_b },
+            { letter: 'C', text: question.option_c },
+            { letter: 'D', text: question.option_d }
+          ].filter(opt => opt.text);
+          const questionId = question.question_id || state.currentQuestionIndex;
+          const userSelection = state.userSelections[questionId];
+          options.forEach(opt => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.innerHTML = `<strong>${opt.letter}.</strong> ${opt.text}`;
+            button.dataset.option = opt.text;
+            if (userSelection === opt.text && !button.classList.contains('correct') && !button.classList.contains('incorrect')) {
+              button.classList.add('selected');
+            }
+            button.addEventListener('click', () => {
+              state.userSelections[questionId] = opt.text;
+              checkMCQAnswer(button, question.answer);
+            });
+            elements.optionsContainer.appendChild(button);
+          });
+        }
+
+        function showFillupQuestion(question) {
+          if (!elements.fillupContent || !elements.fillupInput || !elements.submitFillupBtn) return;
+          elements.fillupContent.style.display = 'block';
+          const questionId = question.question_id || state.currentQuestionIndex;
+          const userSelection = state.userSelections[questionId];
+          elements.fillupInput.value = userSelection || '';
+          elements.fillupInput.classList.remove('correct', 'incorrect');
+          elements.fillupInput.disabled = false;
+          elements.submitFillupBtn.disabled = false;
+          elements.submitFillupBtn.onclick = () => {
+            state.userSelections[questionId] = elements.fillupInput.value;
+            checkFillupAnswer(question.answer);
+          };
+        }
+
+        function showFlashcardQuestion(question) {
+          if (!elements.flashcardContent || !elements.flashcardAnswer || !elements.revealAnswerBtn) return;
+          elements.flashcardContent.style.display = 'block';
+          elements.flashcardAnswer.innerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
+          elements.flashcardAnswer.style.display = 'none';
+          elements.revealAnswerBtn.disabled = false;
+          elements.revealAnswerBtn.onclick = () => {
+            elements.flashcardAnswer.style.display = 'block';
+            elements.revealAnswerBtn.disabled = true;
+            state.totalAnswered++;
+            state.score++;
+            updateScore();
+            if (elements.explanationContainer) {
+              elements.explanationContainer.style.display = 'block';
+            }
+            clearInterval(timerInterval);
+          };
+        }
+
+        function showMatchQuestion(question) {
+          if (!elements.matchContent || !elements.matchContainer || !elements.submitMatchBtn) return;
+          elements.matchContent.style.display = 'block';
+          elements.matchContainer.innerHTML = '';
+          state.matchSelections = {};
+          const questionId = question.question_id || state.currentQuestionIndex;
+          const userSelection = state.userSelections[questionId] || {};
+          const options = [
+            question.option_a,
+            question.option_b,
+            question.option_c,
+            question.option_d
+          ].filter(opt => opt).map(opt => opt.split(','));
+          if (options.length === 0) {
+            showError('No valid match options available.');
+            return;
+          }
+          const leftItems = options.map(opt => opt[0]).filter(item => item);
+          const rightItems = options.map(opt => opt[1]).filter(item => item).sort(() => Math.random() - 0.5);
+          if (leftItems.length !== rightItems.length) {
+            showError('Mismatch in number of match items.');
+            return;
+          }
+          const leftColumn = document.createElement('div');
+          leftColumn.className = 'match-column';
+          const rightColumn = document.createElement('div');
+          rightColumn.className = 'match-column';
+          leftItems.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'match-item';
+            div.textContent = item;
+            div.dataset.id = index;
+            if (userSelection.left === index.toString()) {
+              div.classList.add('selected');
+              state.matchSelections.left = index.toString();
+            }
+            div.addEventListener('click', () => selectMatchItem(div, 'left'));
+            leftColumn.appendChild(div);
+          });
+          rightItems.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'match-item';
+            div.textContent = item;
+            div.dataset.id = index;
+            if (userSelection.right === index.toString()) {
+              div.classList.add('selected');
+              state.matchSelections.right = index.toString();
+            }
+            div.addEventListener('click', () => selectMatchItem(div, 'right'));
+            rightColumn.appendChild(div);
+          });
+          elements.matchContainer.appendChild(leftColumn);
+          elements.matchContainer.appendChild(rightColumn);
+          elements.submitMatchBtn.disabled = !state.matchSelections.left || !state.matchSelections.right;
+          elements.submitMatchBtn.onclick = () => {
+            state.userSelections[questionId] = { ...state.matchSelections };
+            checkMatchAnswer(question);
+          };
+        }
+
+        function showVideoQuestion(question) {
+          if (!elements.videoContent || !elements.videoFrame) return;
+          elements.videoContent.style.display = 'block';
+          const videoId = question.question?.trim();
+          elements.videoFrame.src = videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+          if (elements.explanationContainer) {
+            elements.explanationContainer.style.display = 'block';
+          }
+          state.totalAnswered++;
+          state.score++;
+          updateScore();
+          clearInterval(timerInterval);
+        }
+
+        function showSimpleQuestion(question) {
+          if (!elements.flashcardContent || !elements.flashcardAnswer) return;
+          elements.flashcardContent.style.display = 'block';
+          let answerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
+          if (question.option_a) answerHTML += `<br><strong>Option A:</strong> ${question.option_a}`;
+          if (question.option_b) answerHTML += `<br><strong>Option B:</strong> ${question.option_b}`;
+          elements.flashcardAnswer.innerHTML = answerHTML;
+          elements.flashcardAnswer.style.display = 'block';
+          if (elements.explanationContainer) {
+            elements.explanationContainer.style.display = 'block';
+          }
+          state.totalAnswered++;
+          state.score++;
+          updateScore();
+          clearInterval(timerInterval);
+        }
+
+        function checkMCQAnswer(button, correctAnswer) {
+          if (!button || !correctAnswer || !elements.optionsContainer) {
+            showError('Invalid question data.');
+            return;
+          }
+          const buttons = elements.optionsContainer.querySelectorAll('.option-btn');
+          state.totalAnswered++;
+          if (button.dataset.option === correctAnswer) {
+            state.score++;
+            button.classList.add('correct');
           } else {
-            elements.userAvatar.textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U';
+            button.classList.add('incorrect');
+            buttons.forEach(btn => {
+              if (btn.dataset.option === correctAnswer) {
+                btn.classList.add('correct');
+              }
+            });
           }
+          updateScore();
+          buttons.forEach(btn => btn.disabled = true);
+          if (elements.explanationContainer) {
+            elements.explanationContainer.style.display = 'block';
+          }
+          clearInterval(timerInterval);
+        }
+
+        function checkFillupAnswer(correctAnswer) {
+          if (!correctAnswer || !elements.fillupInput || !elements.submitFillupBtn) {
+            showError('Invalid question data.');
+            return;
+          }
+          const input = elements.fillupInput;
+          state.totalAnswered++;
+          const userAnswer = input.value.trim().toLowerCase();
+          if (userAnswer === correctAnswer.toLowerCase()) {
+            state.score++;
+            input.classList.add('correct');
+          } else {
+            input.classList.add('incorrect');
+          }
+          updateScore();
+          input.disabled = true;
+          elements.submitFillupBtn.disabled = true;
+          if (elements.explanationContainer) {
+            elements.explanationContainer.style.display = 'block';
+          }
+          clearInterval(timerInterval);
+        }
+
+        function selectMatchItem(item, side) {
+          if (!item || !elements.submitMatchBtn) return;
+          const id = item.dataset.id;
+          const items = item.parentElement.querySelectorAll('.match-item');
+          items.forEach(i => i.classList.remove('selected'));
+          item.classList.add('selected');
+          state.matchSelections[side] = id;
+          elements.submitMatchBtn.disabled = !state.matchSelections.left || !state.matchSelections.right;
+        }
+
+        function checkMatchAnswer(question) {
+          if (!elements.matchContainer || !elements.submitMatchBtn) {
+            showError('Invalid match question data.');
+            return;
+          }
+          const options = [
+            question.option_a,
+            question.option_b,
+            question.option_c,
+            question.option_d
+          ].filter(opt => opt).map(opt => opt.split(','));
+          if (options.length === 0) {
+            showError('No valid match options available.');
+            return;
+          }
+          const correctPairs = options.reduce((acc, [left, right], index) => {
+            acc[left] = right;
+            return acc;
+          }, {});
+          const leftItems = elements.matchContainer.querySelectorAll('.match-column:first-child .match-item');
+          const rightItems = elements.matchContainer.querySelectorAll('.match-column:last-child .match-item');
+          state.totalAnswered++;
+          const leftItem = leftItems[state.matchSelections.left]?.textContent;
+          const rightItem = rightItems[state.matchSelections.right]?.textContent;
+          if (leftItem && rightItem && correctPairs[leftItem] === rightItem) {
+            state.score++;
+            leftItems[state.matchSelections.left].classList.add('correct');
+            rightItems[state.matchSelections.right].classList.add('correct');
+          } else {
+            if (leftItems[state.matchSelections.left]) {
+              leftItems[state.matchSelections.left].classList.add('incorrect');
+            }
+            if (rightItems[state.matchSelections.right]) {
+              rightItems[state.matchSelections.right].classList.add('incorrect');
+            }
+            leftItems.forEach((item, index) => {
+              if (correctPairs[item.textContent] === rightItems[index]?.textContent) {
+                item.classList.add('correct');
+                rightItems[index].classList.add('correct');
+              }
+            });
+          }
+          updateScore();
+          leftItems.forEach(item => item.style.pointerEvents = 'none');
+          rightItems.forEach(item => item.style.pointerEvents = 'none');
+          elements.submitMatchBtn.disabled = true;
+          if (elements.explanationContainer) {
+            elements.explanationContainer.style.display = 'block';
+          }
+          clearInterval(timerInterval);
+        }
+
+        function showResults() {
+          if (!elements.quizContent || !elements.quizResults || !elements.scoreValue || !elements.totalScore || !elements.prevBtn || !elements.nextQuestionBtn) return;
+          elements.quizContent.style.display = 'none';
+          elements.quizResults.style.display = 'block';
+          elements.scoreValue.textContent = state.score;
+          elements.totalScore.textContent = state.questions.length;
+          elements.prevBtn.disabled = true;
+          elements.nextQuestionBtn.disabled = true;
+          clearInterval(timerInterval);
+
+          const quizResult = {
+            date: Date.now(),
+            subject: state.currentSubject || (state.isDPP ? 'DPP' : 'Test'),
+            chapter: state.currentChapter,
+            unit: state.currentUnit,
+            topic: state.currentTopic,
+            quizType: state.currentQuizType,
+            score: state.score,
+            total: state.questions.length,
+            timeTaken: Math.floor((Date.now() - state.startTime) / 1000),
+            dppId: state.dppId,
+            testId: state.testId
+          };
           
-          // Initialize the app
-          initEventListeners();
-          checkUrlParams();
+          if (auth.currentUser) {
+            const newResultRef = database.ref(`quizHistory/${auth.currentUser.uid}`).push();
+            newResultRef.set(quizResult).catch(error => {
+              console.error('Error saving quiz result:', error);
+            });
+          }
+        }
+
+        function startTimer() {
+          if (!elements.timerDisplay) return;
+          timeLeft = state.timeLimit;
+          elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
+          clearInterval(timerInterval);
+          timerInterval = setInterval(() => {
+            timeLeft--;
+            elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
+            if (timeLeft <= 0) {
+              clearInterval(timerInterval);
+              state.totalAnswered++;
+              updateScore();
+              disableInputs();
+              if (elements.explanationContainer) {
+                elements.explanationContainer.style.display = 'block';
+              }
+              if (elements.nextQuestionBtn) {
+                elements.nextQuestionBtn.disabled = false;
+              }
+            }
+          }, 1000);
+        }
+
+        function formatTime(seconds) {
+          const mins = Math.floor(seconds / 60);
+          const secs = seconds % 60;
+          return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function disableInputs() {
+          if (elements.optionsContainer) {
+            elements.optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+          }
+          if (elements.fillupInput) {
+            elements.fillupInput.disabled = true;
+          }
+          if (elements.submitFillupBtn) {
+            elements.submitFillupBtn.disabled = true;
+          }
+          if (elements.revealAnswerBtn) {
+            elements.revealAnswerBtn.disabled = true;
+          }
+          if (elements.matchContainer) {
+            elements.matchContainer.querySelectorAll('.match-item').forEach(item => item.style.pointerEvents = 'none');
+          }
+          if (elements.submitMatchBtn) {
+            elements.submitMatchBtn.disabled = true;
+          }
+        }
+
+        function updateScore() {
+          if (elements.scoreDisplay) {
+            elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
+          }
+        }
+
+        function updateProgress() {
+          if (elements.progressFill) {
+            const progress = state.questions.length > 0 ? ((state.currentQuestionIndex + 1) / state.questions.length) * 100 : 0;
+            elements.progressFill.style.width = `${progress}%`;
+          }
+        }
+
+        function showError(message) {
+          if (!elements.quizContent || !elements.quizScreen || !elements.nextQuestionBtn || !elements.prevBtn) {
+            console.error('Required elements for error display are missing.');
+            return;
+          }
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'empty-state';
+          errorDiv.innerHTML = `<i class="fas fa-exclamation-circle empty-state-icon"></i><div>${message}</div>`;
+          elements.quizContent.innerHTML = '';
+          elements.quizContent.appendChild(errorDiv);
+          elements.quizScreen.style.display = 'block';
+          elements.nextQuestionBtn.style.display = 'none';
+          elements.prevBtn.style.display = 'none';
+          clearInterval(timerInterval);
+        }
+
+        function resetSelections(level) {
+          const levels = ['subject', 'chapter', 'unit', 'topic', 'quizType'];
+          const index = levels.indexOf(level);
+          for (let i = index; i < levels.length; i++) {
+            state[`current${levels[i].charAt(0).toUpperCase() + levels[i].slice(1)}`] = null;
+            const card = elements[`${levels[i]}Card`];
+            const list = elements[`${levels[i]}List`];
+            if (card) card.classList.remove('hidden');
+            if (list) list.innerHTML = '';
+          }
+          if (elements.startQuizBtn) {
+            elements.startQuizBtn.style.display = 'none';
+            elements.startQuizBtn.disabled = true;
+          }
+          if (elements.quizScreen && elements.quizContent && elements.quizResults && elements.nextQuestionBtn && elements.prevBtn) {
+            elements.quizScreen.style.display = 'none';
+            elements.quizContent.style.display = 'block';
+            elements.quizResults.style.display = 'none';
+            elements.nextQuestionBtn.style.display = 'block';
+            elements.prevBtn.style.display = 'block';
+          }
+          clearInterval(timerInterval);
+          timeLeft = state.timeLimit;
+          if (elements.timerDisplay) {
+            elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
+          }
+          if (elements.progressFill) {
+            elements.progressFill.style.width = '0%';
+          }
+          state.isDPP = false;
+          state.isTest = false;
+          state.dppId = null;
+          state.testId = null;
+          showScreen(level);
+          // Reload previous level content
+          switch (level) {
+            case 'subject':
+              if (elements.subjectCard) {
+                elements.subjectCard.classList.remove('hidden');
+              }
+              break;
+            case 'chapter':
+              handleSubjectSelect(state.currentSubject);
+              break;
+            case 'unit':
+              handleChapterSelect(state.currentChapter);
+              break;
+            case 'topic':
+              handleUnitSelect(state.currentUnit);
+              break;
+            case 'quizType':
+              handleTopicSelect(state.currentTopic);
+              break;
+          }
+        }
+
+        async function handleReportQuestion() {
+          if (!state.questions[state.currentQuestionIndex] || !auth.currentUser || !elements.reportReason || !elements.reportModal) return;
+          const question = state.questions[state.currentQuestionIndex];
+          const reason = elements.reportReason.value.trim();
+          if (!reason) {
+            alert('Please provide a reason for the report.');
+            return;
+          }
+
+          const deviceInfo = {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            screen: `${window.screen.width}x${window.screen.height}`
+          };
+
+          const report = {
+            userId: auth.currentUser.uid,
+            userEmail: auth.currentUser.email || 'Unknown',
+            date: Date.now(),
+            question: {
+              id: question.question_id || state.currentQuestionIndex,
+              text: question.question,
+              answer: question.answer,
+              options: {
+                a: question.option_a,
+                b: question.option_b,
+                c: question.option_c,
+                d: question.option_d
+              },
+              quiz_type: question.quiz_type,
+              chapter_name: question.chapter_name,
+              unit_name: question.unit_name,
+              topic_name: question.topic_name,
+              explanation: question.explanation
+            },
+            reason: reason,
+            deviceInfo: deviceInfo
+          };
+
+          try {
+            await database.ref('reports').push(report);
+            elements.reportModal.style.display = 'none';
+            elements.reportReason.value = '';
+            alert('Report submitted successfully.');
+          } catch (error) {
+            console.error('Error submitting report:', error);
+            alert('Failed to submit report: ' + error.message);
+          }
+        }
+
+        // Initialize event listeners
+        function initEventListeners() {
+          if (elements.subjectItems) {
+            elements.subjectItems.forEach(item => {
+              item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
+            });
+          }
+
+          if (elements.backToSubjects) {
+            elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
+          }
+          if (elements.backToChapters) {
+            elements.backToChapters.addEventListener('click', () => resetSelections('chapter'));
+          }
+          if (elements.backToUnits) {
+            elements.backToUnits.addEventListener('click', () => resetSelections('unit'));
+          }
+          if (elements.backToTopics) {
+            elements.backToTopics.addEventListener('click', () => resetSelections('topic'));
+          }
+
+          if (elements.startQuizBtn) {
+            elements.startQuizBtn.addEventListener('click', startQuiz);
+          }
+
+          if (elements.nextQuestionBtn) {
+            elements.nextQuestionBtn.addEventListener('click', () => {
+              clearInterval(timerInterval);
+              timeLeft = state.timeLimit;
+              if (state.currentQuestionIndex < state.questions.length - 1) {
+                state.currentQuestionIndex++;
+                showQuestion(state.questions[state.currentQuestionIndex]);
+                startTimer();
+              } else {
+                showResults();
+              }
+            });
+          }
+
+          if (elements.prevBtn) {
+            elements.prevBtn.addEventListener('click', () => {
+              if (state.currentQuestionIndex > 0) {
+                clearInterval(timerInterval);
+                timeLeft = state.timeLimit;
+                state.currentQuestionIndex--;
+                showQuestion(state.questions[state.currentQuestionIndex]);
+                startTimer();
+              }
+            });
+          }
+
+          if (elements.restartQuizBtn) {
+            elements.restartQuizBtn.addEventListener('click', () => {
+              state.currentQuestionIndex = 0;
+              state.score = 0;
+              state.totalAnswered = 0;
+              state.matchSelections = {};
+              state.userSelections = {};
+              state.startTime = Date.now();
+              updateScore();
+              if (elements.quizContent && elements.quizResults && elements.prevBtn && elements.nextQuestionBtn) {
+                elements.quizContent.style.display = 'block';
+                elements.quizResults.style.display = 'none';
+                elements.prevBtn.disabled = true;
+                elements.nextQuestionBtn.disabled = false;
+              }
+              showQuestion(state.questions[0]);
+              startTimer();
+            });
+          }
+
+          if (elements.newQuizBtn) {
+            elements.newQuizBtn.addEventListener('click', () => {
+              if (state.isDPP || state.isTest) {
+                window.location.href = state.isDPP ? 'dpp.html' : 'tests.html';
+              } else {
+                resetSelections('subject');
+              }
+            });
+          }
+
+          if (elements.resetBtn) {
+            elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
+          }
+
+          if (elements.userAvatar && elements.dropdownMenu) {
+            elements.userAvatar.addEventListener('click', () => {
+              elements.dropdownMenu.classList.toggle('show');
+            });
+          }
+
+          if (elements.logoutBtn) {
+            elements.logoutBtn.addEventListener('click', () => {
+              auth.signOut().then(() => {
+                window.location.href = 'index.html';
+              }).catch(error => {
+                console.error('Error logging out:', error);
+                showError('Failed to log out: ' + error.message);
+              });
+            });
+          }
+
+          if (elements.reportBtn && elements.reportModal && elements.reportReason) {
+            elements.reportBtn.addEventListener('click', () => {
+              elements.reportModal.style.display = 'flex';
+              elements.reportReason.focus();
+            });
+          }
+
+          if (elements.cancelReportBtn && elements.reportModal && elements.reportReason) {
+            elements.cancelReportBtn.addEventListener('click', () => {
+              elements.reportModal.style.display = 'none';
+              elements.reportReason.value = '';
+            });
+          }
+
+          if (elements.submitReportBtn) {
+            elements.submitReportBtn.addEventListener('click', handleReportQuestion);
+          }
+
+          window.addEventListener('click', (e) => {
+            if (elements.userMenu && elements.dropdownMenu && !elements.userMenu.contains(e.target)) {
+              elements.dropdownMenu.classList.remove('show');
+            }
+            if (elements.reportModal && elements.reportBtn && !elements.reportModal.contains(e.target) && e.target !== elements.reportBtn) {
+              elements.reportModal.style.display = 'none';
+              if (elements.reportReason) {
+                elements.reportReason.value = '';
+              }
+            }
+          });
+        }
+
+        // Initialize auth state listener
+        auth.onAuthStateChanged((user) => {
+          if (!user) {
+            window.location.href = 'index.html';
+          } else {
+            if (elements.userAvatar) {
+              if (user.photoURL) {
+                elements.userAvatar.style.backgroundImage = `url(${user.photoURL})`;
+                elements.userAvatar.textContent = '';
+              } else {
+                elements.userAvatar.textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U';
+              }
+            }
+            
+            initEventListeners();
+            checkUrlParams(); 
           
           // Load user's quiz history
           database.ref(`quizHistory/${user.uid}`).once('value').then((snapshot) => {

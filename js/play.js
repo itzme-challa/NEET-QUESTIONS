@@ -34,7 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
       testId: null,
       timeLimit: 60,
       startTime: null,
-      userAnswers: {}
+      userAnswers: {},
+      loadingProgress: 0,
+      estimatedLoadTime: 5000 // Default estimated load time in ms
     };
 
     const elements = {
@@ -101,7 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
       userAvatar: document.getElementById('userAvatar'),
       dropdownMenu: document.getElementById('dropdownMenu'),
       logoutBtn: document.getElementById('logoutBtn'),
-      reportBtn: document.getElementById('reportBtn')
+      reportBtn: document.getElementById('reportBtn'),
+      loadingProgressBar: document.getElementById('loadingProgressBar'),
+      loadingCountdown: document.getElementById('loadingCountdown')
     };
 
     // Validate all required elements
@@ -118,7 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
       'totalScore', 'restartQuizBtn', 'newQuizBtn', 'viewResultsBtn', 'loadingModal',
       'reportModal', 'reportReason', 'submitReportBtn', 'cancelReportBtn', 'scoreDisplay',
       'timerDisplay', 'progressFill', 'quizInfo', 'quizInfoTitle', 'quizInfoDetails',
-      'userMenu', 'userAvatar', 'dropdownMenu', 'logoutBtn', 'reportBtn'
+      'userMenu', 'userAvatar', 'dropdownMenu', 'logoutBtn', 'reportBtn',
+      'loadingProgressBar', 'loadingCountdown'
     ];
 
     for (const key of requiredElements) {
@@ -130,11 +135,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let timerInterval;
     let timeLeft = 60;
+    let loadingInterval;
 
     // Check URL parameters for DPP, test, or result ID
     function checkUrlParams() {
       const urlParams = new URLSearchParams(window.location.search);
-      const dppId = urlParams.get('d seminaryId');
+      const dppId = urlParams.get('dppId'); // Fixed typo
       const testId = urlParams.get('testId');
       const resultId = urlParams.get('result');
       
@@ -146,6 +152,22 @@ document.addEventListener('DOMContentLoaded', () => {
         loadTest(testId);
       } else {
         showScreen('subject');
+      }
+    }
+
+    // Update loading progress and countdown
+    function updateLoadingProgress() {
+      state.loadingProgress += 100 / (state.estimatedLoadTime / 100);
+      if (state.loadingProgress > 100) state.loadingProgress = 100;
+      if (elements.loadingProgressBar) {
+        elements.loadingProgressBar.style.width = `${state.loadingProgress}%`;
+      }
+      const timeRemaining = Math.max(0, state.estimatedLoadTime / 1000 - (state.loadingProgress / 100) * (state.estimatedLoadTime / 1000));
+      if (elements.loadingCountdown) {
+        elements.loadingCountdown.textContent = `Loading... (${timeRemaining.toFixed(1)}s)`;
+      }
+      if (state.loadingProgress >= 100) {
+        clearInterval(loadingInterval);
       }
     }
 
@@ -161,25 +183,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Set quiz info
-        if (elements.quizInfoTitle && elements.quizInfoDetails) {
-          elements.quizInfoTitle.textContent = result.dppId ? `DPP: ${result.subject}` : result.testId ? `Test: ${result.subject}` : `Quiz: ${result.subject}`;
-          elements.quizInfoDetails.innerHTML = `
-            ${result.chapter || ''} | 
-            ${result.unit || ''} | 
-            ${result.topic || ''} | 
-            ${result.quizType || ''}
-          `;
-          elements.quizInfo.style.display = 'block';
-        }
+        elements.quizInfoTitle.textContent = result.dppId ? `DPP: ${result.subject}` : result.testId ? `Test: ${result.subject}` : `Quiz: ${result.subject}`;
+        elements.quizInfoDetails.innerHTML = `
+          ${result.chapter || ''} | 
+          ${result.unit || ''} | 
+          ${result.topic || ''} | 
+          ${result.quizType || ''}
+        `;
+        elements.quizInfo.style.display = 'block';
 
         // Load questions
         if (result.subject === 'all') {
-          const allQuestions = [];
-          for (const subject of ['biology', 'chemistry', 'physics']) {
-            const data = await loadSubjectData(subject);
-            allQuestions.push(...data);
-          }
-          state.questions = allQuestions.filter(q => 
+          const allQuestions = await Promise.all(['biology', 'chemistry', 'physics'].map(subject => loadSubjectData(subject)));
+          state.questions = allQuestions.flat().filter(q => 
             q.chapter_name === result.chapter &&
             q.unit_name === result.unit &&
             q.topic_name === result.topic &&
@@ -204,13 +220,11 @@ document.addEventListener('DOMContentLoaded', () => {
         state.totalAnswered = result.total;
         state.userAnswers = result.userAnswers || {};
 
-        if (elements.quizContent && elements.quizResults && elements.scoreValue && elements.totalScore) {
-          elements.quizContent.style.display = 'none';
-          elements.quizResults.style.display = 'block';
-          elements.scoreValue.textContent = state.score;
-          elements.totalScore.textContent = state.totalAnswered;
-          elements.viewResultsBtn.style.display = 'none';
-        }
+        elements.quizContent.style.display = 'none';
+        elements.quizResults.style.display = 'block';
+        elements.scoreValue.textContent = state.score;
+        elements.totalScore.textContent = state.totalAnswered;
+        elements.viewResultsBtn.style.display = 'none';
       } catch (error) {
         console.error('Error loading result:', error);
         showError('Failed to load result: ' + error.message);
@@ -235,16 +249,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Set quiz info
-        if (elements.quizInfoTitle && elements.quizInfoDetails) {
-          elements.quizInfoTitle.textContent = dpp.name;
-          elements.quizInfoDetails.innerHTML = `
-            ${dpp.subject.charAt(0).toUpperCase() + dpp.subject.slice(1)} | 
-            ${dpp.chapter} | 
-            ${dpp.unit} | 
-            ${dpp.topic}
-          `;
-          elements.quizInfo.style.display = 'block';
-        }
+        elements.quizInfoTitle.textContent = dpp.name;
+        elements.quizInfoDetails.innerHTML = `
+          ${dpp.subject.charAt(0).toUpperCase() + dpp.subject.slice(1)} | 
+          ${dpp.chapter} | 
+          ${dpp.unit} | 
+          ${dpp.topic}
+        `;
+        elements.quizInfo.style.display = 'block';
         
         // Load questions for this DPP
         const data = await loadSubjectData(dpp.subject);
@@ -287,34 +299,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Set quiz info
-        if (elements.quizInfoTitle && elements.quizInfoDetails) {
-          elements.quizInfoTitle.textContent = test.name;
-          elements.quizInfoDetails.innerHTML = `
-            ${test.subject === 'all' ? 'All Subjects' : test.subject.charAt(0).toUpperCase() + test.subject.slice(1)} | 
-            ${test.questions} questions | 
-            ${test.time} minutes
-          `;
-          elements.quizInfo.style.display = 'block';
-        }
+        elements.quizInfoTitle.textContent = test.name;
+        elements.quizInfoDetails.innerHTML = `
+          ${test.subject === 'all' ? 'All Subjects' : test.subject.charAt(0).toUpperCase() + test.subject.slice(1)} | 
+          ${test.questions} questions | 
+          ${test.time} minutes
+        `;
+        elements.quizInfo.style.display = 'block';
         state.timeLimit = test.time * 60;
         
         // Load questions for this test
         if (test.subject === 'all') {
-          const allQuestions = [];
-          for (const subject of ['biology', 'chemistry', 'physics']) {
-            const data = await loadSubjectData(subject);
-            const subjectQuestions = data.filter(q => 
-              test.chapters.some(chapter => {
-                if (chapter.includes(':')) {
-                  const [chapSubject, chapName] = chapter.split(':');
-                  return chapSubject === subject && q.chapter_name === chapName;
-                }
-                return q.chapter_name === chapter;
-              })
-            );
-            allQuestions.push(...subjectQuestions);
-          }
-          state.questions = allQuestions.sort(() => Math.random() - 0.5).slice(0, test.questions);
+          const allQuestions = await Promise.all(['biology', 'chemistry', 'physics'].map(subject => loadSubjectData(subject)));
+          state.questions = allQuestions.flat()
+            .filter(q => test.chapters.some(chapter => {
+              if (chapter.includes(':')) {
+                const [chapSubject, chapName] = chapter.split(':');
+                return chapSubject === q.subject && q.chapter_name === chapName;
+              }
+              return q.chapter_name === chapter;
+            }))
+            .sort(() => Math.random() - 0.5)
+            .slice(0, test.questions);
         } else {
           const data = await loadSubjectData(test.subject);
           state.questions = data
@@ -342,18 +348,24 @@ document.addEventListener('DOMContentLoaded', () => {
       if (elements.loadingModal) {
         elements.loadingModal.style.display = show ? 'flex' : 'none';
       }
+      if (show) {
+        state.loadingProgress = 0;
+        updateLoadingProgress();
+        loadingInterval = setInterval(updateLoadingProgress, 100);
+      } else {
+        clearInterval(loadingInterval);
+        state.loadingProgress = 100;
+        elements.loadingProgressBar.style.width = '100%';
+        elements.loadingCountdown.textContent = 'Loading... (0.0s)';
+      }
     }
 
     function showScreen(screenName) {
       const screens = ['subject', 'chapter', 'unit', 'topic', 'quizType', 'quiz'];
       screens.forEach(screen => {
-        if (elements[`${screen}Screen`]) {
-          elements[`${screen}Screen`].style.display = screen === screenName ? 'block' : 'none';
-        }
+        elements[`${screen}Screen`].style.display = screen === screenName ? 'block' : 'none';
       });
-      if (elements.resetBtn) {
-        elements.resetBtn.style.display = screenName === 'quiz' ? 'block' : 'none';
-      }
+      elements.resetBtn.style.display = screenName === 'quiz' ? 'block' : 'none';
     }
 
     function createListItem(text, value, count, isSelected = false) {
@@ -375,16 +387,14 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const questions = [];
         const snapshot = await database.ref(`subjects/${subject}/chapters`).once('value');
-        const chapters = snapshot.val();
-        if (!chapters) return [];
-
-        for (const [chapterId, chapterData] of Object.entries(chapters)) {
+        const chapters = snapshot.val() || {};
+        const chapterPromises = Object.entries(chapters).map(async ([chapterId, chapterData]) => {
           const unitsSnapshot = await database.ref(`subjects/${subject}/chapters/${chapterId}/units`).once('value');
           const units = unitsSnapshot.val() || {};
-          for (const [unitId, unitData] of Object.entries(units)) {
+          const unitPromises = Object.entries(units).map(async ([unitId, unitData]) => {
             const topicsSnapshot = await database.ref(`subjects/${subject}/chapters/${chapterId}/units/${unitId}/topics`).once('value');
             const topics = topicsSnapshot.val() || {};
-            for (const [topicId, topicData] of Object.entries(topics)) {
+            const topicPromises = Object.entries(topics).map(async ([topicId, topicData]) => {
               const questionsSnapshot = await database.ref(`subjects/${subject}/chapters/${chapterId}/units/${unitId}/topics/${topicId}/questions`).once('value');
               const topicQuestions = questionsSnapshot.val() || {};
               for (const [questionId, questionData] of Object.entries(topicQuestions)) {
@@ -393,12 +403,16 @@ document.addEventListener('DOMContentLoaded', () => {
                   chapter_name: chapterData.name,
                   unit_name: unitData.name,
                   topic_name: topicData.name,
-                  question_id: questionId
+                  question_id: questionId,
+                  subject
                 });
               }
-            }
-          }
-        }
+            });
+            await Promise.all(topicPromises);
+          });
+          await Promise.all(unitPromises);
+        });
+        await Promise.all(chapterPromises);
         state.subjectData[subject] = questions;
         return questions;
       } catch (error) {
@@ -413,139 +427,89 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleSubjectSelect(subject) {
       state.currentSubject = subject;
-      if (elements.subjectCard) {
-        elements.subjectCard.classList.add('hidden');
-      }
+      elements.subjectCard.classList.add('hidden');
       const data = await loadSubjectData(subject);
       if (!data.length) return;
       const snapshot = await database.ref(`subjects/${subject}/chapters`).once('value');
       const chaptersData = snapshot.val() || {};
       const chapters = Object.keys(chaptersData).sort();
-      if (elements.chapterList) {
-        elements.chapterList.innerHTML = '';
-        if (chapters.length === 0) {
-          elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
-        } else {
-          for (const chapter of chapters) {
+      elements.chapterList.innerHTML = chapters.length === 0 
+        ? '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>'
+        : chapters.map(chapter => {
             const count = data.filter(q => q.chapter_name === chaptersData[chapter].name).length;
             const isSelected = state.currentChapter === chaptersData[chapter].name;
             const li = createListItem(chaptersData[chapter].name, chaptersData[chapter].name, count, isSelected);
             li.addEventListener('click', () => handleChapterSelect(chaptersData[chapter].name));
-            elements.chapterList.appendChild(li);
-          }
-        }
-      }
+            return li.outerHTML;
+          }).join('');
       showScreen('chapter');
-      if (elements.chapterCard) {
-        elements.chapterCard.classList.remove('hidden');
-      }
+      elements.chapterCard.classList.remove('hidden');
     }
 
     async function handleChapterSelect(chapter) {
       state.currentChapter = chapter;
-      if (elements.chapterCard) {
-        elements.chapterCard.classList.add('hidden');
-      }
+      elements.chapterCard.classList.add('hidden');
       const data = state.subjectData[state.currentSubject];
       const snapshot = await database.ref(`subjects/${state.currentSubject}/chapters`).once('value');
       const chaptersData = snapshot.val() || {};
-      let chapterId = null;
-      for (const [id, data] of Object.entries(chaptersData)) {
-        if (data.name === chapter) {
-          chapterId = id;
-          break;
-        }
-      }
+      const chapterId = Object.entries(chaptersData).find(([id, data]) => data.name === chapter)?.[0];
       if (!chapterId) return;
       const unitsSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters/${chapterId}/units`).once('value');
       const unitsData = unitsSnapshot.val() || {};
       const units = Object.keys(unitsData).sort();
-      if (elements.unitList) {
-        elements.unitList.innerHTML = '';
-        if (units.length === 0) {
-          elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
-        } else {
-          for (const unit of units) {
+      elements.unitList.innerHTML = units.length === 0 
+        ? '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>'
+        : units.map(unit => {
             const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === unitsData[unit].name).length;
             const isSelected = state.currentUnit === unitsData[unit].name;
             const li = createListItem(unitsData[unit].name, unitsData[unit].name, count, isSelected);
             li.addEventListener('click', () => handleUnitSelect(unitsData[unit].name));
-            elements.unitList.appendChild(li);
-          }
-        }
-      }
+            return li.outerHTML;
+          }).join('');
       showScreen('unit');
-      if (elements.unitCard) {
-        elements.unitCard.classList.remove('hidden');
-      }
+      elements.unitCard.classList.remove('hidden');
     }
 
     async function handleUnitSelect(unit) {
       state.currentUnit = unit;
-      if (elements.unitCard) {
-        elements.unitCard.classList.add('hidden');
-      }
+      elements.unitCard.classList.add('hidden');
       const data = state.subjectData[state.currentSubject];
       const chapterSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters`).once('value');
       const chaptersData = chapterSnapshot.val() || {};
-      let chapterId = null;
-      for (const [id, data] of Object.entries(chaptersData)) {
-        if (data.name === state.currentChapter) {
-          chapterId = id;
-          break;
-        }
-      }
+      const chapterId = Object.entries(chaptersData).find(([id, data]) => data.name === state.currentChapter)?.[0];
       if (!chapterId) return;
       const unitsSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters/${chapterId}/units`).once('value');
       const unitsData = unitsSnapshot.val() || {};
-      let unitId = null;
-      for (const [id, data] of Object.entries(unitsData)) {
-        if (data.name === unit) {
-          unitId = id;
-          break;
-        }
-      }
+      const unitId = Object.entries(unitsData).find(([id, data]) => data.name === unit)?.[0];
       if (!unitId) return;
       const topicsSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters/${chapterId}/units/${unitId}/topics`).once('value');
       const topicsData = topicsSnapshot.val() || {};
       const topics = Object.keys(topicsData).sort();
-      if (elements.topicList) {
-        elements.topicList.innerHTML = '';
-        if (topics.length === 0) {
-          elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
-        } else {
-          for (const topic of topics) {
+      elements.topicList.innerHTML = topics.length === 0 
+        ? '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>'
+        : topics.map(topic => {
             const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === topicsData[topic].name).length;
             const isSelected = state.currentTopic === topicsData[topic].name;
             const li = createListItem(topicsData[topic].name, topicsData[topic].name, count, isSelected);
             li.addEventListener('click', () => handleTopicSelect(topicsData[topic].name));
-            elements.topicList.appendChild(li);
-          }
-        }
-      }
+            return li.outerHTML;
+          }).join('');
       showScreen('topic');
-      if (elements.topicCard) {
-        elements.topicCard.classList.remove('hidden');
-      }
+      elements.topicCard.classList.remove('hidden');
     }
 
     async function handleTopicSelect(topic) {
       state.currentTopic = topic;
-      if (elements.topicCard) {
-        elements.topicCard.classList.add('hidden');
-      }
+      elements.topicCard.classList.add('hidden');
       const data = state.subjectData[state.currentSubject];
       const quizTypes = [...new Set(data.filter(q => 
         q.chapter_name === state.currentChapter && 
         q.unit_name === state.currentUnit && 
         q.topic_name === topic
       ).map(q => q.quiz_type))].filter(Boolean).sort();
-      if (elements.quizTypeList) {
-        elements.quizTypeList.innerHTML = '';
-        if (quizTypes.length === 0) {
-          elements.quizTypeList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No quiz types found</div></div>';
-        } else {
-          quizTypes.forEach(type => {
+      elements.quizTypeList.innerHTML = quizTypes.length === 0 
+        ? '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No quiz types found</div></div>'
+        : quizTypes.map(type => {
             const count = data.filter(q => 
               q.chapter_name === state.currentChapter && 
               q.unit_name === state.currentUnit && 
@@ -555,29 +519,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const isSelected = state.currentQuizType === type;
             const li = createListItem(type, type, count, isSelected);
             li.addEventListener('click', () => handleQuizTypeSelect(type));
-            elements.quizTypeList.appendChild(li);
-          });
-        }
-      }
-      if (elements.startQuizBtn) {
-        elements.startQuizBtn.style.display = 'block';
-      }
+            return li.outerHTML;
+          }).join('');
+      elements.startQuizBtn.style.display = 'block';
       showScreen('quizType');
-      if (elements.quizTypeCard) {
-        elements.quizTypeCard.classList.remove('hidden');
-      }
+      elements.quizTypeCard.classList.remove('hidden');
     }
 
     function handleQuizTypeSelect(quizType) {
       state.currentQuizType = quizType;
-      if (elements.quizTypeList) {
-        elements.quizTypeList.querySelectorAll('.list-item').forEach(item => {
-          item.classList.toggle('active', item.dataset.value === quizType);
-        });
-      }
-      if (elements.startQuizBtn) {
-        elements.startQuizBtn.disabled = false;
-      }
+      elements.quizTypeList.querySelectorAll('.list-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.value === quizType);
+      });
+      elements.startQuizBtn.disabled = false;
     }
 
     async function startQuiz() {
@@ -610,12 +564,8 @@ document.addEventListener('DOMContentLoaded', () => {
       state.matchSelections = {};
       state.startTime = Date.now();
       updateScore();
-      if (elements.totalQuestions) {
-        elements.totalQuestions.textContent = state.questions.length;
-      }
-      if (elements.startQuizBtn) {
-        elements.startQuizBtn.style.display = 'none';
-      }
+      elements.totalQuestions.textContent = state.questions.length;
+      elements.startQuizBtn.style.display = 'none';
       showScreen('quiz');
       showQuestion(state.questions[0]);
       startTimer();
@@ -628,21 +578,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       updateProgress();
       ['mcqContent', 'fillupContent', 'flashcardContent', 'matchContent', 'videoContent'].forEach(id => {
-        if (elements[id]) {
-          elements[id].style.display = 'none';
-        }
+        elements[id].style.display = 'none';
       });
       elements.explanationContainer.style.display = 'none';
-      if (elements.prevBtn) {
-        elements.prevBtn.disabled = state.currentQuestionIndex === 0;
-      }
-      if (elements.nextQuestionBtn) {
-        elements.nextQuestionBtn.disabled = false;
-        elements.nextQuestionBtn.textContent = state.currentQuestionIndex === state.questions.length - 1 ? 'See Results' : 'Next';
-      }
-      if (elements.currentQuestion) {
-        elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
-      }
+      elements.prevBtn.disabled = state.currentQuestionIndex === 0;
+      elements.nextQuestionBtn.disabled = false;
+      elements.nextQuestionBtn.textContent = state.currentQuestionIndex === state.questions.length - 1 ? 'See Results' : 'Next';
+      elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
       elements.questionText.innerHTML = question.question || 'No question text available';
       elements.explanationText.innerHTML = question.explanation || 'No explanation provided';
       const questionKey = `${question.question_id}_${state.currentQuestionIndex}`;
@@ -669,7 +611,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showMCQQuestion(question, userAnswer) {
-      if (!elements.mcqContent || !elements.optionsContainer) return;
       elements.mcqContent.style.display = 'block';
       elements.optionsContainer.innerHTML = '';
       const options = [
@@ -700,7 +641,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showFillupQuestion(question, userAnswer) {
-      if (!elements.fillupContent || !elements.fillupInput || !elements.submitFillupBtn) return;
       elements.fillupContent.style.display = 'block';
       elements.fillupInput.value = userAnswer ? userAnswer.answer : '';
       elements.fillupInput.classList.remove('correct', 'incorrect');
@@ -717,7 +657,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showFlashcardQuestion(question, userAnswer) {
-      if (!elements.flashcardContent || !elements.flashcardAnswer || !elements.revealAnswerBtn) return;
       elements.flashcardContent.style.display = 'block';
       elements.flashcardAnswer.innerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
       elements.flashcardAnswer.style.display = userAnswer ? 'block' : 'none';
@@ -739,7 +678,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showMatchQuestion(question, userAnswer) {
-      if (!elements.matchContent || !elements.matchContainer || !elements.submitMatchBtn) return;
       elements.matchContent.style.display = 'block';
       elements.matchContainer.innerHTML = '';
       state.matchSelections = {};
@@ -793,7 +731,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showVideoQuestion(question, userAnswer) {
-      if (!elements.videoContent || !elements.videoFrame) return;
       elements.videoContent.style.display = 'block';
       const videoId = question.question?.trim();
       elements.videoFrame.src = videoId ? `https://www.youtube.com/embed/${videoId}` : '';
@@ -808,7 +745,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showSimpleQuestion(question, userAnswer) {
-      if (!elements.flashcardContent || !elements.flashcardAnswer) return;
       elements.flashcardContent.style.display = 'block';
       let answerHTML = question.answer ? `<strong>Answer:</strong> ${question.answer}` : 'No answer provided';
       if (question.option_a) answerHTML += `<br><strong>Option A:</strong> ${question.option_a}`;
@@ -827,7 +763,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function checkMCQAnswer(button, correctAnswer, question) {
-      if (!elements.optionsContainer || !elements.explanationContainer) return;
       const buttons = elements.optionsContainer.querySelectorAll('.option-btn');
       state.totalAnswered++;
       const questionKey = `${question.question_id}_${state.currentQuestionIndex}`;
@@ -854,7 +789,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function checkFillupAnswer(correctAnswer, question) {
-      if (!elements.fillupInput || !elements.submitFillupBtn || !elements.explanationContainer) return;
       const input = elements.fillupInput;
       state.totalAnswered++;
       const userAnswer = input.value.trim().toLowerCase();
@@ -878,17 +812,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function selectMatchItem(item, side) {
-      if (!elements.matchContainer || !elements.submitMatchBtn) return;
-      const id = item.dataset.id;
       const items = item.parentElement.querySelectorAll('.match-item');
       items.forEach(i => i.classList.remove('selected'));
       item.classList.add('selected');
-      state.matchSelections[side] = id;
+      state.matchSelections[side] = item.dataset.id;
       elements.submitMatchBtn.disabled = !state.matchSelections.left || !state.matchSelections.right;
     }
 
     function checkMatchAnswer(question, userAnswer) {
-      if (!elements.matchContainer || !elements.submitMatchBtn || !elements.explanationContainer) return;
       const options = [
         question.option_a,
         question.option_b,
@@ -926,7 +857,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function submitReport() {
-      if (!elements.reportReason || !elements.reportModal) return;
       const reason = elements.reportReason.value.trim();
       if (!reason) {
         alert('Please provide a reason for reporting this question.');
@@ -935,7 +865,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const question = state.questions[state.currentQuestionIndex];
       const user = auth.currentUser;
-      // Get device information
       const deviceInfo = {
         userAgent: navigator.userAgent,
         platform: navigator.platform,
@@ -944,7 +873,6 @@ document.addEventListener('DOMContentLoaded', () => {
         screenHeight: screen.height
       };
 
-      // Attempt to get location (requires user consent)
       let location = null;
       try {
         const position = await new Promise((resolve, reject) => {
@@ -1005,7 +933,6 @@ document.addEventListener('DOMContentLoaded', () => {
         userAnswers: state.userAnswers
       };
       
-      // Save quiz result to database
       let resultKey = null;
       if (auth.currentUser) {
         const newResultRef = database.ref('quizHistory/' + auth.currentUser.uid).push();
@@ -1013,11 +940,11 @@ document.addEventListener('DOMContentLoaded', () => {
         newResultRef.set(quizResult);
       }
       
-      if (elements.quizContent) elements.quizContent.style.display = 'none';
-      if (elements.quizResults) elements.quizResults.style.display = 'block';
-      if (elements.scoreValue) elements.scoreValue.textContent = state.score;
-      if (elements.totalScore) elements.totalScore.textContent = state.questions.length;
-      if (resultKey && elements.viewResultsBtn) {
+      elements.quizContent.style.display = 'none';
+      elements.quizResults.style.display = 'block';
+      elements.scoreValue.textContent = state.score;
+      elements.totalScore.textContent = state.questions.length;
+      if (resultKey) {
         elements.viewResultsBtn.dataset.resultKey = resultKey;
       }
       clearInterval(timerInterval);
@@ -1025,22 +952,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startTimer() {
       timeLeft = state.timeLimit;
-      if (elements.timerDisplay) {
-        elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
-      }
+      elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
       timerInterval = setInterval(() => {
         timeLeft--;
-        if (elements.timerDisplay) {
-          elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
-        }
+        elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
         if (timeLeft <= 0) {
           clearInterval(timerInterval);
           state.totalAnswered++;
           updateScore();
           disableInputs();
-          if (elements.explanationContainer) {
-            elements.explanationContainer.style.display = 'block';
-          }
+          elements.explanationContainer.style.display = 'block';
         }
       }, 1000);
     }
@@ -1052,34 +973,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function disableInputs() {
-      if (elements.optionsContainer) {
-        elements.optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
-      }
-      if (elements.fillupInput) {
-        elements.fillupInput.disabled = true;
-      }
-      if (elements.submitFillupBtn) {
-        elements.submitFillupBtn.disabled = true;
-      }
-      if (elements.revealAnswerBtn) {
-        elements.revealAnswerBtn.disabled = true;
-      }
-      if (elements.matchContainer) {
-        elements.matchContainer.querySelectorAll('.match-item').forEach(item => item.style.pointerEvents = 'none');
-      }
-      if (elements.submitMatchBtn) {
-        elements.submitMatchBtn.disabled = true;
-      }
+      elements.optionsContainer.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+      elements.fillupInput.disabled = true;
+      elements.submitFillupBtn.disabled = true;
+      elements.revealAnswerBtn.disabled = true;
+      elements.matchContainer.querySelectorAll('.match-item').forEach(item => item.style.pointerEvents = 'none');
+      elements.submitMatchBtn.disabled = true;
     }
 
     function updateScore() {
-      if (elements.scoreDisplay) {
-        elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
-      }
+      elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
     }
 
     function updateProgress() {
-      if (elements.progressFill && state.questions.length > 0) {
+      if (state.questions.length > 0) {
         const progress = ((state.currentQuestionIndex + 1) / state.questions.length) * 100;
         elements.progressFill.style.width = `${progress}%`;
       }
@@ -1087,18 +994,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showError(message) {
       console.error('Error:', message);
-      if (elements.quizContent && elements.quizScreen && elements.nextQuestionBtn) {
-        elements.quizContent.innerHTML = `
-          <div class="empty-state">
-            <i class="fas fa-exclamation-circle empty-state-icon"></i>
-            <div>${message}</div>
-          </div>
-        `;
-        showScreen('quiz');
-        elements.nextQuestionBtn.style.display = 'none';
-      } else {
-        alert(message);
-      }
+      elements.quizContent.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-exclamation-circle empty-state-icon"></i>
+          <div>${message}</div>
+        </div>
+      `;
+      showScreen('quiz');
+      elements.nextQuestionBtn.style.display = 'none';
     }
 
     function resetSelections(level) {
@@ -1113,23 +1016,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (card) card.classList.remove('hidden');
         if (list) list.innerHTML = '';
       }
-      if (elements.startQuizBtn) {
-        elements.startQuizBtn.style.display = 'none';
-        elements.startQuizBtn.disabled = true;
-      }
-      if (elements.quizScreen && elements.quizContent && elements.nextQuestionBtn) {
-        elements.quizScreen.style.display = 'none';
-        elements.quizContent.innerHTML = '';
-        elements.nextQuestionBtn.style.display = 'block';
-      }
+      elements.startQuizBtn.style.display = 'none';
+      elements.startQuizBtn.disabled = true;
+      elements.quizScreen.style.display = 'none';
+      elements.quizContent.innerHTML = '';
+      elements.nextQuestionBtn.style.display = 'block';
       clearInterval(timerInterval);
       timeLeft = state.timeLimit;
-      if (elements.timerDisplay) {
-        elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
-      }
-      if (elements.progressFill) {
-        elements.progressFill.style.width = '0%';
-      }
+      elements.timerDisplay.textContent = `Time: ${formatTime(timeLeft)}`;
+      elements.progressFill.style.width = '0%';
       state.isDPP = false;
       state.isTest = false;
       state.dppId = null;
@@ -1147,9 +1042,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (level === 'quizType' && state.currentQuizType) {
         handleTopicSelect(state.currentTopic);
       } else {
-        if (elements.subjectCard) {
-          elements.subjectCard.classList.remove('hidden');
-        }
+        elements.subjectCard.classList.remove('hidden');
       }
     }
 
@@ -1159,126 +1052,72 @@ document.addEventListener('DOMContentLoaded', () => {
         item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
       });
 
-      if (elements.backToSubjects) {
-        elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
-      }
-      if (elements.backToChapters) {
-        elements.backToChapters.addEventListener('click', () => resetSelections('chapter'));
-      }
-      if (elements.backToUnits) {
-        elements.backToUnits.addEventListener('click', () => resetSelections('unit'));
-      }
-      if (elements.backToTopics) {
-        elements.backToTopics.addEventListener('click', () => resetSelections('topic'));
-      }
-
-      if (elements.startQuizBtn) {
-        elements.startQuizBtn.addEventListener('click', startQuiz);
-      }
-
-      if (elements.nextQuestionBtn) {
-        elements.nextQuestionBtn.addEventListener('click', () => {
+      elements.backToSubjects.addEventListener('click', () => resetSelections('subject'));
+      elements.backToChapters.addEventListener('click', () => resetSelections('chapter'));
+      elements.backToUnits.addEventListener('click', () => resetSelections('unit'));
+      elements.backToTopics.addEventListener('click', () => resetSelections('topic'));
+      elements.startQuizBtn.addEventListener('click', startQuiz);
+      elements.nextQuestionBtn.addEventListener('click', () => {
+        clearInterval(timerInterval);
+        timeLeft = state.timeLimit;
+        if (state.currentQuestionIndex < state.questions.length - 1) {
+          state.currentQuestionIndex++;
+          showQuestion(state.questions[state.currentQuestionIndex]);
+          startTimer();
+        } else {
+          showResults();
+        }
+      });
+      elements.prevBtn.addEventListener('click', () => {
+        if (state.currentQuestionIndex > 0) {
           clearInterval(timerInterval);
           timeLeft = state.timeLimit;
-          if (state.currentQuestionIndex < state.questions.length - 1) {
-            state.currentQuestionIndex++;
-            showQuestion(state.questions[state.currentQuestionIndex]);
-            startTimer();
-          } else {
-            showResults();
-          }
-        });
-      }
-
-      if (elements.prevBtn) {
-        elements.prevBtn.addEventListener('click', () => {
-          if (state.currentQuestionIndex > 0) {
-            clearInterval(timerInterval);
-            timeLeft = state.timeLimit;
-            state.currentQuestionIndex--;
-            showQuestion(state.questions[state.currentQuestionIndex]);
-            startTimer();
-          }
-        });
-      }
-
-      if (elements.restartQuizBtn) {
-        elements.restartQuizBtn.addEventListener('click', () => {
-          state.currentQuestionIndex = 0;
-          state.score = 0;
-          state.totalAnswered = 0;
-          state.userAnswers = {};
-          if (elements.quizContent && elements.quizResults) {
-            elements.quizContent.style.display = 'block';
-            elements.quizResults.style.display = 'none';
-          }
-          showQuestion(state.questions[0]);
+          state.currentQuestionIndex--;
+          showQuestion(state.questions[state.currentQuestionIndex]);
           startTimer();
-        });
-      }
-
-      if (elements.newQuizBtn) {
-        elements.newQuizBtn.addEventListener('click', () => resetSelections('subject'));
-      }
-
-      if (elements.viewResultsBtn) {
-        elements.viewResultsBtn.addEventListener('click', () => {
-          const resultKey = elements.viewResultsBtn.dataset.resultKey;
-          if (resultKey) {
-            window.location.href = `results.html?result=${resultKey}`;
-          }
-        });
-      }
-
-      if (elements.resetBtn) {
-        elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
-      }
-
-      if (elements.userAvatar) {
-        elements.userAvatar.addEventListener('click', () => {
-          if (elements.dropdownMenu) {
-            elements.dropdownMenu.classList.toggle('show');
-          }
-        });
-      }
-
-      if (elements.logoutBtn) {
-        elements.logoutBtn.addEventListener('click', async (e) => {
-          e.preventDefault();
-          try {
-            await auth.signOut();
-            window.location.href = 'login.html';
-          } catch (error) {
-            console.error('Error logging out:', error);
-            showError('Failed to log out. Please try again.');
-          }
-        });
-      }
-
-      if (elements.reportBtn) {
-        elements.reportBtn.addEventListener('click', () => {
-          if (elements.reportModal) {
-            elements.reportModal.style.display = 'flex';
-          }
-        });
-      }
-
-      if (elements.submitReportBtn) {
-        elements.submitReportBtn.addEventListener('click', submitReport);
-      }
-
-      if (elements.cancelReportBtn) {
-        elements.cancelReportBtn.addEventListener('click', () => {
-          if (elements.reportModal && elements.reportReason) {
-            elements.reportModal.style.display = 'none';
-            elements.reportReason.value = '';
-          }
-        });
-      }
-
-      // Close dropdown when clicking outside
+        }
+      });
+      elements.restartQuizBtn.addEventListener('click', () => {
+        state.currentQuestionIndex = 0;
+        state.score = 0;
+        state.totalAnswered = 0;
+        state.userAnswers = {};
+        elements.quizContent.style.display = 'block';
+        elements.quizResults.style.display = 'none';
+        showQuestion(state.questions[0]);
+        startTimer();
+      });
+      elements.newQuizBtn.addEventListener('click', () => resetSelections('subject'));
+      elements.viewResultsBtn.addEventListener('click', () => {
+        const resultKey = elements.viewResultsBtn.dataset.resultKey;
+        if (resultKey) {
+          window.location.href = `results.html?result=${resultKey}`;
+        }
+      });
+      elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
+      elements.userAvatar.addEventListener('click', () => {
+        elements.dropdownMenu.classList.toggle('show');
+      });
+      elements.logoutBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+          await auth.signOut();
+          window.location.href = 'login.html';
+        } catch (error) {
+          console.error('Error logging out:', error);
+          showError('Failed to log out. Please try again.');
+        }
+      });
+      elements.reportBtn.addEventListener('click', () => {
+        elements.reportModal.style.display = 'flex';
+      });
+      elements.submitReportBtn.addEventListener('click', submitReport);
+      elements.cancelReportBtn.addEventListener('click', () => {
+        elements.reportModal.style.display = 'none';
+        elements.reportReason.value = '';
+      });
       document.addEventListener('click', (e) => {
-        if (elements.userMenu && elements.dropdownMenu && !elements.userMenu.contains(e.target)) {
+        if (!elements.userMenu.contains(e.target)) {
           elements.dropdownMenu.classList.remove('show');
         }
       });
@@ -1287,9 +1126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Firebase Authentication
     auth.onAuthStateChanged(user => {
       if (user) {
-        if (elements.userAvatar) {
-          elements.userAvatar.textContent = user.displayName ? user.displayName[0].toUpperCase() : 'U';
-        }
+        elements.userAvatar.textContent = user.displayName ? user.displayName[0].toUpperCase() : 'U';
         checkUrlParams();
         initEventListeners();
       } else {

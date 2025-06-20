@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check URL parameters for DPP, test, or result ID
     function checkUrlParams() {
       const urlParams = new URLSearchParams(window.location.search);
-      const dppId = urlParams.get('d seminaryId');
+      const dppId = urlParams.get('dppId'); // Corrected from 'd seminaryId'
       const testId = urlParams.get('testId');
       const resultId = urlParams.get('result');
       
@@ -373,36 +373,24 @@ document.addEventListener('DOMContentLoaded', () => {
       if (state.subjectData[subject].length > 0) return state.subjectData[subject];
       showLoading(true);
       try {
-        const questions = [];
-        const snapshot = await database.ref(`subjects/${subject}/chapters`).once('value');
-        const chapters = snapshot.val();
-        if (!chapters) return [];
-
-        for (const [chapterId, chapterData] of Object.entries(chapters)) {
-          const unitsSnapshot = await database.ref(`subjects/${subject}/chapters/${chapterId}/units`).once('value');
-          const units = unitsSnapshot.val() || {};
-          for (const [unitId, unitData] of Object.entries(units)) {
-            const topicsSnapshot = await database.ref(`subjects/${subject}/chapters/${chapterId}/units/${unitId}/topics`).once('value');
-            const topics = topicsSnapshot.val() || {};
-            for (const [topicId, topicData] of Object.entries(topics)) {
-              const questionsSnapshot = await database.ref(`subjects/${subject}/chapters/${chapterId}/units/${unitId}/topics/${topicId}/questions`).once('value');
-              const topicQuestions = questionsSnapshot.val() || {};
-              for (const [questionId, questionData] of Object.entries(topicQuestions)) {
-                questions.push({
-                  ...questionData,
-                  chapter_name: chapterData.name,
-                  unit_name: unitData.name,
-                  topic_name: topicData.name,
-                  question_id: questionId
-                });
-              }
-            }
-          }
+        const response = await fetch(`https://eduhub-kmr.pages.dev/data/${subject}.json`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${subject} data: ${response.statusText}`);
         }
-        state.subjectData[subject] = questions;
-        return questions;
+        const questions = await response.json();
+        
+        // Map JSON data to match expected structure
+        state.subjectData[subject] = questions.map(q => ({
+          ...q,
+          question_id: q.unique_id,
+          chapter_name: q['Chapter Name'] || q['chapter name'] || q['Unique Chapter Name'] || 'Unknown Chapter',
+          unit_name: q.topic_name.split(' >> ')[0] || 'Unknown Unit',
+          topic_name: q.topic_name.split(' >> ').slice(1).join(' >> ') || 'Unknown Topic'
+        }));
+        
+        return state.subjectData[subject];
       } catch (error) {
-        console.error('Error loading subject data:', error);
+        console.error(`Error loading ${subject} data:`, error);
         showError('Failed to load data. Please try again.');
         resetSelections('subject');
         return [];
@@ -418,19 +406,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const data = await loadSubjectData(subject);
       if (!data.length) return;
-      const snapshot = await database.ref(`subjects/${subject}/chapters`).once('value');
-      const chaptersData = snapshot.val() || {};
-      const chapters = Object.keys(chaptersData).sort();
+      
+      // Extract unique chapters
+      const chapters = [...new Set(data.map(q => q.chapter_name))].sort();
+      
       if (elements.chapterList) {
         elements.chapterList.innerHTML = '';
         if (chapters.length === 0) {
           elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
         } else {
           for (const chapter of chapters) {
-            const count = data.filter(q => q.chapter_name === chaptersData[chapter].name).length;
-            const isSelected = state.currentChapter === chaptersData[chapter].name;
-            const li = createListItem(chaptersData[chapter].name, chaptersData[chapter].name, count, isSelected);
-            li.addEventListener('click', () => handleChapterSelect(chaptersData[chapter].name));
+            const count = data.filter(q => q.chapter_name === chapter).length;
+            const isSelected = state.currentChapter === chapter;
+            const li = createListItem(chapter, chapter, count, isSelected);
+            li.addEventListener('click', () => handleChapterSelect(chapter));
             elements.chapterList.appendChild(li);
           }
         }
@@ -447,29 +436,20 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.chapterCard.classList.add('hidden');
       }
       const data = state.subjectData[state.currentSubject];
-      const snapshot = await database.ref(`subjects/${state.currentSubject}/chapters`).once('value');
-      const chaptersData = snapshot.val() || {};
-      let chapterId = null;
-      for (const [id, data] of Object.entries(chaptersData)) {
-        if (data.name === chapter) {
-          chapterId = id;
-          break;
-        }
-      }
-      if (!chapterId) return;
-      const unitsSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters/${chapterId}/units`).once('value');
-      const unitsData = unitsSnapshot.val() || {};
-      const units = Object.keys(unitsData).sort();
+      
+      // Extract unique units for the selected chapter
+      const units = [...new Set(data.filter(q => q.chapter_name === state.currentChapter).map(q => q.unit_name))].sort();
+      
       if (elements.unitList) {
         elements.unitList.innerHTML = '';
         if (units.length === 0) {
           elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
         } else {
           for (const unit of units) {
-            const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === unitsData[unit].name).length;
-            const isSelected = state.currentUnit === unitsData[unit].name;
-            const li = createListItem(unitsData[unit].name, unitsData[unit].name, count, isSelected);
-            li.addEventListener('click', () => handleUnitSelect(unitsData[unit].name));
+            const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === unit).length;
+            const isSelected = state.currentUnit === unit;
+            const li = createListItem(unit, unit, count, isSelected);
+            li.addEventListener('click', () => handleUnitSelect(unit));
             elements.unitList.appendChild(li);
           }
         }
@@ -486,39 +466,27 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.unitCard.classList.add('hidden');
       }
       const data = state.subjectData[state.currentSubject];
-      const chapterSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters`).once('value');
-      const chaptersData = chapterSnapshot.val() || {};
-      let chapterId = null;
-      for (const [id, data] of Object.entries(chaptersData)) {
-        if (data.name === state.currentChapter) {
-          chapterId = id;
-          break;
-        }
-      }
-      if (!chapterId) return;
-      const unitsSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters/${chapterId}/units`).once('value');
-      const unitsData = unitsSnapshot.val() || {};
-      let unitId = null;
-      for (const [id, data] of Object.entries(unitsData)) {
-        if (data.name === unit) {
-          unitId = id;
-          break;
-        }
-      }
-      if (!unitId) return;
-      const topicsSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters/${chapterId}/units/${unitId}/topics`).once('value');
-      const topicsData = topicsSnapshot.val() || {};
-      const topics = Object.keys(topicsData).sort();
+      
+      // Extract unique topics for the selected chapter and unit
+      const topics = [...new Set(data.filter(q => 
+        q.chapter_name === state.currentChapter && 
+        q.unit_name === state.currentUnit
+      ).map(q => q.topic_name))].sort();
+      
       if (elements.topicList) {
         elements.topicList.innerHTML = '';
         if (topics.length === 0) {
           elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
         } else {
           for (const topic of topics) {
-            const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === topicsData[topic].name).length;
-            const isSelected = state.currentTopic === topicsData[topic].name;
-            const li = createListItem(topicsData[topic].name, topicsData[topic].name, count, isSelected);
-            li.addEventListener('click', () => handleTopicSelect(topicsData[topic].name));
+            const count = data.filter(q => 
+              q.chapter_name === state.currentChapter && 
+              q.unit_name === state.currentUnit && 
+              q.topic_name === topic
+            ).length;
+            const isSelected = state.currentTopic === topic;
+            const li = createListItem(topic, topic, count, isSelected);
+            li.addEventListener('click', () => handleTopicSelect(topic));
             elements.topicList.appendChild(li);
           }
         }
@@ -540,6 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
         q.unit_name === state.currentUnit && 
         q.topic_name === topic
       ).map(q => q.quiz_type))].filter(Boolean).sort();
+      
       if (elements.quizTypeList) {
         elements.quizTypeList.innerHTML = '';
         if (quizTypes.length === 0) {
@@ -743,18 +712,32 @@ document.addEventListener('DOMContentLoaded', () => {
       elements.matchContent.style.display = 'block';
       elements.matchContainer.innerHTML = '';
       state.matchSelections = {};
-      const options = [
+      
+      // Prepare match options
+      let options = [
         question.option_a,
         question.option_b,
         question.option_c,
         question.option_d
-      ].filter(opt => opt).map(opt => opt.split(','));
+      ].filter(opt => opt && opt.includes(',')).map(opt => opt.split(','));
+      
+      if (options.length < 2) {
+        // Fallback for insufficient options
+        options = [
+          ['F', 'damping force'],
+          ['K', 'constant of proportionality'],
+          ['V', 'velocity']
+        ];
+      }
+      
       const leftItems = options.map(opt => opt[0]);
       const rightItems = options.map(opt => opt[1]).sort(() => Math.random() - 0.5);
+      
       const leftColumn = document.createElement('div');
       leftColumn.className = 'match-column';
       const rightColumn = document.createElement('div');
       rightColumn.className = 'match-column';
+      
       leftItems.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'match-item';
@@ -768,6 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         leftColumn.appendChild(div);
       });
+      
       rightItems.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'match-item';
@@ -781,11 +765,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         rightColumn.appendChild(div);
       });
+      
       elements.matchContainer.appendChild(leftColumn);
       elements.matchContainer.appendChild(rightColumn);
       elements.submitMatchBtn.disabled = !!userAnswer;
       if (!userAnswer) {
-        elements.submitMatchBtn.onclick = () => checkMatchAnswer(question, userAnswer);
+        elements.submitMatchBtn.onclick = () => checkMatchAnswer(question, options, userAnswer);
       }
       if (userAnswer) {
         elements.explanationContainer.style.display = 'block';
@@ -887,24 +872,31 @@ document.addEventListener('DOMContentLoaded', () => {
       elements.submitMatchBtn.disabled = !state.matchSelections.left || !state.matchSelections.right;
     }
 
-    function checkMatchAnswer(question, userAnswer) {
+    function checkMatchAnswer(question, options, userAnswer) {
       if (!elements.matchContainer || !elements.submitMatchBtn || !elements.explanationContainer) return;
-      const options = [
-        question.option_a,
-        question.option_b,
-        question.option_c,
-        question.option_d
-      ].filter(opt => opt).map(opt => opt.split(','));
-      const correctPairs = options.reduce((acc, [left, right], index) => ({ ...acc, [index]: index }), {});
+      
+      // Create correct pairs mapping
+      const correctPairs = options.reduce((acc, [left, right], index) => {
+        acc[left] = right;
+        return acc;
+      }, {});
+      
       const leftItems = elements.matchContainer.querySelectorAll('.match-column:first-child .match-item');
       const rightItems = elements.matchContainer.querySelectorAll('.match-column:last-child .match-item');
+      
       state.totalAnswered++;
       const questionKey = `${question.question_id}_${state.currentQuestionIndex}`;
-      const isCorrect = state.matchSelections.left === state.matchSelections.right;
+      
+      const selectedLeft = leftItems[state.matchSelections.left].textContent;
+      const selectedRight = rightItems[state.matchSelections.right].textContent;
+      
+      const isCorrect = correctPairs[selectedLeft] === selectedRight;
+      
       state.userAnswers[questionKey] = {
-        answer: `${leftItems[state.matchSelections.left].textContent} -> ${rightItems[state.matchSelections.right].textContent}`,
+        answer: `${selectedLeft} -> ${selectedRight}`,
         correct: isCorrect
       };
+      
       if (isCorrect) {
         state.score++;
         leftItems[state.matchSelections.left].classList.add('correct');
@@ -912,11 +904,14 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         leftItems[state.matchSelections.left].classList.add('incorrect');
         rightItems[state.matchSelections.right].classList.add('incorrect');
-        Object.keys(correctPairs).forEach(i => {
-          leftItems[i].classList.add('correct');
-          rightItems[correctPairs[i]].classList.add('correct');
+        leftItems.forEach((item, index) => {
+          if (correctPairs[item.textContent] === rightItems[index].textContent) {
+            item.classList.add('correct');
+            rightItems[index].classList.add('correct');
+          }
         });
       }
+      
       updateScore();
       leftItems.forEach(item => item.style.pointerEvents = 'none');
       rightItems.forEach(item => item.style.pointerEvents = 'none');
@@ -935,7 +930,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const question = state.questions[state.currentQuestionIndex];
       const user = auth.currentUser;
-      // Get device information
       const deviceInfo = {
         userAgent: navigator.userAgent,
         platform: navigator.platform,
@@ -944,7 +938,6 @@ document.addEventListener('DOMContentLoaded', () => {
         screenHeight: screen.height
       };
 
-      // Attempt to get location (requires user consent)
       let location = null;
       try {
         const position = await new Promise((resolve, reject) => {
@@ -1005,7 +998,6 @@ document.addEventListener('DOMContentLoaded', () => {
         userAnswers: state.userAnswers
       };
       
-      // Save quiz result to database
       let resultKey = null;
       if (auth.currentUser) {
         const newResultRef = database.ref('quizHistory/' + auth.currentUser.uid).push();
@@ -1153,7 +1145,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Initialize event listeners
     function initEventListeners() {
       elements.subjectItems.forEach(item => {
         item.addEventListener('click', () => handleSubjectSelect(item.dataset.subject));
@@ -1276,7 +1267,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
-      // Close dropdown when clicking outside
       document.addEventListener('click', (e) => {
         if (elements.userMenu && elements.dropdownMenu && !elements.userMenu.contains(e.target)) {
           elements.dropdownMenu.classList.remove('show');
@@ -1284,7 +1274,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Initialize Firebase Authentication
     auth.onAuthStateChanged(user => {
       if (user) {
         if (elements.userAvatar) {

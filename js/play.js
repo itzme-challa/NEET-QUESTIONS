@@ -1,4 +1,4 @@
-  document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     // Initialize Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
@@ -14,7 +14,6 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const database = firebase.database();
-    const firestore = firebase.firestore();
 
     const state = {
       currentSubject: null,
@@ -135,7 +134,7 @@
     // Check URL parameters for DPP, test, or result ID
     function checkUrlParams() {
       const urlParams = new URLSearchParams(window.location.search);
-      const dppId = urlParams.get('dppId');
+      const dppId = urlParams.get('d seminaryId');
       const testId = urlParams.get('testId');
       const resultId = urlParams.get('result');
       
@@ -375,23 +374,28 @@
       showLoading(true);
       try {
         const questions = [];
-        const chaptersSnapshot = await firestore.collection('subjects').doc(subject)
-          .collection('chapters').get();
-        for (const chapterDoc of chaptersSnapshot.docs) {
-          const unitsSnapshot = await chapterDoc.ref.collection('units').get();
-          for (const unitDoc of unitsSnapshot.docs) {
-            const topicsSnapshot = await unitDoc.ref.collection('topics').get();
-            for (const topicDoc of topicsSnapshot.docs) {
-              const questionsSnapshot = await topicDoc.ref.collection('questions').get();
-              questionsSnapshot.forEach(questionDoc => {
+        const snapshot = await database.ref(`subjects/${subject}/chapters`).once('value');
+        const chapters = snapshot.val();
+        if (!chapters) return [];
+
+        for (const [chapterId, chapterData] of Object.entries(chapters)) {
+          const unitsSnapshot = await database.ref(`subjects/${subject}/chapters/${chapterId}/units`).once('value');
+          const units = unitsSnapshot.val() || {};
+          for (const [unitId, unitData] of Object.entries(units)) {
+            const topicsSnapshot = await database.ref(`subjects/${subject}/chapters/${chapterId}/units/${unitId}/topics`).once('value');
+            const topics = topicsSnapshot.val() || {};
+            for (const [topicId, topicData] of Object.entries(topics)) {
+              const questionsSnapshot = await database.ref(`subjects/${subject}/chapters/${chapterId}/units/${unitId}/topics/${topicId}/questions`).once('value');
+              const topicQuestions = questionsSnapshot.val() || {};
+              for (const [questionId, questionData] of Object.entries(topicQuestions)) {
                 questions.push({
-                  ...questionDoc.data(),
-                  chapter_name: chapterDoc.id,
-                  unit_name: unitDoc.id,
-                  topic_name: topicDoc.id,
-                  question_id: questionDoc.id
+                  ...questionData,
+                  chapter_name: chapterData.name,
+                  unit_name: unitData.name,
+                  topic_name: topicData.name,
+                  question_id: questionId
                 });
-              });
+              }
             }
           }
         }
@@ -414,18 +418,19 @@
       }
       const data = await loadSubjectData(subject);
       if (!data.length) return;
-      const chaptersSnapshot = await firestore.collection('subjects').doc(subject).collection('chapters').get();
-      const chapters = chaptersSnapshot.docs.map(doc => doc.id).sort();
+      const snapshot = await database.ref(`subjects/${subject}/chapters`).once('value');
+      const chaptersData = snapshot.val() || {};
+      const chapters = Object.keys(chaptersData).sort();
       if (elements.chapterList) {
         elements.chapterList.innerHTML = '';
         if (chapters.length === 0) {
           elements.chapterList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No chapters found</div></div>';
         } else {
           for (const chapter of chapters) {
-            const count = data.filter(q => q.chapter_name === chapter).length;
-            const isSelected = state.currentChapter === chapter;
-            const li = createListItem(chapter, chapter, count, isSelected);
-            li.addEventListener('click', () => handleChapterSelect(chapter));
+            const count = data.filter(q => q.chapter_name === chaptersData[chapter].name).length;
+            const isSelected = state.currentChapter === chaptersData[chapter].name;
+            const li = createListItem(chaptersData[chapter].name, chaptersData[chapter].name, count, isSelected);
+            li.addEventListener('click', () => handleChapterSelect(chaptersData[chapter].name));
             elements.chapterList.appendChild(li);
           }
         }
@@ -442,19 +447,29 @@
         elements.chapterCard.classList.add('hidden');
       }
       const data = state.subjectData[state.currentSubject];
-      const unitsSnapshot = await firestore.collection('subjects').doc(state.currentSubject)
-        .collection('chapters').doc(chapter).collection('units').get();
-      const units = unitsSnapshot.docs.map(doc => doc.id).sort();
+      const snapshot = await database.ref(`subjects/${state.currentSubject}/chapters`).once('value');
+      const chaptersData = snapshot.val() || {};
+      let chapterId = null;
+      for (const [id, data] of Object.entries(chaptersData)) {
+        if (data.name === chapter) {
+          chapterId = id;
+          break;
+        }
+      }
+      if (!chapterId) return;
+      const unitsSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters/${chapterId}/units`).once('value');
+      const unitsData = unitsSnapshot.val() || {};
+      const units = Object.keys(unitsData).sort();
       if (elements.unitList) {
         elements.unitList.innerHTML = '';
         if (units.length === 0) {
           elements.unitList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No units found</div></div>';
         } else {
           for (const unit of units) {
-            const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === unit).length;
-            const isSelected = state.currentUnit === unit;
-            const li = createListItem(unit, unit, count, isSelected);
-            li.addEventListener('click', () => handleUnitSelect(unit));
+            const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === unitsData[unit].name).length;
+            const isSelected = state.currentUnit === unitsData[unit].name;
+            const li = createListItem(unitsData[unit].name, unitsData[unit].name, count, isSelected);
+            li.addEventListener('click', () => handleUnitSelect(unitsData[unit].name));
             elements.unitList.appendChild(li);
           }
         }
@@ -471,20 +486,39 @@
         elements.unitCard.classList.add('hidden');
       }
       const data = state.subjectData[state.currentSubject];
-      const topicsSnapshot = await firestore.collection('subjects').doc(state.currentSubject)
-        .collection('chapters').doc(state.currentChapter)
-        .collection('units').doc(unit).collection('topics').get();
-      const topics = topicsSnapshot.docs.map(doc => doc.id).sort();
+      const chapterSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters`).once('value');
+      const chaptersData = chapterSnapshot.val() || {};
+      let chapterId = null;
+      for (const [id, data] of Object.entries(chaptersData)) {
+        if (data.name === state.currentChapter) {
+          chapterId = id;
+          break;
+        }
+      }
+      if (!chapterId) return;
+      const unitsSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters/${chapterId}/units`).once('value');
+      const unitsData = unitsSnapshot.val() || {};
+      let unitId = null;
+      for (const [id, data] of Object.entries(unitsData)) {
+        if (data.name === unit) {
+          unitId = id;
+          break;
+        }
+      }
+      if (!unitId) return;
+      const topicsSnapshot = await database.ref(`subjects/${state.currentSubject}/chapters/${chapterId}/units/${unitId}/topics`).once('value');
+      const topicsData = topicsSnapshot.val() || {};
+      const topics = Object.keys(topicsData).sort();
       if (elements.topicList) {
         elements.topicList.innerHTML = '';
         if (topics.length === 0) {
           elements.topicList.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle empty-state-icon"></i><div>No topics found</div></div>';
         } else {
           for (const topic of topics) {
-            const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === topic).length;
-            const isSelected = state.currentTopic === topic;
-            const li = createListItem(topic, topic, count, isSelected);
-            li.addEventListener('click', () => handleTopicSelect(topic));
+            const count = data.filter(q => q.chapter_name === state.currentChapter && q.unit_name === state.currentUnit && q.topic_name === topicsData[topic].name).length;
+            const isSelected = state.currentTopic === topicsData[topic].name;
+            const li = createListItem(topicsData[topic].name, topicsData[topic].name, count, isSelected);
+            li.addEventListener('click', () => handleTopicSelect(topicsData[topic].name));
             elements.topicList.appendChild(li);
           }
         }
@@ -1188,14 +1222,13 @@
       }
 
       if (elements.viewResultsBtn) {
-  elements.viewResultsBtn.addEventListener('click', () => {
-    const resultKey = elements.viewResultsBtn.dataset.resultKey;
-    if (resultKey) {
-      window.location.href = `results.html?result=${resultKey}`;
-    }
-  });
-}
-
+        elements.viewResultsBtn.addEventListener('click', () => {
+          const resultKey = elements.viewResultsBtn.dataset.resultKey;
+          if (resultKey) {
+            window.location.href = `results.html?result=${resultKey}`;
+          }
+        });
+      }
 
       if (elements.resetBtn) {
         elements.resetBtn.addEventListener('click', () => resetSelections('subject'));
@@ -1263,4 +1296,4 @@
         window.location.href = 'login.html';
       }
     });
-  });
+});

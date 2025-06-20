@@ -4,9 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NEET Quiz Admin</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
     :root {
       --primary-color: #4361ee;
@@ -65,11 +67,70 @@
       gap: 0.75rem;
       font-weight: 600;
       color: var(--primary-dark);
+      text-decoration: none;
     }
 
     .logo-icon {
       font-size: 1.5rem;
       color: var(--primary-color);
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-menu {
+      position: relative;
+    }
+
+    .user-avatar {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      right: 0;
+      top: 3rem;
+      background-color: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      min-width: 200px;
+      display: none;
+      z-index: 100;
+    }
+
+    .dropdown-menu.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      text-decoration: none;
+      color: var(--text-dark);
+    }
+
+    .dropdown-item:hover {
+      background-color: var(--bg-light);
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background-color: var(--bg-light);
+      margin: 0.5rem 0;
     }
 
     .main-content {
@@ -78,6 +139,32 @@
       max-width: 1200px;
       width: 100%;
       margin: 0 auto;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+    }
+
+    .tab {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-weight: 500;
+    }
+
+    .tab.active {
+      border-bottom-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .card {
@@ -136,25 +223,39 @@
       background-color: var(--bg-light);
     }
 
-    .btn-icon {
-      padding: 0.5rem;
-      border-radius: 50%;
-      width: 2.5rem;
-      height: 2.5rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+    .btn-danger {
+      background-color: var(--error-color);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #dc2626;
+    }
+
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
     }
 
     .form-control {
       display: block;
       width: 100%;
       padding: 0.5rem 0.75rem;
-      margin-bottom: 1rem;
       font-size: 1rem;
       border: 1px solid var(--border-color);
       border-radius: var(--radius-sm);
       background-color: white;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: 500;
+      font-size: 0.875rem;
     }
 
     .alert {
@@ -275,6 +376,39 @@
       font-weight: 500;
     }
 
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+
+    .table th,
+    .table td {
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    .table th {
+      background-color: var(--bg-light);
+      font-weight: 600;
+    }
+
+    .table tbody tr:hover {
+      background-color: var(--bg-light);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
     .backdrop {
       position: fixed;
       top: 0;
@@ -292,13 +426,39 @@
       background-color: white;
       border-radius: var(--radius-md);
       width: 90%;
-      max-width: 500px;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
       animation: fadeIn 0.3s ease;
     }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-20px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-weight: 600;
+    }
+
+    .modal-body {
+      padding: 1rem;
+    }
+
+    .modal-footer {
+      padding: 1rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
     }
 
     .loading {
@@ -321,12 +481,47 @@
     }
 
     @media (max-width: 768px) {
+      .main-content {
+        padding: 1rem;
+      }
+
+      .tabs {
+        flex-wrap: wrap;
+      }
+
+      .tab {
+        flex: 1;
+        text-align: center;
+      }
+
       .group-list {
         grid-template-columns: 1fr;
       }
-      
-      .main-content {
-        padding: 1rem;
+
+      .filter-group {
+        flex-direction: column;
+      }
+
+      .table th,
+      .table td {
+        font-size: 0.875rem;
+        padding: 0.5rem;
+      }
+
+      .modal {
+        width: 95%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .nav-buttons {
+        width: 100%;
+        justify-content: flex-end;
       }
     }
   </style>
@@ -334,87 +529,307 @@
 <body>
   <div id="app">
     <header class="header">
-      <div class="logo">
+      <a href="index.html" class="logo">
         <i class="fas fa-atom logo-icon"></i>
         <span>NEET Quiz Admin</span>
+      </a>
+      <div class="nav-buttons">
+        <div class="user-menu" id="userMenu">
+          <div class="user-avatar" id="userAvatar">U</div>
+          <div class="dropdown-menu" id="dropdownMenu">
+            <a href="profile.html" class="dropdown-item">
+              <i class="fas fa-user"></i> Profile
+            </a>
+            <a href="dpp.html" class="dropdown-item">
+              <i class="fas fa-tasks"></i> My DPPs
+            </a>
+            <a href="tests.html" class="dropdown-item">
+              <i class="fas fa-file-alt"></i> My Tests
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item" id="logoutBtn">
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+          </div>
+        </div>
       </div>
     </header>
 
     <main class="main-content">
-      <div class="card">
-        <div class="card-header">
-          <h2 class="card-title">Question Importer</h2>
-        </div>
-        <div class="card-body">
-          <div class="form-group">
-            <label for="subjectSelect">Select Subject:</label>
-            <select id="subjectSelect" class="form-control">
-              <option value="biology">Biology</option>
-              <option value="chemistry">Chemistry</option>
-              <option value="physics">Physics</option>
-            </select>
-          </div>
-          <button id="fetchBtn" class="btn btn-primary">
-            <i class="fas fa-download"></i> Fetch Questions
-          </button>
-        </div>
+      <div class="tabs">
+        <div class="tab active" data-tab="import">Import Questions</div>
+        <div class="tab" data-tab="edit">Edit Questions</div>
+        <div class="tab" data-tab="reports">Question Reports</div>
       </div>
 
-      <div class="card" id="previewCard" style="display: none;">
-        <div class="card-header">
-          <h2 class="card-title">Organize Questions</h2>
-          <div id="questionStats" class="badge badge-primary">0 questions</div>
+      <!-- Import Questions Tab -->
+      <div class="tab-content active" id="importTab">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Question Importer</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="subjectSelect">Select Subject:</label>
+              <select id="subjectSelect" class="form-control">
+                <option value="biology">Biology</option>
+                <option value="chemistry">Chemistry</option>
+                <option value="physics">Physics</option>
+              </select>
+            </div>
+            <button id="fetchBtn" class="btn btn-primary">
+              <i class="fas fa-download"></i> Fetch Questions
+            </button>
+          </div>
         </div>
-        <div class="card-body">
-          <div id="previewContent"></div>
-          
-          <div id="groupSelection" style="display: none;">
-            <div class="group-container">
-              <div class="group-header">
-                <i class="fas fa-layer-group"></i>
-                <span>Hierarchy Groups</span>
+
+        <div class="card" id="previewCard" style="display: none;">
+          <div class="card-header">
+            <h2 class="card-title">Organize Questions</h2>
+            <div id="questionStats" class="badge badge-primary">0 questions</div>
+          </div>
+          <div class="card-body">
+            <div id="previewContent"></div>
+            
+            <div id="groupSelection" style="display: none;">
+              <div class="group-container">
+                <div class="group-header">
+                  <i class="fas fa-layer-group"></i>
+                  <span>Hierarchy Groups</span>
+                </div>
+                <div class="hierarchy-path">
+                  Database path: <span>subjects</span> → <span id="currentSubjectPath"></span> → <span>chapters</span> → <span>units</span> → <span>topics</span> → <span>questions</span>
+                </div>
+                
+                <div class="group-list" id="chapterList"></div>
+                
+                <div class="group-list" id="unitList" style="display: none; margin-top: 1.5rem;"></div>
+                
+                <div class="group-list" id="topicList" style="display: none; margin-top: 1.5rem;"></div>
               </div>
-              <div class="hierarchy-path">
-                Database path: <span>subjects</span> → <span id="currentSubjectPath"></span> → <span>chapters</span> → <span>units</span> → <span>topics</span> → <span>questions</span>
+              
+              <div style="margin-top: 1.5rem;">
+                <div class="group-header">
+                  <i class="fas fa-check-circle"></i>
+                  <span>Selected Groups</span>
+                  <span id="selectedGroupsCount" class="badge">0 selected</span>
+                </div>
+                <div id="selectedGroupsList" style="margin-top: 0.5rem;"></div>
+                
+                <div class="selection-actions" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                  <button id="selectAllBtn" class="btn btn-outline">Select All</button>
+                  <button id="deselectAllBtn" class="btn btn-outline">Clear Selection</button>
+                </div>
               </div>
-              
-              <div class="group-list" id="chapterList"></div>
-              
-              <div class="group-list" id="unitList" style="display: none; margin-top: 1.5rem;"></div>
-              
-              <div class="group-list" id="topicList" style="display: none; margin-top: 1.5rem;"></div>
             </div>
             
-            <div style="margin-top: 1.5rem;">
-              <div class="group-header">
-                <i class="fas fa-check-circle"></i>
-                <span>Selected Groups</span>
-                <span id="selectedGroupsCount" class="badge">0 selected</span>
-              </div>
-              <div id="selectedGroupsList" style="margin-top: 0.5rem;"></div>
-              
-              <div class="selection-actions" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                <button id="selectAllBtn" class="btn btn-outline">Select All</button>
-                <button id="deselectAllBtn" class="btn btn-outline">Clear Selection</button>
-              </div>
+            <div class="progress" id="progressContainer" style="display: none;">
+              <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%">0%</div>
             </div>
+            
+            <button id="submitBtn" class="btn btn-primary" style="margin-top: 1.5rem; display: none;">
+              <i class="fas fa-save"></i> Submit to Database
+            </button>
           </div>
-          
-          <div class="progress" id="progressContainer" style="display: none;">
-            <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%">0%</div>
+        </div>
+
+        <div class="card" id="statusCard" style="display: none;">
+          <div class="card-header">
+            <h2 class="card-title">Submission Results</h2>
           </div>
-          
-          <button id="submitBtn" class="btn btn-primary" style="margin-top: 1.5rem; display: none;">
-            <i class="fas fa-save"></i> Submit to Database
-          </button>
+          <div class="card-body" id="statusContent"></div>
         </div>
       </div>
 
-      <div class="card" id="statusCard" style="display: none;">
-        <div class="card-header">
-          <h2 class="card-title">Submission Results</h2>
+      <!-- Edit Questions Tab -->
+      <div class="tab-content" id="editTab">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Load Questions</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="loadSubjectSelect">Select Subject:</label>
+              <select id="loadSubjectSelect" class="form-control">
+                <option value="">Select Subject</option>
+                <option value="biology">Biology</option>
+                <option value="chemistry">Chemistry</option>
+                <option value="physics">Physics</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="loadChapterSelect">Select Chapter:</label>
+              <select id="loadChapterSelect" class="form-control" disabled>
+                <option value="">Select Chapter</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="loadUnitSelect">Select Unit:</label>
+              <select id="loadUnitSelect" class="form-control" disabled>
+                <option value="">Select Unit</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="loadTopicSelect">Select Topic:</label>
+              <select id="loadTopicSelect" class="form-control" disabled>
+                <option value="">Select Topic</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="loadQuestionId">Question ID (Optional):</label>
+              <input type="text" id="loadQuestionId" class="form-control" placeholder="Enter Question ID">
+            </div>
+            <button id="loadQuestionsBtn" class="btn btn-primary">
+              <i class="fas fa-search"></i> Load Questions
+            </button>
+          </div>
         </div>
-        <div class="card-body" id="statusContent"></div>
+
+        <div class="card" id="questionsListCard" style="display: none;">
+          <div class="card-header">
+            <h2 class="card-title">Questions</h2>
+            <div id="questionsCount" class="badge badge-primary">0 questions</div>
+          </div>
+          <div class="card-body">
+            <div class="table-container">
+              <table class="table" id="questionsTable">
+                <thead>
+                  <tr>
+                    <th>Question</th>
+                    <th>Quiz Type</th>
+                    <th>Chapter</th>
+                    <th>Unit</th>
+                    <th>Topic</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="questionsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="backdrop" id="editQuestionModal" style="display: none;">
+          <div class="modal">
+            <div class="modal-header">
+              <h3 class="modal-title">Edit Question</h3>
+              <button class="btn btn-icon" id="closeEditModalBtn">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="editQuestionForm">
+                <input type="hidden" id="editQuestionId">
+                <input type="hidden" id="editSubject">
+                <div class="form-group">
+                  <label for="editQuestionText" class="form-label">Question</label>
+                  <textarea id="editQuestionText" class="form-control" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="editQuizType" class="form-label">Quiz Type</label>
+                  <select id="editQuizType" class="form-control" required>
+                    <option value="mcq">Multiple Choice</option>
+                    <option value="match">Match the Following</option>
+                    <option value="fillup">Fill in the Blank</option>
+                  </select>
+                </div>
+                <div id="mcqOptions" class="form-group">
+                  <label class="form-label">Options</label>
+                  <input type="text" id="editOptionA" class="form-control" placeholder="Option A">
+                  <input type="text" id="editOptionB" class="form-control" placeholder="Option B">
+                  <input type="text" id="editOptionC" class="form-control" placeholder="Option C">
+                  <input type="text" id="editOptionD" class="form-control" placeholder="Option D">
+                </div>
+                <div class="form-group">
+                  <label for="editAnswer" class="form-label">Answer</label>
+                  <input type="text" id="editAnswer" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label for="editExplanation" class="form-label">Explanation</label>
+                  <textarea id="editExplanation" class="form-control" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="editChapter" class="form-label">Chapter</label>
+                  <input type="text" id="editChapter" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label for="editUnit" class="form-label">Unit</label>
+                  <input type="text" id="editUnit" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label for="editTopic" class="form-label">Topic</label>
+                  <input type="text" id="editTopic" class="form-control" required>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-outline" id="cancelEditBtn">Cancel</button>
+              <button class="btn btn-primary" id="saveQuestionBtn">Save</button>
+              <button class="btn btn-danger" id="deleteQuestionBtn" style="display: none;">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question Reports Tab -->
+      <div class="tab-content" id="reportsTab">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Question Reports</h2>
+          </div>
+          <div class="card-body">
+            <div class="filter-group">
+              <div class="form-group">
+                <label for="reportSubjectFilter">Subject:</label>
+                <select id="reportSubjectFilter" class="form-control">
+                  <option value="">All Subjects</option>
+                  <option value="biology">Biology</option>
+                  <option value="chemistry">Chemistry</option>
+                  <option value="physics">Physics</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="reportReasonFilter">Reason:</label>
+                <select id="reportReasonFilter" class="form-control">
+                  <option value="">All Reasons</option>
+                  <option value="incorrect">Incorrect Answer</option>
+                  <option value="ambiguous">Ambiguous Question</option>
+                  <option value="typo">Typographical Error</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-container">
+              <table class="table" id="reportsTable">
+                <thead>
+                  <tr>
+                    <th>Question ID</th>
+                    <th>Subject</th>
+                    <th>Reason</th>
+                    <th>Timestamp</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="reportsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="backdrop" id="reportDetailsModal" style="display: none;">
+          <div class="modal">
+            <div class="modal-header">
+              <h3 class="modal-title">Report Details</h3>
+              <button class="btn btn-icon" id="closeReportModalBtn">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="modal-body" id="reportDetailsContent"></div>
+            <div class="modal-footer">
+              <button class="btn btn-outline" id="closeReportDetailsBtn">Close</button>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -426,361 +841,460 @@
         </div>
       </div>
     </div>
-  </div>
 
   <script>
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
-      authDomain: "community-604af.firebaseapp.com",
-      databaseURL: "https://community-604af-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "community-604af",
-      storageBucket: "community-604af.appspot.com",
-      messagingSenderId: "735063146170",
-      appId: "1:735063146170:web:725bce2c3c64afc0f30c83",
-      measurementId: "G-7YD8RLH33Q"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // DOM Elements
-    const elements = {
-      subjectSelect: document.getElementById('subjectSelect'),
-      fetchBtn: document.getElementById('fetchBtn'),
-      previewCard: document.getElementById('previewCard'),
-      previewContent: document.getElementById('previewContent'),
-      questionStats: document.getElementById('questionStats'),
-      groupSelection: document.getElementById('groupSelection'),
-      chapterList: document.getElementById('chapterList'),
-      unitList: document.getElementById('unitList'),
-      topicList: document.getElementById('topicList'),
-      currentSubjectPath: document.getElementById('currentSubjectPath'),
-      selectedGroupsCount: document.getElementById('selectedGroupsCount'),
-      selectedGroupsList: document.getElementById('selectedGroupsList'),
-      selectAllBtn: document.getElementById('selectAllBtn'),
-      deselectAllBtn: document.getElementById('deselectAllBtn'),
-      submitBtn: document.getElementById('submitBtn'),
-      statusCard: document.getElementById('statusCard'),
-      statusContent: document.getElementById('statusContent'),
-      loadingModal: document.getElementById('loadingModal'),
-      loadingText: document.getElementById('loadingText'),
-      progressContainer: document.getElementById('progressContainer'),
-      progressBar: document.getElementById('progressBar')
-    };
-
-    // Configuration
-    const subjectUrls = {
-      biology: 'https://eduhub-kmr.pages.dev/data/biology.json',
-      chemistry: 'https://eduhub-kmr.pages.dev/data/chemistry.json',
-      physics: 'https://eduhub-kmr.pages.dev/data/physics.json'
-    };
-    const BATCH_SIZE = 50;
-
-    // App State
-    let state = {
-      fetchedQuestions: [],
-      groupedQuestions: {
-        chapters: {},
-        units: {},
-        topics: {}
-      },
-      selectedGroups: new Set(),
-      subject: null
-    };
-
-    // Helper Functions
-    function showLoading(show, text = 'Processing...') {
-      elements.loadingModal.style.display = show ? 'flex' : 'none';
-      elements.loadingText.textContent = text;
-    }
-
-    function updateProgress(percent) {
-      elements.progressBar.style.width = `${percent}%`;
-      elements.progressBar.textContent = `${Math.round(percent)}%`;
-    }
-
-    function createSlug(name) {
-      return name.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-    }
-
-    function getChapterName(question) {
-      return question['Chapter Name'] || question['chapter name'] || 
-             question['Unique Chapter Name'] || 
-             question.topic_name?.split('>>')[0]?.trim() || 'Uncategorized';
-    }
-
-    function getUnitName(question) {
-      return question.topic_name?.split('>>')[1]?.trim() || 'Uncategorized';
-    }
-
-    function getTopicName(question) {
-      return question.topic_name?.split('>>')[2]?.trim() || 'Uncategorized';
-    }
-
-    function formatQuestion(question, subject) {
-      return {
-        subject: subject,
-        question: question.question,
-        answer: question.answer,
-        explanation: question.explanation,
-        quiz_type: question.quiz_type || 'mcq',
-        chapter: getChapterName(question),
-        unit: getUnitName(question),
-        topic: getTopicName(question),
-        topic_name: `${getChapterName(question)}>>${getUnitName(question)}>>${getTopicName(question)}`,
-        ...(question.quiz_type === 'mcq' && {
-          option_a: question.option_a,
-          option_b: question.option_b,
-          option_c: question.option_c,
-          option_d: question.option_d
-        }),
-        ...(question.quiz_type === 'match' && {
-          option_a: question.option_a,
-          option_b: question.option_b,
-          option_c: question.option_c,
-          option_d: question.option_d
-        }),
-        createdAt: firebase.database.ServerValue.TIMESTAMP,
-        updatedAt: firebase.database.ServerValue.TIMESTAMP
-      };
-    }
-
-    function groupQuestions(questions, subject) {
-      const groups = {
-        chapters: {},
-        units: {},
-        topics: {}
+    document.addEventListener('DOMContentLoaded', () => {
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
+        authDomain: "community-604af.firebaseapp.com",
+        databaseURL: "https://community-604af-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "community-604af",
+        storageBucket: "community-604af.appspot.com",
+        messagingSenderId: "735063146170",
+        appId: "1:735063146170:web:725bce2c3c64afc0f30c83",
+        measurementId: "G-7YD8RLH33Q"
       };
 
-      questions.forEach(q => {
-        const formatted = formatQuestion(q, subject);
-        const chapter = formatted.chapter;
-        const unit = `${chapter}>>${formatted.unit}`;
-        const topic = `${unit}>>${formatted.topic}`;
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.database();
 
-        // Group by chapter
-        if (!groups.chapters[chapter]) {
-          groups.chapters[chapter] = {
-            name: chapter,
-            slug: createSlug(chapter),
-            questions: [],
-            units: new Set()
-          };
+      // Authentication state listener
+      auth.onAuthStateChanged((user) => {
+        if (!user) {
+          window.location.href = 'index.html';
+        } else {
+          // Set user avatar
+          if (user.photoURL) {
+            document.getElementById('userAvatar').style.backgroundImage = `url(${user.photoURL})`;
+            document.getElementById('userAvatar').textContent = '';
+          } else {
+            const initial = user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U';
+            document.getElementById('userAvatar').textContent = initial;
+          }
+          initApp();
         }
-        groups.chapters[chapter].questions.push(formatted);
-        groups.chapters[chapter].units.add(formatted.unit);
-
-        // Group by unit
-        if (!groups.units[unit]) {
-          groups.units[unit] = {
-            name: formatted.unit,
-            slug: createSlug(formatted.unit),
-            chapter: chapter,
-            chapterSlug: createSlug(chapter),
-            questions: [],
-            topics: new Set()
-          };
-        }
-        groups.units[unit].questions.push(formatted);
-        groups.units[unit].topics.add(formatted.topic);
-
-        // Group by topic
-        if (!groups.topics[topic]) {
-          groups.topics[topic] = {
-            name: formatted.topic,
-            slug: createSlug(formatted.topic),
-            chapter: chapter,
-            chapterSlug: createSlug(chapter),
-            unit: formatted.unit,
-            unitSlug: createSlug(formatted.unit),
-            questions: []
-          };
-        }
-        groups.topics[topic].questions.push(formatted);
       });
 
-      return groups;
-    }
+      // DOM Elements
+      const elements = {
+        // General
+        userAvatar: document.getElementById('userAvatar'),
+        dropdownMenu: document.getElementById('dropdownMenu'),
+        userMenu: document.getElementById('userMenu'),
+        logoutBtn: document.getElementById('logoutBtn'),
+        loadingModal: document.getElementById('loadingModal'),
+        loadingText: document.getElementById('loadingText'),
+        // Import Tab
+        subjectSelect: document.getElementById('subjectSelect'),
+        fetchBtn: document.getElementById('fetchBtn'),
+        previewCard: document.getElementById('previewCard'),
+        previewContent: document.getElementById('previewContent'),
+        questionStats: document.getElementById('questionStats'),
+        groupSelection: document.getElementById('groupSelection'),
+        chapterList: document.getElementById('chapterList'),
+        unitList: document.getElementById('unitList'),
+        topicList: document.getElementById('topicList'),
+        currentSubjectPath: document.getElementById('currentSubjectPath'),
+        selectedGroupsCount: document.getElementById('selectedGroupsCount'),
+        selectedGroupsList: document.getElementById('selectedGroupsList'),
+        selectAllBtn: document.getElementById('selectAllBtn'),
+        deselectAllBtn: document.getElementById('deselectAllBtn'),
+        submitBtn: document.getElementById('submitBtn'),
+        statusCard: document.getElementById('statusCard'),
+        statusContent: document.getElementById('statusContent'),
+        progressContainer: document.getElementById('progressContainer'),
+        progressBar: document.getElementById('progressBar'),
+        // Edit Tab
+        loadSubjectSelect: document.getElementById('loadSubjectSelect'),
+        loadChapterSelect: document.getElementById('loadChapterSelect'),
+        loadUnitSelect: document.getElementById('loadUnitSelect'),
+        loadTopicSelect: document.getElementById('loadTopicSelect'),
+        loadQuestionId: document.getElementById('loadQuestionId'),
+        loadQuestionsBtn: document.getElementById('loadQuestionsBtn'),
+        questionsListCard: document.getElementById('questionsListCard'),
+        questionsCount: document.getElementById('questionsCount'),
+        questionsTableBody: document.getElementById('questionsTableBody'),
+        editQuestionModal: document.getElementById('editQuestionModal'),
+        closeEditModalBtn: document.getElementById('closeEditModalBtn'),
+        editQuestionForm: document.getElementById('editQuestionForm'),
+        editQuestionId: document.getElementById('editQuestionId'),
+        editSubject: document.getElementById('editSubject'),
+        editQuestionText: document.getElementById('editQuestionText'),
+        editQuizType: document.getElementById('editQuizType'),
+        mcqOptions: document.getElementById('mcqOptions'),
+        editOptionA: document.getElementById('editOptionA'),
+        editOptionB: document.getElementById('editOptionB'),
+        editOptionC: document.getElementById('editOptionC'),
+        editOptionD: document.getElementById('editOptionD'),
+        editAnswer: document.getElementById('editAnswer'),
+        editExplanation: document.getElementById('editExplanation'),
+        editChapter: document.getElementById('editChapter'),
+        editUnit: document.getElementById('editUnit'),
+        editTopic: document.getElementById('editTopic'),
+        cancelEditBtn: document.getElementById('cancelEditBtn'),
+        saveQuestionBtn: document.getElementById('saveQuestionBtn'),
+        deleteQuestionBtn: document.getElementById('deleteQuestionBtn'),
+        // Reports Tab
+        reportSubjectFilter: document.getElementById('reportSubjectFilter'),
+        reportReasonFilter: document.getElementById('reportReasonFilter'),
+        reportsTableBody: document.getElementById('reportsTableBody'),
+        reportDetailsModal: document.getElementById('reportDetailsModal'),
+        closeReportModalBtn: document.getElementById('closeReportModalBtn'),
+        reportDetailsContent: document.getElementById('reportDetailsContent'),
+        closeReportDetailsBtn: document.getElementById('closeReportDetailsBtn')
+      };
 
-    function renderGroupItems(groups, type) {
-      const container = type === 'chapters' ? elements.chapterList :
-                        type === 'units' ? elements.unitList :
-                        elements.topicList;
-      
-      container.innerHTML = '';
-      
-      Object.entries(groups[type]).forEach(([key, group]) => {
-        const item = document.createElement('div');
-        item.className = `group-item ${state.selectedGroups.has(`${type}:${key}`) ? 'selected' : ''}`;
-        item.dataset.type = type;
-        item.dataset.key = key;
-        
-        item.innerHTML = `
-          <div class="group-item-header">
-            <div>${group.name}</div>
-            <span class="badge ${state.selectedGroups.has(`${type}:${key}`) ? 'badge-primary' : ''}">
-              ${group.questions.length} Qs
-            </span>
-          </div>
-          <div class="group-item-count">
-            ${type === 'chapters' ? `${group.units.size} units` : 
-             type === 'units' ? `${group.topics.size} topics` : 
-             'Questions'}
-          </div>
-        `;
-        
-        item.addEventListener('click', () => toggleGroupSelection(type, key, item));
-        container.appendChild(item);
-      });
-      
-      container.style.display = 'grid';
-    }
+      // Configuration
+      const subjectUrls = {
+        biology: 'https://eduhub-kmr.pages.dev/data/biology.json',
+        chemistry: 'https://eduhub-kmr.pages.dev/data/chemistry.json',
+        physics: 'https://eduhub-kmr.pages.dev/data/physics.json'
+      };
+      const BATCH_SIZE = 50;
 
-    function toggleGroupSelection(type, key, element) {
-      const groupKey = `${type}:${key}`;
-      
-      if (state.selectedGroups.has(groupKey)) {
-        state.selectedGroups.delete(groupKey);
-        element.classList.remove('selected');
-        element.querySelector('.badge').classList.remove('badge-primary');
-      } else {
-        state.selectedGroups.add(groupKey);
-        element.classList.add('selected');
-        element.querySelector('.badge').classList.add('badge-primary');
+      // App State
+      let state = {
+        fetchedQuestions: [],
+        groupedQuestions: {
+          chapters: {},
+          units: {},
+          topics: {}
+        },
+        selectedGroups: new Set(),
+        subject: null,
+        loadedQuestions: [],
+        chapters: {},
+        units: {},
+        topics: {},
+        reports: {}
+      };
+
+      // Helper Functions
+      function showLoading(show, text = 'Processing...') {
+        elements.loadingModal.style.display = show ? 'flex' : 'none';
+        elements.loadingText.textContent = text;
       }
-      
-      updateSelectionUI();
-    }
 
-    function updateSelectionUI() {
-      elements.selectedGroupsCount.textContent = `${state.selectedGroups.size} selected`;
-      
-      elements.selectedGroupsList.innerHTML = '';
-      state.selectedGroups.forEach(groupKey => {
-        const [type, key] = groupKey.split(':');
-        const group = state.groupedQuestions[type][key];
-        
-        const item = document.createElement('div');
-        item.className = 'badge';
-        item.style.marginRight = '0.5rem';
-        item.style.marginBottom = '0.5rem';
-        item.style.display = 'inline-block';
-        
-        let icon = '';
-        if (type === 'chapters') icon = '<i class="fas fa-book"></i>';
-        else if (type === 'units') icon = '<i class="fas fa-layer-group"></i>';
-        else icon = '<i class="fas fa-tag"></i>';
-        
-        item.innerHTML = `${icon} ${group.name} (${group.questions.length} Qs)`;
-        elements.selectedGroupsList.appendChild(item);
-      });
-      
-      elements.submitBtn.style.display = state.selectedGroups.size > 0 ? 'block' : 'none';
-    }
+      function updateProgress(percent) {
+        elements.progressBar.style.width = `${percent}%`;
+        elements.progressBar.textContent = `${Math.round(percent)}%`;
+      }
 
-    function getSelectedQuestions() {
-      const questions = [];
-      
-      state.selectedGroups.forEach(groupKey => {
-        const [type, key] = groupKey.split(':');
-        const group = state.groupedQuestions[type][key];
-        if (group) {
-          questions.push(...group.questions);
+      function createSlug(name) {
+        return name.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+      }
+
+      function getChapterName(question) {
+        return question['Chapter Name'] || question['chapter name'] || 
+               question['Unique Chapter Name'] || 
+               question.topic_name?.split('>>')[0]?.trim() || 'Uncategorized';
+      }
+
+      function getUnitName(question) {
+        return question.topic_name?.split('>>')[1]?.trim() || 'Uncategorized';
+      }
+
+      function getTopicName(question) {
+        return question.topic_name?.split('>>')[2]?.trim() || 'Uncategorized';
+      }
+
+      function formatQuestion(question, subject) {
+        return {
+          subject: subject,
+          question: question.question,
+          answer: question.answer,
+          explanation: question.explanation,
+          quiz_type: question.quiz_type || 'mcq',
+          chapter: getChapterName(question),
+          unit: getUnitName(question),
+          topic: getTopicName(question),
+          topic_name: `${getChapterName(question)}>>${getUnitName(question)}>>${getTopicName(question)}`,
+          ...(question.quiz_type === 'mcq' && {
+            option_a: question.option_a,
+            option_b: question.option_b,
+            option_c: question.option_c,
+            option_d: question.option_d
+          }),
+          ...(question.quiz_type === 'match' && {
+            option_a: question.option_a,
+            option_b: question.option_b,
+            option_c: question.option_c,
+            option_d: question.option_d
+          }),
+          createdAt: firebase.database.ServerValue.TIMESTAMP,
+          updatedAt: firebase.database.ServerValue.TIMESTAMP
+        };
+      }
+
+      function groupQuestions(questions, subject) {
+        const groups = {
+          chapters: {},
+          units: {},
+          topics: {}
+        };
+
+        questions.forEach(q => {
+          const formatted = formatQuestion(q, subject);
+          const chapter = formatted.chapter;
+          const unit = `${chapter}>>${formatted.unit}`;
+          const topic = `${unit}>>${formatted.topic}`;
+
+          // Group by chapter
+          if (!groups.chapters[chapter]) {
+            groups.chapters[chapter] = {
+              name: chapter,
+              slug: createSlug(chapter),
+              questions: [],
+              units: new Set()
+            };
+          }
+          groups.chapters[chapter].questions.push(formatted);
+          groups.chapters[chapter].units.add(formatted.unit);
+
+          // Group by unit
+          if (!groups.units[unit]) {
+            groups.units[unit] = {
+              name: formatted.unit,
+              slug: createSlug(formatted.unit),
+              chapter: chapter,
+              chapterSlug: createSlug(chapter),
+              questions: [],
+              topics: new Set()
+            };
+          }
+          groups.units[unit].questions.push(formatted);
+          groups.units[unit].topics.add(formatted.topic);
+
+          // Group by topic
+          if (!groups.topics[topic]) {
+            groups.topics[topic] = {
+              name: formatted.topic,
+              slug: createSlug(formatted.topic),
+              chapter: chapter,
+              chapterSlug: createSlug(chapter),
+              unit: formatted.unit,
+              unitSlug: createSlug(formatted.unit),
+              questions: []
+            };
+          }
+          groups.topics[topic].questions.push(formatted);
+        });
+
+        return groups;
+      }
+
+      function renderGroupItems(groups, type) {
+        const container = type === 'chapters' ? elements.chapterList :
+                         type === 'units' ? elements.unitList :
+                         elements.topicList;
+        
+        container.innerHTML = '';
+        
+        Object.entries(groups[type]).forEach(([key, group]) => {
+          const item = document.createElement('div');
+          item.className = `group-item ${state.selectedGroups.has(`${type}:${key}`) ? 'selected' : ''}`;
+          item.dataset.type = type;
+          item.dataset.key = key;
+          
+          item.innerHTML = `
+            <div class="group-item-header">
+              <div>${group.name}</div>
+              <span class="badge ${state.selectedGroups.has(`${type}:${key}`) ? 'badge-primary' : ''}">
+                ${group.questions.length} Qs
+              </span>
+            </div>
+            <div class="group-item-count">
+              ${type === 'chapters' ? `${group.units.size} units` :
+               type === 'units' ? `${group.topics.size} topics` :
+               'Questions'}
+            </div>
+          `;
+          
+          item.addEventListener('click', () => toggleGroupSelection(type, key, item));
+          container.appendChild(item);
+        });
+        
+        container.style.display = 'grid';
+      }
+
+      function toggleGroupSelection(type, key, element) {
+        const groupKey = `${type}:${key}`;
+        
+        if (state.selectedGroups.has(groupKey)) {
+          state.selectedGroups.delete(groupKey);
+          element.classList.remove('selected');
+          element.querySelector('.badge').classList.remove('badge-primary');
+        } else {
+          state.selectedGroups.add(groupKey);
+          element.classList.add('selected');
+          element.querySelector('.badge').classList.add('badge-primary');
         }
-      });
-      
-      return questions;
-    }
-
-    // Main Functions
-    async function fetchQuestions() {
-      state.subject = elements.subjectSelect.value;
-      showLoading(true, `Fetching ${state.subject} questions...`);
-      
-      try {
-        const response = await fetch(subjectUrls[state.subject]);
-        if (!response.ok) throw new Error('Failed to fetch questions');
-        const data = await response.json();
-        
-        state.fetchedQuestions = data;
-        state.groupedQuestions = groupQuestions(data, state.subject);
-        state.selectedGroups = new Set();
-        
-        elements.questionStats.textContent = `${data.length} questions`;
-        elements.currentSubjectPath.textContent = state.subject;
-        
-        elements.previewContent.innerHTML = `
-          <p>Successfully fetched ${data.length} questions organized into:</p>
-          <ul>
-            <li>${Object.keys(state.groupedQuestions.chapters).length} Chapters</li>
-            <li>${Object.keys(state.groupedQuestions.units).length} Units</li>
-            <li>${Object.keys(state.groupedQuestions.topics).length} Topics</li>
-          </ul>
-        `;
-        
-        renderGroupItems(state.groupedQuestions, 'chapters');
-        renderGroupItems(state.groupedQuestions, 'units');
-        renderGroupItems(state.groupedQuestions, 'topics');
-        
-        elements.groupSelection.style.display = 'block';
-        elements.previewCard.style.display = 'block';
-        elements.statusCard.style.display = 'none';
-        elements.progressContainer.style.display = 'none';
         
         updateSelectionUI();
-        
-      } catch (error) {
-        console.error('Error fetching questions:', error);
-        alert(`Failed to fetch questions: ${error.message}`);
-      } finally {
-        showLoading(false);
       }
-    }
 
-    async function submitQuestions() {
-      const questionsToSubmit = getSelectedQuestions();
-      if (questionsToSubmit.length === 0) {
-        alert('No questions selected for submission');
-        return;
+      function updateSelectionUI() {
+        elements.selectedGroupsCount.textContent = `${state.selectedGroups.size} selected`;
+        
+        elements.selectedGroupsList.innerHTML = '';
+        state.selectedGroups.forEach(groupKey => {
+          const [type, key] = groupKey.split(':');
+          const group = state.groupedQuestions[type][key];
+          
+          const item = document.createElement('div');
+          item.className = 'badge';
+          item.style.marginRight = '0.5rem';
+          item.style.marginBottom = '0.5rem';
+          item.style.display = 'inline-block';
+          
+          let icon = '';
+          if (type === 'chapters') icon = '<i class="fas fa-book"></i>';
+          else if (type === 'units') icon = '<i class="fas fa-layer-group"></i>';
+          else icon = '<i class="fas fa-tag"></i>';
+          
+          item.innerHTML = `${icon} ${group.name} (${group.questions.length} Qs)`;
+          elements.selectedGroupsList.appendChild(item);
+        });
+        
+        elements.submitBtn.style.display = state.selectedGroups.size > 0 ? 'block' : 'none';
       }
-      
-      showLoading(true, 'Preparing database structure...');
-      elements.progressContainer.style.display = 'block';
-      updateProgress(0);
-      
-      try {
-        let successfulSubmissions = 0;
-        let failedSubmissions = 0;
-        const totalQuestions = questionsToSubmit.length;
-        const subjectSlug = createSlug(state.subject);
+
+      function getSelectedQuestions() {
+        const questions = [];
         
-        // Track created nodes to avoid duplicates
-        const createdNodes = {
-          subjects: new Set(),
-          chapters: new Set(),
-          units: new Set(),
-          topics: new Set()
-        };
+        state.selectedGroups.forEach(groupKey => {
+          const [type, key] = groupKey.split(':');
+          const group = state.groupedQuestions[type][key];
+          if (group) {
+            questions.push(...group.questions);
+          }
+        });
         
-        // Process in batches
-        for (let i = 0; i < totalQuestions; i += BATCH_SIZE) {
-          const batchEnd = Math.min(i + BATCH_SIZE, totalQuestions);
-          const batch = questionsToSubmit.slice(i, batchEnd);
+        return questions;
+      }
+
+      // Authentication Event Listeners
+      elements.logoutBtn.addEventListener('click', () => {
+        auth.signOut().then(() => {
+          window.location.href = 'index.html';
+        });
+      });
+
+      elements.userAvatar.addEventListener('click', () => {
+        elements.dropdownMenu.classList.toggle('show');
+      });
+
+      window.addEventListener('click', (e) => {
+        if (!elements.userMenu.contains(e.target)) {
+          elements.dropdownMenu.classList.remove('show');
+        }
+      });
+
+      // Initialize tabs
+      function initTabs() {
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            tab.classList.add('active');
+            const tabId = tab.dataset.tab + 'Tab';
+            document.getElementById(tabId).classList.add('active');
+            
+            if (tab.dataset.tab === 'reports') {
+              loadReports();
+            }
+          });
+        });
+      }
+
+      // Import Questions Functions
+      async function fetchQuestions() {
+        state.subject = elements.subjectSelect.value;
+        showLoading(true, `Fetching ${state.subject} questions...`);
+        
+        try {
+          const response = await fetch(subjectUrls[state.subject]);
+          if (!response.ok) throw new Error('Failed to fetch questions');
+          const data = await response.json();
           
-          showLoading(true, `Submitting questions ${i+1}-${batchEnd} of ${totalQuestions}...`);
+          state.fetchedQuestions = data;
+          state.groupedQuestions = groupQuestions(data, state.subject);
+          state.selectedGroups = new Set();
           
-          try {
+          elements.questionStats.textContent = `${data.length} questions`;
+          elements.currentSubjectPath.textContent = state.subject;
+          
+          elements.previewContent.innerHTML = `
+            <p>Successfully fetched ${data.length} questions organized into:</p>
+            <ul>
+              <li>${Object.keys(state.groupedQuestions.chapters).length} Chapters</li>
+              <li>${Object.keys(state.groupedQuestions.units).length} Units</li>
+              <li>${Object.keys(state.groupedQuestions.topics).length} Topics</li>
+            </ul>
+          `;
+          
+          renderGroupItems(state.groupedQuestions, 'chapters');
+          renderGroupItems(state.groupedQuestions, 'units');
+          renderGroupItems(state.groupedQuestions, 'topics');
+          
+          elements.groupSelection.style.display = 'block';
+          elements.previewCard.style.display = 'block';
+          elements.statusCard.style.display = 'none';
+          elements.progressContainer.style.display = 'none';
+          
+          updateSelectionUI();
+          
+        } catch (error) {
+          console.error('Error fetching questions:', error);
+          alert(`Failed to fetch questions: ${error.message}`);
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      async function submitQuestions() {
+        const questionsToSubmit = getSelectedQuestions();
+        if (questionsToSubmit.length === 0) {
+          alert('No questions selected for submission');
+          return;
+        }
+        
+        showLoading(true, 'Preparing database structure...');
+        elements.progressContainer.style.display = 'block';
+        updateProgress(0);
+        
+        try {
+          let successfulSubmissions = 0;
+          let failedSubmissions = 0;
+          const totalQuestions = questionsToSubmit.length;
+          const subjectSlug = createSlug(state.subject);
+          
+          const createdNodes = {
+            subjects: new Set(),
+            chapters: new Set(),
+            units: new Set(),
+            topics: new Set()
+          };
+          
+          for (let i = 0; i < totalQuestions; i += BATCH_SIZE) {
+            const batchEnd = Math.min(i + BATCH_SIZE, totalQuestions);
+            const batch = questionsToSubmit.slice(i, batchEnd);
+            
+            showLoading(true, `Submitting questions ${i+1}-${batchEnd} of ${totalQuestions}...`);
+            
             for (const question of batch) {
               try {
                 const chapterSlug = createSlug(question.chapter);
                 const unitSlug = createSlug(question.unit);
                 const topicSlug = createSlug(question.topic);
                 
-                // 1. Ensure subject exists
                 const subjectKey = `subjects/${subjectSlug}`;
                 if (!createdNodes.subjects.has(subjectKey)) {
                   await db.ref(subjectKey).set({
@@ -792,7 +1306,6 @@
                   createdNodes.subjects.add(subjectKey);
                 }
                 
-                // 2. Ensure chapter exists
                 const chapterKey = `${subjectKey}/chapters/${chapterSlug}`;
                 if (!createdNodes.chapters.has(chapterKey)) {
                   await db.ref(chapterKey).set({
@@ -806,7 +1319,6 @@
                   createdNodes.chapters.add(chapterKey);
                 }
                 
-                // 3. Ensure unit exists
                 const unitKey = `${chapterKey}/units/${unitSlug}`;
                 if (!createdNodes.units.has(unitKey)) {
                   await db.ref(unitKey).set({
@@ -822,7 +1334,6 @@
                   createdNodes.units.add(unitKey);
                 }
                 
-                // 4. Ensure topic exists
                 const topicKey = `${unitKey}/topics/${topicSlug}`;
                 if (!createdNodes.topics.has(topicKey)) {
                   await db.ref(topicKey).set({
@@ -840,7 +1351,6 @@
                   createdNodes.topics.add(topicKey);
                 }
                 
-                // 5. Add question
                 const questionRef = db.ref(`${topicKey}/questions`).push();
                 await questionRef.set(question);
                 
@@ -852,94 +1362,508 @@
               }
             }
             
-            // Update progress
             updateProgress((batchEnd / totalQuestions) * 100);
-          } catch (error) {
-            console.error('Error submitting batch:', error);
-            failedSubmissions += batch.length;
           }
+          
+          showLoading(false);
+          elements.statusContent.innerHTML = `
+            <div class="alert alert-success">
+              <i class="fas fa-check-circle"></i> Successfully submitted ${successfulSubmissions} questions!
+            </div>
+            
+            <div class="hierarchy-path">
+              Created database structure: <br>
+              <span>subjects</span> → 
+              <span>${state.subject}</span> → 
+              <span>chapters</span> → 
+              <span>units</span> → 
+              <span>topics</span> → 
+              <span>questions</span>
+            </div>
+            
+            <h3 style="margin-top: 1rem;">Submission Details:</h3>
+            <ul>
+              <li>Subjects created: ${createdNodes.subjects.size}</li>
+              <li>Chapters created: ${createdNodes.chapters.size}</li>
+              <li>Units created: ${createdNodes.units.size}</li>
+              <li>Topics created: ${createdNodes.topics.size}</li>
+            </ul>
+            
+            ${failedSubmissions > 0 ? `
+              <div class="alert alert-error" style="margin-top: 1rem;">
+                <i class="fas fa-exclamation-circle"></i> 
+                ${failedSubmissions} questions failed to submit (check console for details)
+              </div>
+            ` : ''}
+          `;
+          
+          elements.statusCard.style.display = 'block';
+          elements.previewCard.style.display = 'none';
+          
+        } catch (error) {
+          console.error('Submission error:', error);
+          elements.statusContent.innerHTML = `
+            <div class="alert alert-error">
+              <i class="fas fa-exclamation-circle"></i> 
+              Error during submission: ${error.message}
+            </div>
+          `;
+          elements.statusCard.style.display = 'block';
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      // Edit Questions Functions
+      function updateSelectOptions() {
+        elements.loadSubjectSelect.addEventListener('change', async () => {
+          const subject = elements.loadSubjectSelect.value;
+          elements.loadChapterSelect.disabled = !subject;
+          elements.loadChapterSelect.innerHTML = '<option value="">Select Chapter</option>';
+          elements.loadUnitSelect.disabled = true;
+          elements.loadUnitSelect.innerHTML = '<option value="">Select Unit</option>';
+          elements.loadTopicSelect.disabled = true;
+          elements.loadTopicSelect.innerHTML = '<option value="">Select Topic</option>';
+          
+          if (subject) {
+            showLoading(true, 'Loading chapters...');
+            try {
+              const chaptersSnapshot = await db.ref(`subjects/${createSlug(subject)}/chapters`).once('value');
+              const chapters = chaptersSnapshot.val() || {};
+              state.chapters = chapters;
+              Object.entries(chapters).forEach(([slug, chapter]) => {
+                const option = document.createElement('option');
+                option.value = slug;
+                option.textContent = chapter.name;
+                elements.loadChapterSelect.appendChild(option);
+              });
+              elements.loadChapterSelect.disabled = false;
+            } catch (error) {
+              console.error('Error loading chapters:', error);
+              alert('Failed to load chapters');
+            } finally {
+              showLoading(false);
+            }
+          }
+        });
+
+        elements.loadChapterSelect.addEventListener('change', async () => {
+          const subject = elements.loadSubjectSelect.value;
+          const chapter = elements.loadChapterSelect.value;
+          elements.loadUnitSelect.disabled = !chapter;
+          elements.loadUnitSelect.innerHTML = '<option value="">Select Unit</option>';
+          elements.loadTopicSelect.disabled = true;
+          elements.loadTopicSelect.innerHTML = '<option value="">Select Topic</option>';
+          
+          if (chapter) {
+            showLoading(true, 'Loading units...');
+            try {
+              const unitsSnapshot = await db.ref(`subjects/${createSlug(subject)}/chapters/${chapter}/units`).once('value');
+              const units = unitsSnapshot.val() || {};
+              state.units = units;
+              Object.entries(units).forEach(([slug, unit]) => {
+                const option = document.createElement('option');
+                option.value = slug;
+                option.textContent = unit.name;
+                elements.loadUnitSelect.appendChild(option);
+              });
+              elements.loadUnitSelect.disabled = false;
+            } catch (error) {
+              console.error('Error loading units:', error);
+              alert('Failed to load units');
+            } finally {
+              showLoading(false);
+            }
+          }
+        });
+
+        elements.loadUnitSelect.addEventListener('change', async () => {
+          const subject = elements.loadSubjectSelect.value;
+          const chapter = elements.loadChapterSelect.value;
+          const unit = elements.loadUnitSelect.value;
+          elements.loadTopicSelect.disabled = !unit;
+          elements.loadTopicSelect.innerHTML = '<option value="">Select Topic</option>';
+          
+          if (unit) {
+            showLoading(true, 'Loading topics...');
+            try {
+              const topicsSnapshot = await db.ref(`subjects/${createSlug(subject)}/chapters/${chapter}/units/${unit}/topics`).once('value');
+              const topics = topicsSnapshot.val() || {};
+              state.topics = topics;
+              Object.entries(topics).forEach(([slug, topic]) => {
+                const option = document.createElement('option');
+                option.value = slug;
+                option.textContent = topic.name;
+                elements.loadTopicSelect.appendChild(option);
+              });
+              elements.loadTopicSelect.disabled = false;
+            } catch (error) {
+              console.error('Error loading topics:', error);
+              alert('Failed to load topics');
+            } finally {
+              showLoading(false);
+            }
+          }
+        });
+      }
+
+      async function loadQuestions() {
+        const subject = elements.loadSubjectSelect.value;
+        const chapter = elements.loadChapterSelect.value;
+        const unit = elements.loadUnitSelect.value;
+        const topic = elements.loadTopicSelect.value;
+        const questionId = elements.loadQuestionId.value.trim();
+        
+        if (!subject && !chapter && !unit && !topic && !questionId) {
+          alert('Please select at least one filter criterion or enter a question ID');
+          return;
+        }
+
+        showLoading(true, 'Loading questions...');
+        try {
+          let questions = [];
+          if (questionId) {
+            // Search for specific question by ID
+            const subjects = ['biology', 'chemistry', 'physics'];
+            for (const subj of subjects) {
+              const snapshot = await db.ref(`subjects/${createSlug(subj)}`).once('value');
+              const subjectData = snapshot.val();
+              if (subjectData?.chapters) {
+                for (const chapKey in subjectData.chapters) {
+                  if (subjectData.chapters[chapKey].units) {
+                    for (const unitKey in subjectData.chapters[chapKey].units) {
+                      if (subjectData.chapters[chapKey].units[unitKey].topics) {
+                        for (const topicKey in subjectData.chapters[chapKey].units[unitKey].topics) {
+                          const qSnapshot = await db.ref(`subjects/${createSlug(subj)}/chapters/${chapKey}/units/${unitKey}/topics/${topicKey}/questions/${questionId}`).once('value');
+                          if (qSnapshot.exists()) {
+                            questions.push({
+                              id: questionId,
+                              ...qSnapshot.val(),
+                              subject: subj,
+                              chapterSlug: chapKey,
+                              unitSlug: unitKey,
+                              topicSlug: topicKey
+                            });
+                            break;
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } else {
+            // Load questions based on hierarchy
+            let path = `subjects/${createSlug(subject)}`;
+            if (chapter) path += `/chapters/${chapter}`;
+            if (unit) path += `/units/${unit}`;
+            if (topic) path += `/topics/${topic}`;
+            path += '/questions';
+            
+            const snapshot = await db.ref(path).once('value');
+            const questionsData = snapshot.val() || {};
+            questions = Object.entries(questionsData).map(([id, q]) => ({
+              id,
+              ...q,
+              subject,
+              chapterSlug: chapter || '',
+              unitSlug: unit || '',
+              topicSlug: topic || ''
+            }));
+          }
+          
+          state.loadedQuestions = questions;
+          elements.questionsCount.textContent = `${questions.length} questions`;
+          elements.questionsTableBody.innerHTML = '';
+          
+          if (questions.length > 0) {
+            questions.forEach(q => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${q.question.substring(0, 50)}${q.question.length > 50 ? '...' : ''}</td>
+                <td>${q.quiz_type}</td>
+                <td>${q.chapter}</td>
+                <td>${q.unit}</td>
+                <td>${q.topic}</td>
+                <td>
+                  <button class="btn btn-primary btn-sm edit-btn" data-id="${q.id}" data-subject="${q.subject}" data-chapter="${q.chapterSlug}" data-unit="${q.unitSlug}" data-topic="${q.topicSlug}">
+                    <i class="fas fa-edit"></i> Edit
+                  </button>
+                </td>
+              `;
+              elements.questionsTableBody.appendChild(row);
+            });
+            elements.questionsListCard.style.display = 'block';
+          } else {
+            elements.questionsListCard.style.display = 'block';
+            elements.questionsTableBody.innerHTML = `
+              <tr>
+                <td colspan="6" style="text-align: center;">No questions found</td>
+              </tr>`;
+          }
+        } catch (error) {
+          console.error('Error loading questions:', error);
+          alert('Failed to load questions');
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      function editQuestion(questionId, subject, chapterSlug, unitSlug, topicSlug) {
+        const question = state.loadedQuestions.find(q => q.id === questionId);
+        if (!question) {
+          alert('Question not found');
+          return;
+        }
+
+        elements.editQuestionId.value = questionId;
+        elements.editSubject.value = subject;
+        elements.editQuestionText.value = question.question;
+        elements.editQuizType.value = question.quiz_type;
+        elements.editOptionA.value = question.option_a || '';
+        elements.editOptionB.value = question.option_b || '';
+        elements.editOptionC.value = question.option_c || '';
+        elements.editOptionD.value = question.option_d || '';
+        elements.editAnswer.value = question.answer;
+        elements.editExplanation.value = question.explanation || '';
+        elements.editChapter.value = question.chapter;
+        elements.editUnit.value = question.unit;
+        elements.editTopic.value = question.topic;
+        
+        elements.mcqOptions.style.display = question.quiz_type === 'mcq' || question.quiz_type === 'match' ? 'block' : 'none';
+        elements.deleteQuestionBtn.style.display = questionId ? 'block' : 'none';
+        elements.editQuestionModal.style.display = 'flex';
+      }
+
+      async function saveQuestion() {
+        const questionData = {
+          subject: elements.editSubject.value,
+          question: elements.editQuestionText.value,
+          quiz_type: elements.editQuizType.value,
+          answer: elements.editAnswer.value,
+          explanation: elements.editExplanation.value || undefined,
+          chapter: elements.editChapter.value,
+          unit: elements.editUnit.value,
+          topic: elements.editTopic.value,
+          topic_name: `${elements.editChapter.value}>>${elements.editUnit.value}>>${elements.editTopic.value}`,
+          ...(elements.editQuizType.value === 'mcq' || elements.editQuizType.value === 'match' ? {
+            option_a: elements.editOptionA.value || undefined,
+            option_b: elements.editOptionB.value || undefined,
+            option_c: elements.editOptionC.value || undefined,
+            option_d: elements.editOptionD.value || undefined
+          } : {}),
+          updatedAt: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        showLoading(true, 'Saving question...');
+        try {
+          const subjectSlug = createSlug(elements.editSubject.value);
+          const chapterSlug = createSlug(elements.editChapter.value);
+          const unitSlug = createSlug(elements.editUnit.value);
+          const topicSlug = createSlug(elements.editTopic.value);
+          
+          const questionId = elements.editQuestionId.value || db.ref().push().key;
+          const path = `subjects/${subjectSlug}/chapters/${chapterSlug}/units/${unitSlug}/topics/${topicSlug}/questions/${questionId}`;
+          
+          await db.ref(path).set(questionData);
+          elements.editQuestionModal.style.display = 'none';
+          alert('Question saved successfully!');
+          loadQuestions();
+        } catch (error) {
+          console.error('Error saving question:', error);
+          alert('Failed to save question');
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      async function deleteQuestion() {
+        if (!confirm('Are you sure you want to delete this question?')) {
+          return;
+        }
+
+        showLoading(true, 'Deleting question...');
+        try {
+          const questionId = elements.editQuestionId.value;
+          const subject = elements.editSubject.value;
+          const chapterSlug = createSlug(elements.editChapter.value);
+          const unitSlug = createSlug(elements.editUnit.value);
+          const topicSlug = createSlug(elements.editTopic.value);
+          
+          const path = `subjects/${createSlug(subject)}/chapters/${chapterSlug}/units/${unitSlug}/topics/${topicSlug}/questions/${questionId}`;
+          
+          await db.ref(path).remove();
+          elements.editQuestionModal.style.display = 'none';
+          alert('Question deleted successfully!');
+          loadQuestions();
+        } catch (error) {
+          console.error('Error deleting question:', error);
+          alert('Failed to delete question');
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      // Question Reports Functions
+      async function loadReports() {
+        showLoading(true, 'Loading reports...');
+        try {
+          const snapshot = await db.ref('questionReports').once('value');
+          state.reports = snapshot.val() || {};
+          filterReports();
+        } catch (error) {
+          console.error('Error loading reports:', error);
+          alert('Failed to load reports');
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      function filterReports() {
+        const subjectFilter = elements.reportSubjectFilter.value;
+        const reasonFilter = elements.reportReasonFilter.value;
+        
+        const reportsArray = Object.entries(state.reports || {}).map(([id, r]) => ({
+          id,
+          ...r
+        }));
+        
+        const filteredReports = reportsArray.filter(report => {
+          const subjectMatch = !subjectFilter || report.subject === subjectFilter;
+          const reasonMatch = !reasonFilter || report.reason === reasonFilter;
+          return subjectMatch && reasonMatch;
+        });
+        
+        elements.reportsTableBody.innerHTML = '';
+        if (filteredReports.length === 0) {
+          elements.reportsTableBody.innerHTML = `
+            <tr>
+              <td colspan="5" style="text-align: center;">No reports found</td>
+            </tr>
+          `;
+          return;
         }
         
-        // Show results
-        showLoading(false);
-        elements.statusContent.innerHTML = `
-          <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i> Successfully submitted ${successfulSubmissions} questions!
-          </div>
-          
-          <div class="hierarchy-path">
-            Created database structure: <br>
-            <span>subjects</span> → 
-            <span>${state.subject}</span> → 
-            <span>chapters</span> → 
-            <span>units</span> → 
-            <span>topics</span> → 
-            <span>questions</span>
-          </div>
-          
-          <h3 style="margin-top: 1rem;">Submission Details:</h3>
-          <ul>
-            <li>Subjects created: ${createdNodes.subjects.size}</li>
-            <li>Chapters created: ${createdNodes.chapters.size}</li>
-            <li>Units created: ${createdNodes.units.size}</li>
-            <li>Topics created: ${createdNodes.topics.size}</li>
-          </ul>
-          
-          ${failedSubmissions > 0 ? `
-            <div class="alert alert-error" style="margin-top: 1rem;">
-              <i class="fas fa-exclamation-circle"></i> 
-              ${failedSubmissions} questions failed to submit (check console for details)
-            </div>
-          ` : ''}
-        `;
-        
-        elements.statusCard.style.display = 'block';
-        elements.previewCard.style.display = 'none';
-        
-      } catch (error) {
-        console.error('Submission error:', error);
-        elements.statusContent.innerHTML = `
-          <div class="alert alert-error">
-            <i class="fas fa-exclamation-circle"></i> 
-            Error during submission: ${error.message}
-          </div>
-        `;
-        elements.statusCard.style.display = 'block';
-      } finally {
-        showLoading(false);
+        filteredReports.forEach(report => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${report.questionId}</td>
+            <td>${report.subject}</td>
+            <td>${report.reason}</td>
+            <td>${new Date(report.timestamp).toLocaleString()}</td>
+            <td>
+              <button class="btn btn-primary btn-sm view-report-btn" data-id="${report.id}">
+                <i class="fas fa-eye"></i> View
+              </button>
+            </td>
+          `;
+          elements.reportsTableBody.appendChild(row);
+        });
       }
-    }
 
-    // Event Listeners
-    elements.fetchBtn.addEventListener('click', fetchQuestions);
-    elements.submitBtn.addEventListener('click', submitQuestions);
-    
-    elements.selectAllBtn.addEventListener('click', () => {
-      Object.keys(state.groupedQuestions.chapters).forEach(key => {
-        state.selectedGroups.add(`chapters:${key}`);
-      });
-      Object.keys(state.groupedQuestions.units).forEach(key => {
-        state.selectedGroups.add(`units:${key}`);
-      });
-      Object.keys(state.groupedQuestions.topics).forEach(key => {
-        state.selectedGroups.add(`topics:${key}`);
-      });
-      
-      document.querySelectorAll('.group-item').forEach(item => {
-        item.classList.add('selected');
-        item.querySelector('.badge').classList.add('badge-primary');
-      });
-      
-      updateSelectionUI();
-    });
-    
-    elements.deselectAllBtn.addEventListener('click', () => {
-      state.selectedGroups.clear();
-      document.querySelectorAll('.group-item').forEach(item => {
-        item.classList.remove('selected');
-        item.querySelector('.badge').classList.remove('badge-primary');
-      });
-      updateSelectionUI();
+      function viewReportDetails(id) {
+        const report = state.reports[id];
+        if (!report) {
+          alert('Report not found');
+          return;
+        }
+        
+        elements.reportDetailsContent.innerHTML = `
+          <div><strong>Question ID:</strong> ${report.questionId}</div>
+          <div><strong>Subject:</strong> ${report.subject}</div>
+          <div><strong>Reason:</strong> ${report.reason}</div>
+          <div><strong>User ID:</strong> ${report.userId}</div>
+          <div><strong>Timestamp:</strong> ${new Date(report.timestamp).toLocaleString()}</div>
+          ${report.chapter ? `<div><strong>Chapter:</strong> ${report.chapter}</div>` : ''}
+          ${report.unit ? `<div><strong>Unit:</strong> ${report.unit}</div>` : ''}
+          ${report.topic ? `<div><strong>Topic:</strong> ${report.topic}</div>` : ''}
+          ${report.quizType ? `<div><strong>Quiz Type:</strong> ${report.quizType}</div>` : ''}
+          ${report.questionText ? `<div><strong>Question Text:</strong> ${report.questionText}</div>` : ''}
+          ${report.userEmail ? `<div><strong>User Email:</strong> ${report.userEmail}</div>` : ''}
+          ${report.userName ? `<div><strong>User Name:</strong> ${report.userName}</div>` : ''}
+          ${report.deviceInfo ? `<div><strong>Device Info:</strong> ${JSON.stringify(report.deviceInfo)}</div>` : ''}
+          ${report.location ? `<div><strong>Location:</strong> ${JSON.stringify(report.location)}</div>` : ''}
+          ${report.dppId ? `<div><strong>DPP ID:</strong> ${report.dppId}</div>` : ''}
+          ${report.testId ? `<div><strong>Test ID:</strong> ${report.testId}</div>` : ''}
+        `;
+        elements.reportDetailsModal.style.display = 'flex';
+      }
+
+      // Initialize app
+      function initApp() {
+        initTabs();
+        elements.fetchBtn.addEventListener('click', fetchQuestions);
+        elements.submitBtn.addEventListener('click', submitQuestions);
+        elements.selectAllBtn.addEventListener('click', () => {
+          Object.keys(state.groupedQuestions.chapters).forEach(key => {
+            state.selectedGroups.add(`chapters:${key}`);
+          });
+          Object.keys(state.groupedQuestions.units).forEach(key => {
+            state.selectedGroups.add(`units:${key}`);
+          });
+          Object.keys(state.groupedQuestions.topics).forEach(key => {
+            state.selectedGroups.add(`topics:${key}`);
+          });
+          document.querySelectorAll('.group-item').forEach(item => {
+            item.classList.add('selected');
+            item.querySelector('.badge').classList.add('badge-primary');
+          });
+          updateSelectionUI();
+        });
+        
+        elements.deselectAllBtn.addEventListener('click', () => {
+          state.selectedGroups.clear();
+          document.querySelectorAll('.group-item').forEach(item => {
+            item.classList.remove('selected');
+            item.querySelector('.badge').classList.remove('badge-primary');
+          });
+          updateSelectionUI();
+        });
+        
+        // Edit Questions
+        elements.loadQuestionsBtn.addEventListener('click', loadQuestions);
+        elements.closeEditModalBtn.addEventListener('click', () => {
+          elements.editQuestionModal.style.display = 'none';
+        });
+        elements.cancelEditBtn.addEventListener('click', () => {
+          elements.editQuestionModal.style.display = 'none';
+        });
+        elements.saveQuestionBtn.addEventListener('click', saveQuestion);
+        elements.deleteQuestionBtn.addEventListener('click', deleteQuestion);
+        elements.questionsTableBody.addEventListener('click', (e) => {
+          if (e.target.closest('.edit-btn')) {
+            const btn = e.target.closest('.edit-btn');
+            editQuestion(
+              btn.dataset.id,
+              btn.dataset.subject,
+              btn.dataset.chapter,
+              btn.dataset.unit,
+              btn.dataset.topic
+            );
+          }
+        });
+        elements.editQuizType.addEventListener('change', () => {
+          elements.mcqOptions.style.display = elements.editQuizType.value === 'mcq' || elements.editQuizType.value === 'match' ? 'block' : 'none';
+        });
+        updateSelectOptions();
+        
+        // Reports
+        elements.reportSubjectFilter.addEventListener('change', filterReports);
+        elements.reportReasonFilter.addEventListener('change', filterReports);
+        elements.closeReportModalBtn.addEventListener('click', () => {
+          elements.reportDetailsModal.style.display = 'none';
+        });
+        elements.closeReportDetailsBtn.addEventListener('click', () => {
+          elements.reportDetailsModal.style.display = 'none';
+        });
+        elements.reportsTableBody.addEventListener('click', (e) => {
+          if (e.target.closest('.view-report-btn')) {
+            const btn = e.target.closest('.view-report-btn');
+            viewReportDetails(btn.dataset.id);
+          }
+        });
+      }
     });
   </script>
 </body>

@@ -122,6 +122,7 @@
     .card {
       background-color: white;
       border-radius: var(--radius-md);
+；
       box-shadow: var(--shadow-sm);
       overflow: hidden;
       margin-bottom: 1.5rem;
@@ -287,6 +288,16 @@
       color: var(--text-light);
     }
 
+    .error-message {
+      color: var(--error);
+      font-size: 0.875rem;
+      text-align: center;
+      padding: 1rem;
+      background-color: #fee2e2;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1rem;
+    }
+
     @media (max-width: 640px) {
       .main-content {
         padding: 1rem;
@@ -337,6 +348,7 @@
             <div class="loading" id="weeklyLoading">
               <div class="spinner"></div>
             </div>
+            <div class="error-message" id="weeklyError" style="display: none;"></div>
             <ul class="leaderboard-list" id="weeklyToppers"></ul>
             <div class="empty-state" id="weeklyEmpty" style="display: none;">
               <i class="fas fa-exclamation-circle empty-state-icon"></i>
@@ -353,6 +365,7 @@
             <div class="loading" id="monthlyLoading">
               <div class="spinner"></div>
             </div>
+            <div class="error-message" id="monthlyError" style="display: none;"></div>
             <ul class="leaderboard-list" id="monthlyToppers"></ul>
             <div class="empty-state" id="monthlyEmpty" style="display: none;">
               <i class="fas fa-exclamation-circle empty-state-icon"></i>
@@ -369,6 +382,7 @@
             <div class="loading" id="latestLoading">
               <div class="spinner"></div>
             </div>
+            <div class="error-message" id="latestError" style="display: none;"></div>
             <ul class="leaderboard-list" id="latestAttempts"></ul>
             <div class="empty-state" id="latestEmpty" style="display: none;">
               <i class="fas fa-exclamation-circle empty-state-icon"></i>
@@ -396,7 +410,14 @@
         measurementId: "G-7YD8RLH33Q"
       };
 
-      firebase.initializeApp(firebaseConfig);
+      try {
+        firebase.initializeApp(firebaseConfig);
+      } catch (error) {
+        console.error('Firebase initialization failed:', error);
+        alert('Failed to initialize Firebase. Please check your configuration.');
+        return;
+      }
+
       const auth = firebase.auth();
       const database = firebase.database();
 
@@ -413,26 +434,41 @@
         latestLoading: document.getElementById('latestLoading'),
         weeklyEmpty: document.getElementById('weeklyEmpty'),
         monthlyEmpty: document.getElementById('monthlyEmpty'),
-        latestEmpty: document.getElementById('latestEmpty')
+        latestEmpty: document.getElementById('latestEmpty'),
+        weeklyError: document.getElementById('weeklyError'),
+        monthlyError: document.getElementById('monthlyError'),
+        latestError: document.getElementById('latestError')
       };
 
-      Object.keys(elements).forEach(key => {
-        if (!elements[key]) {
+      Object.entries(elements).forEach(([key, element]) => {
+        if (!element) {
           console.warn(`Element with ID '${key}' not found in DOM.`);
         }
       });
 
       function showLoading(section, show) {
-        if (elements[`${section}Loading`] && elements[`${section}Empty`]) {
+        if (elements[`${section}Loading`] && elements[`${section}Empty`] && elements[`${section}Error`]) {
           elements[`${section}Loading`].style.display = show ? 'flex' : 'none';
           elements[`${section}Empty`].style.display = 'none';
+          elements[`${section}Error`].style.display = 'none';
         }
       }
 
-      function showEmpty(section) {
-        if (elements[`${section}Empty`] && elements[`${section}Loading`]) {
+      function showEmpty(section, message = `No ${section} data available.`) {
+        if (elements[`${section}Empty`] && elements[`${section}Loading`] && elements[`${section}Error`]) {
           elements[`${section}Empty`].style.display = 'block';
+          elements[`${section}Empty`].querySelector('div').textContent = message;
           elements[`${section}Loading`].style.display = 'none';
+          elements[`${section}Error`].style.display = 'none';
+        }
+      }
+
+      function showError(section, message) {
+        if (elements[`${section}Error`] && elements[`${section}Loading`] && elements[`${section}Empty`]) {
+          elements[`${section}Error`].textContent = message;
+          elements[`${section}Error`].style.display = 'block';
+          elements[`${section}Loading`].style.display = 'none';
+          elements[`${section}Empty`].style.display = 'none';
         }
       }
 
@@ -440,10 +476,11 @@
         try {
           const snapshot = await database.ref(`users/${userId}`).once('value');
           const userData = snapshot.val();
-          return userData || { displayName: 'Anonymous', photoURL: null };
+          console.log(`Fetched user data for ${userId}:`, userData);
+          return userData || { name: 'Anonymous', photoURL: null };
         } catch (error) {
           console.error(`Error fetching user data for ${userId}:`, error);
-          return { displayName: 'Anonymous', photoURL: null };
+          return { name: 'Anonymous', photoURL: null };
         }
       }
 
@@ -452,19 +489,28 @@
         try {
           const snapshot = await database.ref('quizHistory').once('value');
           const allResults = snapshot.val();
-          const weeklyResults = [];
+          if (!allResults) {
+            console.warn('No quiz history data found.');
+            showEmpty('weekly', 'No quiz results available for the past week.');
+            return;
+          }
 
+          const weeklyResults = [];
           const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
           for (const userId in allResults) {
             const userResults = allResults[userId];
             for (const resultId in userResults) {
               const result = userResults[resultId];
-              if (result.date && result.date > oneWeekAgo) {
+              if (!result.date || !Number.isFinite(result.score) || !Number.isFinite(result.total)) {
+                console.warn(`Invalid result data for user ${userId}, result ${resultId}:`, result);
+                continue;
+              }
+              if (result.date > oneWeekAgo) {
                 const user = await fetchUserData(userId);
                 weeklyResults.push({
                   userId,
-                  displayName: user.name || user.displayName,
+                  displayName: user.name || 'Anonymous',
                   photoURL: user.photoURL,
                   score: result.score,
                   total: result.total,
@@ -475,28 +521,31 @@
             }
           }
 
+          console.log('Weekly results:', weeklyResults);
           weeklyResults.sort((a, b) => b.percentage - a.percentage || b.date - a.date);
           const top10 = weeklyResults.slice(0, 10);
 
-          elements.weeklyToppers.innerHTML = top10.map((result, index) => `
-            <li class="leaderboard-item">
-              <span class="leaderboard-rank">${index + 1}</span>
-              <div class="leaderboard-user">
-                <div class="leaderboard-avatar" ${result.photoURL ? `style="background-image: url(${result.photoURL})"` : ''}>
-                  ${result.photoURL ? '' : (result.displayName ? result.displayName.charAt(0).toUpperCase() : 'A')}
+          if (elements.weeklyToppers) {
+            elements.weeklyToppers.innerHTML = top10.map((result, index) => `
+              <li class="leaderboard-item">
+                <span class="leaderboard-rank">${index + 1}</span>
+                <div class="leaderboard-user">
+                  <div class="leaderboard-avatar" ${result.photoURL ? `style="background-image: url(${result.photoURL})"` : ''}>
+                    ${result.photoURL ? '' : (result.displayName ? result.displayName.charAt(0).toUpperCase() : 'A')}
+                  </div>
+                  <span>${result.displayName}</span>
                 </div>
-                <span>${result.displayName || 'Anonymous'}</span>
-              </div>
-              <span class="leaderboard-score">${result.score}/${result.total} (${Math.round(result.percentage)}%)</span>
-            </li>
-          `).join('');
+                <span class="leaderboard-score">${result.score}/${result.total} (${Math.round(result.percentage)}%)</span>
+              </li>
+            `).join('');
+          }
 
           if (top10.length === 0) {
-            showEmpty('weekly');
+            showEmpty('weekly', 'No quiz results from the past week.');
           }
         } catch (error) {
           console.error('Error loading weekly toppers:', error);
-          showEmpty('weekly');
+          showError('weekly', `Failed to load weekly toppers: ${error.message}`);
         } finally {
           showLoading('weekly', false);
         }
@@ -507,19 +556,28 @@
         try {
           const snapshot = await database.ref('quizHistory').once('value');
           const allResults = snapshot.val();
-          const monthlyResults = [];
+          if (!allResults) {
+            console.warn('No quiz history data found.');
+            showEmpty('monthly', 'No quiz results available for the past month.');
+            return;
+          }
 
+          const monthlyResults = [];
           const oneMonthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
           for (const userId in allResults) {
             const userResults = allResults[userId];
             for (const resultId in userResults) {
               const result = userResults[resultId];
-              if (result.date && result.date > oneMonthAgo) {
+              if (!result.date || !Number.isFinite(result.score) || !Number.isFinite(result.total)) {
+                console.warn(`Invalid result data for user ${userId}, result ${resultId}:`, result);
+                continue;
+              }
+              if (result.date > oneMonthAgo) {
                 const user = await fetchUserData(userId);
                 monthlyResults.push({
                   userId,
-                  displayName: user.name || user.displayName,
+                  displayName: user.name || 'Anonymous',
                   photoURL: user.photoURL,
                   score: result.score,
                   total: result.total,
@@ -530,28 +588,31 @@
             }
           }
 
+          console.log('Monthly results:', monthlyResults);
           monthlyResults.sort((a, b) => b.percentage - a.percentage || b.date - a.date);
           const top20 = monthlyResults.slice(0, 20);
 
-          elements.monthlyToppers.innerHTML = top20.map((result, index) => `
-            <li class="leaderboard-item">
-              <span class="leaderboard-rank">${index + 1}</span>
-              <div class="leaderboard-user">
-                <div class="leaderboard-avatar" ${result.photoURL ? `style="background-image: url(${result.photoURL})"` : ''}>
-                  ${result.photoURL ? '' : (result.displayName ? result.displayName.charAt(0).toUpperCase() : 'A')}
+          if (elements.monthlyToppers) {
+            elements.monthlyToppers.innerHTML = top20.map((result, index) => `
+              <li class="leaderboard-item">
+                <span class="leaderboard-rank">${index + 1}</span>
+                <div class="leaderboard-user">
+                  <div class="leaderboard-avatar" ${result.photoURL ? `style="background-image: url(${result.photoURL})"` : ''}>
+                    ${result.photoURL ? '' : (result.displayName ? result.displayName.charAt(0).toUpperCase() : 'A')}
+                  </div>
+                  <span>${result.displayName}</span>
                 </div>
-                <span>${result.displayName || 'Anonymous'}</span>
-              </div>
-              <span class="leaderboard-score">${result.score}/${result.total} (${Math.round(result.percentage)}%)</span>
-            </li>
-          `).join('');
+                <span class="leaderboard-score">${result.score}/${result.total} (${Math.round(result.percentage)}%)</span>
+              </li>
+            `).join('');
+          }
 
           if (top20.length === 0) {
-            showEmpty('monthly');
+            showEmpty('monthly', 'No quiz results from the past month.');
           }
         } catch (error) {
           console.error('Error loading monthly toppers:', error);
-          showEmpty('monthly');
+          showError('monthly', `Failed to load monthly toppers: ${error.message}`);
         } finally {
           showLoading('monthly', false);
         }
@@ -562,16 +623,25 @@
         try {
           const snapshot = await database.ref('quizHistory').once('value');
           const allResults = snapshot.val();
-          const latestResults = [];
+          if (!allResults) {
+            console.warn('No quiz history data found.');
+            showEmpty('latest', 'No recent quiz attempts available.');
+            return;
+          }
 
+          const latestResults = [];
           for (const userId in allResults) {
             const userResults = allResults[userId];
             for (const resultId in userResults) {
               const result = userResults[resultId];
+              if (!result.date || !Number.isFinite(result.score) || !Number.isFinite(result.total) || !result.subject) {
+                console.warn(`Invalid result data for user ${userId}, result ${resultId}:`, result);
+                continue;
+              }
               const user = await fetchUserData(userId);
               latestResults.push({
                 userId,
-                displayName: user.name || user.displayName,
+                displayName: user.name || 'Anonymous',
                 photoURL: user.photoURL,
                 score: result.score,
                 total: result.total,
@@ -582,28 +652,31 @@
             }
           }
 
+          console.log('Latest results:', latestResults);
           latestResults.sort((a, b) => b.date - a.date);
           const top10 = latestResults.slice(0, 10);
 
-          elements.latestAttempts.innerHTML = top10.map((result, index) => `
-            <li class="leaderboard-item">
-              <span class="leaderboard-rank">${index + 1}</span>
-              <div class="leaderboard-user">
-                <div class="leaderboard-avatar" ${result.photoURL ? `style="background-image: url(${result.photoURL})"` : ''}>
-                  ${result.photoURL ? '' : (result.displayName ? result.displayName.charAt(0).toUpperCase() : 'A')}
+          if (elements.latestAttempts) {
+            elements.latestAttempts.innerHTML = top10.map((result, index) => `
+              <li class="leaderboard-item">
+                <span class="leaderboard-rank">${index + 1}</span>
+                <div class="leaderboard-user">
+                  <div class="leaderboard-avatar" ${result.photoURL ? `style="background-image: url(${result.photoURL})"` : ''}>
+                    ${result.photoURL ? '' : (result.displayName ? result.displayName.charAt(0).toUpperCase() : 'A')}
+                  </div>
+                  <span>${result.displayName}</span>
                 </div>
-                <span>${result.displayName || 'Anonymous'}</span>
-              </div>
-              <span class="leaderboard-score">${result.score}/${result.total} (${Math.round(result.percentage)}%) - ${result.subject.charAt(0).toUpperCase() + result.subject.slice(1)}</span>
-            </li>
-          `).join('');
+                <span class="leaderboard-score">${result.score}/${result.total} (${Math.round(result.percentage)}%) - ${result.subject.charAt(0).toUpperCase() + result.subject.slice(1)}</span>
+              </li>
+            `).join('');
+          }
 
           if (top10.length === 0) {
-            showEmpty('latest');
+            showEmpty('latest', 'No recent quiz attempts available.');
           }
         } catch (error) {
           console.error('Error loading latest attempts:', error);
-          showEmpty('latest');
+          showError('latest', `Failed to load latest attempts: ${error.message}`);
         } finally {
           showLoading('latest', false);
         }
@@ -627,30 +700,36 @@
           });
         }
 
-        window.addEventListener('click', (e) => {
-          if (elements.userMenu && elements.dropdownMenu && !elements.userMenu.contains(e.target)) {
-            elements.dropdownMenu.classList.remove('show');
-          }
-        });
+        if (elements.userMenu && elements.dropdownMenu) {
+          window.addEventListener('click', (e) => {
+            if (!elements.userMenu.contains(e.target)) {
+              elements.dropdownMenu.classList.remove('show');
+            }
+          });
+        }
       }
 
       auth.onAuthStateChanged((user) => {
         if (!user) {
+          console.log('No user authenticated, redirecting to index.html');
           window.location.href = 'index.html';
-        } else {
-          if (elements.userAvatar) {
-            if (user.photoURL) {
-              elements.userAvatar.style.backgroundImage = `url(${user.photoURL})`;
-              elements.userAvatar.textContent = '';
-            } else {
-              elements.userAvatar.textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U';
-            }
-          }
-          initEventListeners();
-          loadWeeklyToppers();
-          loadMonthlyToppers();
-          loadLatestAttempts();
+          return;
         }
+
+        if (elements.userAvatar) {
+          if (user.photoURL) {
+            elements.userAvatar.style.backgroundImage = `url(${user.photoURL})`;
+            elements.userAvatar.textContent = '';
+          } else {
+            elements.userAvatar.textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U';
+          }
+        }
+
+        console.log('User authenticated:', user.uid);
+        initEventListeners();
+        loadWeeklyToppers();
+        loadMonthlyToppers();
+        loadLatestAttempts();
       });
     });
   </script>

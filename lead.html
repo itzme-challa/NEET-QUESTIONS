@@ -436,12 +436,6 @@
         }
       }
 
-      function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-      }
-
       async function fetchUserData(userId) {
         try {
           const snapshot = await database.ref(`users/${userId}`).once('value');
@@ -470,7 +464,7 @@
                 const user = await fetchUserData(userId);
                 weeklyResults.push({
                   userId,
-                  displayName: user.displayName,
+                  displayName: user.name || user.displayName,
                   photoURL: user.photoURL,
                   score: result.score,
                   total: result.total,
@@ -525,7 +519,7 @@
                 const user = await fetchUserData(userId);
                 monthlyResults.push({
                   userId,
-                  displayName: user.displayName,
+                  displayName: user.name || user.displayName,
                   photoURL: user.photoURL,
                   score: result.score,
                   total: result.total,
@@ -577,7 +571,7 @@
               const user = await fetchUserData(userId);
               latestResults.push({
                 userId,
-                displayName: user.displayName,
+                displayName: user.name || user.displayName,
                 photoURL: user.photoURL,
                 score: result.score,
                 total: result.total,
@@ -600,7 +594,7 @@
                 </div>
                 <span>${result.displayName || 'Anonymous'}</span>
               </div>
-              <span class="leaderboard-score">${result.score}/${result.total} (${Math.round(result.percentage)}%) - ${result.subject}</span>
+              <span class="leaderboard-score">${result.score}/${result.total} (${Math.round(result.percentage)}%) - ${result.subject.charAt(0).toUpperCase() + result.subject.slice(1)}</span>
             </li>
           `).join('');
 

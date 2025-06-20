@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NEET Quiz Admin</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -375,7 +375,7 @@
                 <span>Hierarchy Groups</span>
               </div>
               <div class="hierarchy-path">
-                Firestore path: <span>subjects</span> → <span id="currentSubjectPath"></span> → <span>chapters</span> → <span>units</span> → <span>topics</span> → <span>questions</span>
+                Database path: <span>subjects</span> → <span id="currentSubjectPath"></span> → <span>chapters</span> → <span>units</span> → <span>topics</span> → <span>questions</span>
               </div>
               
               <div class="group-list" id="chapterList"></div>
@@ -405,7 +405,7 @@
           </div>
           
           <button id="submitBtn" class="btn btn-primary" style="margin-top: 1.5rem; display: none;">
-            <i class="fas fa-save"></i> Submit to Firestore
+            <i class="fas fa-save"></i> Submit to Database
           </button>
         </div>
       </div>
@@ -443,7 +443,7 @@
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const db = firebase.database();
 
     // DOM Elements
     const elements = {
@@ -477,7 +477,6 @@
       physics: 'https://eduhub-kmr.pages.dev/data/physics.json'
     };
     const BATCH_SIZE = 50;
-    const MAX_BATCH_WRITES = 500; // Firestore limit
 
     // App State
     let state = {
@@ -545,8 +544,8 @@
           option_c: question.option_c,
           option_d: question.option_d
         }),
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
       };
     }
 
@@ -658,10 +657,8 @@
     }
 
     function updateSelectionUI() {
-      // Update selected count
       elements.selectedGroupsCount.textContent = `${state.selectedGroups.size} selected`;
       
-      // Update selected groups list
       elements.selectedGroupsList.innerHTML = '';
       state.selectedGroups.forEach(groupKey => {
         const [type, key] = groupKey.split(':');
@@ -682,7 +679,6 @@
         elements.selectedGroupsList.appendChild(item);
       });
       
-      // Show/hide submit button
       elements.submitBtn.style.display = state.selectedGroups.size > 0 ? 'block' : 'none';
     }
 
@@ -714,7 +710,6 @@
         state.groupedQuestions = groupQuestions(data, state.subject);
         state.selectedGroups = new Set();
         
-        // Update UI
         elements.questionStats.textContent = `${data.length} questions`;
         elements.currentSubjectPath.textContent = state.subject;
         
@@ -727,12 +722,10 @@
           </ul>
         `;
         
-        // Render group selectors
         renderGroupItems(state.groupedQuestions, 'chapters');
         renderGroupItems(state.groupedQuestions, 'units');
         renderGroupItems(state.groupedQuestions, 'topics');
         
-        // Show UI elements
         elements.groupSelection.style.display = 'block';
         elements.previewCard.style.display = 'block';
         elements.statusCard.style.display = 'none';
@@ -755,7 +748,7 @@
         return;
       }
       
-      showLoading(true, 'Preparing Firestore structure...');
+      showLoading(true, 'Preparing database structure...');
       elements.progressContainer.style.display = 'block';
       updateProgress(0);
       
@@ -765,8 +758,8 @@
         const totalQuestions = questionsToSubmit.length;
         const subjectSlug = createSlug(state.subject);
         
-        // Track created documents to avoid duplicates
-        const createdDocs = {
+        // Track created nodes to avoid duplicates
+        const createdNodes = {
           subjects: new Set(),
           chapters: new Set(),
           units: new Set(),
@@ -781,9 +774,6 @@
           showLoading(true, `Submitting questions ${i+1}-${batchEnd} of ${totalQuestions}...`);
           
           try {
-            // Create batches of writes
-            let writes = [];
-            
             for (const question of batch) {
               try {
                 const chapterSlug = createSlug(question.chapter);
@@ -791,129 +781,83 @@
                 const topicSlug = createSlug(question.topic);
                 
                 // 1. Ensure subject exists
-                const subjectKey = `subjects:${subjectSlug}`;
-                if (!createdDocs.subjects.has(subjectKey)) {
-                  writes.push({
-                    type: 'set',
-                    ref: db.collection('subjects').doc(subjectSlug),
-                    data: {
-                      name: state.subject,
-                      slug: subjectSlug,
-                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }
+                const subjectKey = `subjects/${subjectSlug}`;
+                if (!createdNodes.subjects.has(subjectKey)) {
+                  await db.ref(subjectKey).set({
+                    name: state.subject,
+                    slug: subjectSlug,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP,
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
                   });
-                  createdDocs.subjects.add(subjectKey);
+                  createdNodes.subjects.add(subjectKey);
                 }
                 
                 // 2. Ensure chapter exists
-                const chapterKey = `chapters:${subjectSlug}_${chapterSlug}`;
-                if (!createdDocs.chapters.has(chapterKey)) {
-                  writes.push({
-                    type: 'set',
-                    ref: db.collection('subjects').doc(subjectSlug)
-                      .collection('chapters').doc(chapterSlug),
-                    data: {
-                      name: question.chapter,
-                      slug: chapterSlug,
-                      subject: state.subject,
-                      subjectSlug: subjectSlug,
-                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }
+                const chapterKey = `${subjectKey}/chapters/${chapterSlug}`;
+                if (!createdNodes.chapters.has(chapterKey)) {
+                  await db.ref(chapterKey).set({
+                    name: question.chapter,
+                    slug: chapterSlug,
+                    subject: state.subject,
+                    subjectSlug: subjectSlug,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP,
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
                   });
-                  createdDocs.chapters.add(chapterKey);
+                  createdNodes.chapters.add(chapterKey);
                 }
                 
                 // 3. Ensure unit exists
-                const unitKey = `units:${subjectSlug}_${chapterSlug}_${unitSlug}`;
-                if (!createdDocs.units.has(unitKey)) {
-                  writes.push({
-                    type: 'set',
-                    ref: db.collection('subjects').doc(subjectSlug)
-                      .collection('chapters').doc(chapterSlug)
-                      .collection('units').doc(unitSlug),
-                    data: {
-                      name: question.unit,
-                      slug: unitSlug,
-                      chapter: question.chapter,
-                      chapterSlug: chapterSlug,
-                      subject: state.subject,
-                      subjectSlug: subjectSlug,
-                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }
+                const unitKey = `${chapterKey}/units/${unitSlug}`;
+                if (!createdNodes.units.has(unitKey)) {
+                  await db.ref(unitKey).set({
+                    name: question.unit,
+                    slug: unitSlug,
+                    chapter: question.chapter,
+                    chapterSlug: chapterSlug,
+                    subject: state.subject,
+                    subjectSlug: subjectSlug,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP,
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
                   });
-                  createdDocs.units.add(unitKey);
+                  createdNodes.units.add(unitKey);
                 }
                 
                 // 4. Ensure topic exists
-                const topicKey = `topics:${subjectSlug}_${chapterSlug}_${unitSlug}_${topicSlug}`;
-                if (!createdDocs.topics.has(topicKey)) {
-                  writes.push({
-                    type: 'set',
-                    ref: db.collection('subjects').doc(subjectSlug)
-                      .collection('chapters').doc(chapterSlug)
-                      .collection('units').doc(unitSlug)
-                      .collection('topics').doc(topicSlug),
-                    data: {
-                      name: question.topic,
-                      slug: topicSlug,
-                      unit: question.unit,
-                      unitSlug: unitSlug,
-                      chapter: question.chapter,
-                      chapterSlug: chapterSlug,
-                      subject: state.subject,
-                      subjectSlug: subjectSlug,
-                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }
+                const topicKey = `${unitKey}/topics/${topicSlug}`;
+                if (!createdNodes.topics.has(topicKey)) {
+                  await db.ref(topicKey).set({
+                    name: question.topic,
+                    slug: topicSlug,
+                    unit: question.unit,
+                    unitSlug: unitSlug,
+                    chapter: question.chapter,
+                    chapterSlug: chapterSlug,
+                    subject: state.subject,
+                    subjectSlug: subjectSlug,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP,
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
                   });
-                  createdDocs.topics.add(topicKey);
+                  createdNodes.topics.add(topicKey);
                 }
                 
                 // 5. Add question
-                writes.push({
-                  type: 'add',
-                  ref: db.collection('subjects').doc(subjectSlug)
-                    .collection('chapters').doc(chapterSlug)
-                    .collection('units').doc(unitSlug)
-                    .collection('topics').doc(topicSlug)
-                    .collection('questions'),
-                  data: question
-                });
+                const questionRef = db.ref(`${topicKey}/questions`).push();
+                await questionRef.set(question);
+                
+                successfulSubmissions++;
                 
               } catch (error) {
-                console.error('Error preparing question:', question.question, error);
+                console.error('Error submitting question:', question.question, error);
                 failedSubmissions++;
               }
             }
             
-            // Execute writes in batches of 500 (Firestore limit)
-            for (let j = 0; j < writes.length; j += MAX_BATCH_WRITES) {
-              const writeBatch = db.batch();
-              const writeChunk = writes.slice(j, j + MAX_BATCH_WRITES);
-              
-              writeChunk.forEach(write => {
-                if (write.type === 'set') {
-                  writeBatch.set(write.ref, write.data, { merge: true });
-                } else if (write.type === 'add') {
-                  const newRef = write.ref.doc();
-                  writeBatch.set(newRef, write.data);
-                }
-              });
-              
-              await writeBatch.commit();
-              successfulSubmissions += writeChunk.filter(w => w.type === 'add').length;
-            }
-            
+            // Update progress
+            updateProgress((batchEnd / totalQuestions) * 100);
           } catch (error) {
             console.error('Error submitting batch:', error);
             failedSubmissions += batch.length;
           }
-          
-          // Update progress
-          updateProgress((batchEnd / totalQuestions) * 100);
         }
         
         // Show results
@@ -924,7 +868,7 @@
           </div>
           
           <div class="hierarchy-path">
-            Created Firestore structure: <br>
+            Created database structure: <br>
             <span>subjects</span> → 
             <span>${state.subject}</span> → 
             <span>chapters</span> → 
@@ -935,10 +879,10 @@
           
           <h3 style="margin-top: 1rem;">Submission Details:</h3>
           <ul>
-            <li>Subjects created: ${createdDocs.subjects.size}</li>
-            <li>Chapters created: ${createdDocs.chapters.size}</li>
-            <li>Units created: ${createdDocs.units.size}</li>
-            <li>Topics created: ${createdDocs.topics.size}</li>
+            <li>Subjects created: ${createdNodes.subjects.size}</li>
+            <li>Chapters created: ${createdNodes.chapters.size}</li>
+            <li>Units created: ${createdNodes.units.size}</li>
+            <li>Topics created: ${createdNodes.topics.size}</li>
           </ul>
           
           ${failedSubmissions > 0 ? `
@@ -971,7 +915,6 @@
     elements.submitBtn.addEventListener('click', submitQuestions);
     
     elements.selectAllBtn.addEventListener('click', () => {
-      // Select all chapters, units, and topics
       Object.keys(state.groupedQuestions.chapters).forEach(key => {
         state.selectedGroups.add(`chapters:${key}`);
       });
@@ -982,7 +925,6 @@
         state.selectedGroups.add(`topics:${key}`);
       });
       
-      // Update UI
       document.querySelectorAll('.group-item').forEach(item => {
         item.classList.add('selected');
         item.querySelector('.badge').classList.add('badge-primary');

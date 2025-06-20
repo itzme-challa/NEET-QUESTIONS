@@ -938,372 +938,372 @@ document.addEventListener('DOMContentLoaded', async () => {
         elements.explanationContainer.style.display = 'block';
         clearInterval(timerInterval);
     }
+
     function checkFillupAnswer(correctAnswer, question) {
-    if (!elements.fillupInput || !elements.submitFillupBtn || !elements.explanationContainer) return;
-    const input = elements.fillupInput;
-    state.totalAnswered++;
-    const userAnswer = input.value.trim().toLowerCase();
-    const questionKey = `${question.question_id}_${state.currentQuestionIndex}`;
-    const isCorrect = userAnswer === correctAnswer?.toLowerCase();
-    state.userAnswers[questionKey] = {
-        answer: userAnswer,
-        correct: isCorrect
-    };
-    if (isCorrect) {
-        state.score++;
-        input.classList.add('correct');
-    } else {
-        input.classList.add('incorrect');
+        if (!elements.fillupInput || !elements.submitFillupBtn || !elements.explanationContainer) return;
+        const input = elements.fillupInput;
+        state.totalAnswered++;
+        const userAnswer = input.value.trim().toLowerCase();
+        const questionKey = `${question.question_id}_${state.currentQuestionIndex}`;
+        const isCorrect = userAnswer === correctAnswer?.toLowerCase();
+        state.userAnswers[questionKey] = {
+            answer: userAnswer,
+            correct: isCorrect
+        };
+        if (isCorrect) {
+            state.score++;
+            input.classList.add('correct');
+        } else {
+            input.classList.add('incorrect');
+        }
+        updateScore();
+        input.disabled = true;
+        elements.submitFillupBtn.disabled = true;
+        elements.explanationContainer.style.display = 'block';
+        clearInterval(timerInterval);
     }
-    updateScore();
-    input.disabled = true;
-    elements.submitFillupBtn.disabled = true;
-    elements.explanationContainer.style.display = 'block';
-    clearInterval(timerInterval);
-}
 
-function selectMatchItem(item, column) {
-    if (!elements.matchContainer) return;
-    const items = elements.matchContainer.querySelectorAll(`.match-column .match-item`);
-    items.forEach(i => i.classList.remove('selected'));
-    item.classList.add('selected');
-    state.matchSelections[column] = item.dataset.id;
-    if (elements.submitMatchBtn && state.matchSelections.left && state.matchSelections.right) {
-        elements.submitMatchBtn.disabled = false;
+    function selectMatchItem(item, column) {
+        if (!elements.matchContainer) return;
+        const items = elements.matchContainer.querySelectorAll(`.match-column .match-item`);
+        items.forEach(i => i.classList.remove('selected'));
+        item.classList.add('selected');
+        state.matchSelections[column] = item.dataset.id;
+        if (elements.submitMatchBtn && state.matchSelections.left && state.matchSelections.right) {
+            elements.submitMatchBtn.disabled = false;
+        }
     }
-}
 
-function checkMatchAnswer(question, userAnswer) {
-    if (!elements.matchContainer || !elements.submitMatchBtn || !elements.explanationContainer) return;
-    const leftItems = elements.matchContainer.querySelectorAll('.match-column:first-child .match-item');
-    const rightItems = elements.matchContainer.querySelectorAll('.match-column:last-child .match-item');
-    state.totalAnswered++;
-    const questionKey = `${question.question_id}_${state.currentQuestionIndex}`;
-    const options = [
-        question.option_a,
-        question.option_b,
-        question.option_c,
-        question.option_d
-    ].filter(opt => opt).map(opt => opt.split(','));
-    const correctMatches = {};
-    options.forEach((opt, index) => {
-        correctMatches[index] = index;
-    });
-    const isCorrect = state.matchSelections.left === state.matchSelections.right;
-    state.userAnswers[questionKey] = {
-        answer: state.matchSelections,
-        correct: isCorrect
-    };
-    if (isCorrect) {
-        state.score++;
-        leftItems[state.matchSelections.left].classList.add('correct');
-        rightItems[state.matchSelections.right].classList.add('correct');
-    } else {
-        leftItems[state.matchSelections.left].classList.add('incorrect');
-        rightItems[state.matchSelections.right].classList.add('incorrect');
-        Object.keys(correctMatches).forEach(index => {
-            leftItems[index].classList.add('correct');
-            rightItems[correctMatches[index]].classList.add('correct');
+    function checkMatchAnswer(question, userAnswer) {
+        if (!elements.matchContainer || !elements.submitMatchBtn || !elements.explanationContainer) return;
+        const leftItems = elements.matchContainer.querySelectorAll('.match-column:first-child .match-item');
+        const rightItems = elements.matchContainer.querySelectorAll('.match-column:last-child .match-item');
+        state.totalAnswered++;
+        const questionKey = `${question.question_id}_${state.currentQuestionIndex}`;
+        const options = [
+            question.option_a,
+            question.option_b,
+            question.option_c,
+            question.option_d
+        ].filter(opt => opt).map(opt => opt.split(','));
+        const correctMatches = {};
+        options.forEach((opt, index) => {
+            correctMatches[index] = index;
         });
+        const isCorrect = state.matchSelections.left === state.matchSelections.right;
+        state.userAnswers[questionKey] = {
+            answer: state.matchSelections,
+            correct: isCorrect
+        };
+        if (isCorrect) {
+            state.score++;
+            leftItems[state.matchSelections.left].classList.add('correct');
+            rightItems[state.matchSelections.right].classList.add('correct');
+        } else {
+            leftItems[state.matchSelections.left].classList.add('incorrect');
+            rightItems[state.matchSelections.right].classList.add('incorrect');
+            Object.keys(correctMatches).forEach(index => {
+                leftItems[index].classList.add('correct');
+                rightItems[correctMatches[index]].classList.add('correct');
+            });
+        }
+        updateScore();
+        elements.submitMatchBtn.disabled = true;
+        elements.matchContainer.querySelectorAll('.match-item').forEach(item => {
+            item.style.pointerEvents = 'none';
+        });
+        elements.explanationContainer.style.display = 'block';
+        clearInterval(timerInterval);
     }
-    updateScore();
-    elements.submitMatchBtn.disabled = true;
-    elements.matchContainer.querySelectorAll('.match-item').forEach(item => {
-        item.style.pointerEvents = 'none';
-    });
-    elements.explanationContainer.style.display = 'block';
-    clearInterval(timerInterval);
-}
 
-function updateScore() {
-    if (elements.scoreDisplay) {
-        elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
+    function updateScore() {
+        if (elements.scoreDisplay) {
+            elements.scoreDisplay.textContent = `Score: ${state.score}/${state.totalAnswered}`;
+        }
+        if (elements.progressFill) {
+            const progress = state.questions.length > 0 ? (state.currentQuestionIndex / state.questions.length) * 100 : 0;
+            elements.progressFill.style.width = `${progress}%`;
+        }
     }
-    if (elements.progressFill) {
-        const progress = state.questions.length > 0 ? (state.currentQuestionIndex / state.questions.length) * 100 : 0;
-        elements.progressFill.style.width = `${progress}%`;
-    }
-}
 
-function updateProgress() {
-    if (elements.currentQuestion && elements.totalQuestions) {
-        elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
-        elements.totalQuestions.textContent = state.questions.length;
+    function updateProgress() {
+        if (elements.currentQuestion && elements.totalQuestions) {
+            elements.currentQuestion.textContent = state.currentQuestionIndex + 1;
+            elements.totalQuestions.textContent = state.questions.length;
+        }
     }
-}
 
-function startTimer() {
-    timeLeft = state.timeLimit;
-    if (elements.timerDisplay) {
-        elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
-    }
-    clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-        timeLeft--;
+    function startTimer() {
+        timeLeft = state.timeLimit;
         if (elements.timerDisplay) {
             elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
         }
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            showResults();
-        }
-    }, 1000);
-}
-
-function showResults() {
-    if (!elements.quizContent || !elements.quizResults || !elements.scoreValue || !elements.totalScore) return;
-    elements.quizContent.style.display = 'none';
-    elements.quizResults.style.display = 'block';
-    elements.scoreValue.textContent = state.score;
-    elements.totalScore.textContent = state.totalAnswered;
-    clearInterval(timerInterval);
-    saveQuizResult();
-}
-
-function saveQuizResult() {
-    if (!auth.currentUser) return;
-    const result = {
-        subject: state.currentSubject,
-        chapter: state.currentChapter,
-        unit: state.currentUnit,
-        topic: state.currentTopic,
-        quizType: state.currentQuizType,
-        score: state.score,
-        total: state.totalAnswered,
-        userAnswers: state.userAnswers,
-        dppId: state.isDPP ? state.dppId : null,
-        testId: state.isTest ? state.testId : null,
-        timestamp: Date.now()
-    };
-    database.ref(`quizHistory/${auth.currentUser.uid}`).push(result);
-}
-
-function showError(message) {
-    alert(message); // Replace with a better UI notification in production
-}
-
-function resetSelections(screen) {
-    state.currentSubject = null;
-    state.currentChapter = null;
-    state.currentUnit = null;
-    state.currentTopic = null;
-    state.currentQuizType = null;
-    state.questions = [];
-    state.currentQuestionIndex = 0;
-    state.score = 0;
-    state.totalAnswered = 0;
-    state.matchSelections = {};
-    state.isDPP = false;
-    state.isTest = false;
-    state.dppId = null;
-    state.testId = null;
-    state.userAnswers = {};
-    clearInterval(timerInterval);
-    if (elements.quizInfo) {
-        elements.quizInfo.style.display = 'none';
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            if (elements.timerDisplay) {
+                elements.timerDisplay.textContent = `Time: ${timeLeft}s`;
+            }
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                showResults();
+            }
+        }, 1000);
     }
-    showScreen(screen);
-}
 
-function showReportModal() {
-    if (elements.reportModal) {
-        elements.reportModal.style.display = 'flex';
-        elements.reportReason.value = '';
+    function showResults() {
+        if (!elements.quizContent || !elements.quizResults || !elements.scoreValue || !elements.totalScore) return;
+        elements.quizContent.style.display = 'none';
+        elements.quizResults.style.display = 'block';
+        elements.scoreValue.textContent = state.score;
+        elements.totalScore.textContent = state.totalAnswered;
+        clearInterval(timerInterval);
+        saveQuizResult();
     }
-}
 
-function hideReportModal() {
-    if (elements.reportModal) {
-        elements.reportModal.style.display = 'none';
+    function saveQuizResult() {
+        if (!auth.currentUser) return;
+        const result = {
+            subject: state.currentSubject,
+            chapter: state.currentChapter,
+            unit: state.currentUnit,
+            topic: state.currentTopic,
+            quizType: state.currentQuizType,
+            score: state.score,
+            total: state.totalAnswered,
+            userAnswers: state.userAnswers,
+            dppId: state.isDPP ? state.dppId : null,
+            testId: state.isTest ? state.testId : null,
+            timestamp: Date.now()
+        };
+        database.ref(`quizHistory/${auth.currentUser.uid}`).push(result);
     }
-}
 
-function submitReport() {
-    if (!elements.reportReason || !auth.currentUser) return;
-    const reason = elements.reportReason.value.trim();
-    if (!reason) {
-        showError('Please provide a reason for the report.');
-        return;
+    function showError(message) {
+        alert(message); // Replace with a better UI notification in production
     }
-    const question = state.questions[state.currentQuestionIndex];
-    const report = {
-        questionId: question.question_id,
-        subject: state.currentSubject,
-        chapter: state.currentChapter,
-        unit: state.currentUnit,
-        topic: state.currentTopic,
-        quizType: state.currentQuizType,
-        reason: reason,
-        timestamp: Date.now(),
-        userId: auth.currentUser.uid
-    };
-    database.ref('reports').push(report);
-    hideReportModal();
-    showError('Report submitted successfully.');
-}
 
-// Event Listeners
-if (elements.subjectItems) {
-    elements.subjectItems.forEach(item => {
-        item.addEventListener('click', () => debouncedHandleSubjectSelect(item.dataset.subject));
-    });
-}
-
-if (elements.backToSubjects) {
-    elements.backToSubjects.addEventListener('click', () => {
-        resetSelections('subject');
-        if (elements.subjectCard) {
-            elements.subjectCard.classList.remove('hidden');
-        }
-    });
-}
-
-if (elements.backToChapters) {
-    elements.backToChapters.addEventListener('click', () => {
+    function resetSelections(screen) {
+        state.currentSubject = null;
         state.currentChapter = null;
         state.currentUnit = null;
         state.currentTopic = null;
         state.currentQuizType = null;
-        showScreen('chapter');
-        if (elements.chapterCard) {
-            elements.chapterCard.classList.remove('hidden');
-        }
-    });
-}
-
-if (elements.backToUnits) {
-    elements.backToUnits.addEventListener('click', () => {
-        state.currentUnit = null;
-        state.currentTopic = null;
-        state.currentQuizType = null;
-        showScreen('unit');
-        if (elements.unitCard) {
-            elements.unitCard.classList.remove('hidden');
-        }
-    });
-}
-
-if (elements.backToTopics) {
-    elements.backToTopics.addEventListener('click', () => {
-        state.currentTopic = null;
-        state.currentQuizType = null;
-        showScreen('topic');
-        if (elements.topicCard) {
-            elements.topicCard.classList.remove('hidden');
-        }
-    });
-}
-
-if (elements.startQuizBtn) {
-    elements.startQuizBtn.addEventListener('click', startQuiz);
-}
-
-if (elements.nextQuestionBtn) {
-    elements.nextQuestionBtn.addEventListener('click', () => {
-        if (state.currentQuestionIndex < state.questions.length - 1) {
-            state.currentQuestionIndex++;
-            showQuestion(state.questions[state.currentQuestionIndex]);
-            startTimer();
-        } else {
-            showResults();
-        }
-    });
-}
-
-if (elements.prevBtn) {
-    elements.prevBtn.addEventListener('click', () => {
-        if (state.currentQuestionIndex > 0) {
-            state.currentQuestionIndex--;
-            showQuestion(state.questions[state.currentQuestionIndex]);
-            startTimer();
-        }
-    });
-}
-
-if (elements.restartQuizBtn) {
-    elements.restartQuizBtn.addEventListener('click', () => {
+        state.questions = [];
         state.currentQuestionIndex = 0;
         state.score = 0;
         state.totalAnswered = 0;
-        state.userAnswers = {};
         state.matchSelections = {};
-        if (elements.quizContent && elements.quizResults) {
-            elements.quizContent.style.display = 'block';
-            elements.quizResults.style.display = 'none';
+        state.isDPP = false;
+        state.isTest = false;
+        state.dppId = null;
+        state.testId = null;
+        state.userAnswers = {};
+        clearInterval(timerInterval);
+        if (elements.quizInfo) {
+            elements.quizInfo.style.display = 'none';
         }
-        showQuestion(state.questions[0]);
-        startTimer();
-    });
-}
+        showScreen(screen);
+    }
 
-if (elements.newQuizBtn) {
-    elements.newQuizBtn.addEventListener('click', () => {
-        resetSelections('subject');
-        if (elements.subjectCard) {
-            elements.subjectCard.classList.remove('hidden');
+    function showReportModal() {
+        if (elements.reportModal) {
+            elements.reportModal.style.display = 'flex';
+            elements.reportReason.value = '';
         }
-    });
-}
+    }
 
-if (elements.viewResultsBtn) {
-    elements.viewResultsBtn.addEventListener('click', () => {
-        window.location.href = 'results.html';
-    });
-}
+    function hideReportModal() {
+        if (elements.reportModal) {
+            elements.reportModal.style.display = 'none';
+        }
+    }
 
-if (elements.userAvatar && elements.dropdownMenu) {
-    elements.userAvatar.addEventListener('click', () => {
-        elements.dropdownMenu.classList.toggle('show');
-    });
-}
+    function submitReport() {
+        if (!elements.reportReason || !auth.currentUser) return;
+        const reason = elements.reportReason.value.trim();
+        if (!reason) {
+            showError('Please provide a reason for the report.');
+            return;
+        }
+        const question = state.questions[state.currentQuestionIndex];
+        const report = {
+            questionId: question.question_id,
+            subject: state.currentSubject,
+            chapter: state.currentChapter,
+            unit: state.currentUnit,
+            topic: state.currentTopic,
+            quizType: state.currentQuizType,
+            reason: reason,
+            timestamp: Date.now(),
+            userId: auth.currentUser.uid
+        };
+        database.ref('reports').push(report);
+        hideReportModal();
+        showError('Report submitted successfully.');
+    }
 
-if (elements.logoutBtn) {
-    elements.logoutBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        auth.signOut().then(() => {
-            window.location.href = 'index.html';
+    // Event Listeners
+    if (elements.subjectItems) {
+        elements.subjectItems.forEach(item => {
+            item.addEventListener('click', () => debouncedHandleSubjectSelect(item.dataset.subject));
         });
-    });
-}
+    }
 
-if (elements.reportBtn) {
-    elements.reportBtn.addEventListener('click', showReportModal);
-}
+    if (elements.backToSubjects) {
+        elements.backToSubjects.addEventListener('click', () => {
+            resetSelections('subject');
+            if (elements.subjectCard) {
+                elements.subjectCard.classList.remove('hidden');
+            }
+        });
+    }
 
-if (elements.submitReportBtn) {
-    elements.submitReportBtn.addEventListener('click', submitReport);
-}
+    if (elements.backToChapters) {
+        elements.backToChapters.addEventListener('click', () => {
+            state.currentChapter = null;
+            state.currentUnit = null;
+            state.currentTopic = null;
+            state.currentQuizType = null;
+            showScreen('chapter');
+            if (elements.chapterCard) {
+                elements.chapterCard.classList.remove('hidden');
+            }
+        });
+    }
 
-if (elements.cancelReportBtn) {
-    elements.cancelReportBtn.addEventListener('click', hideReportModal);
-}
+    if (elements.backToUnits) {
+        elements.backToUnits.addEventListener('click', () => {
+            state.currentUnit = null;
+            state.currentTopic = null;
+            state.currentQuizType = null;
+            showScreen('unit');
+            if (elements.unitCard) {
+                elements.unitCard.classList.remove('hidden');
+            }
+        });
+    }
 
-if (elements.resetBtn) {
-    elements.resetBtn.addEventListener('click', () => {
-        resetSelections('subject');
-        if (elements.subjectCard) {
-            elements.subjectCard.classList.remove('hidden');
+    if (elements.backToTopics) {
+        elements.backToTopics.addEventListener('click', () => {
+            state.currentTopic = null;
+            state.currentQuizType = null;
+            showScreen('topic');
+            if (elements.topicCard) {
+                elements.topicCard.classList.remove('hidden');
+            }
+        });
+    }
+
+    if (elements.startQuizBtn) {
+        elements.startQuizBtn.addEventListener('click', startQuiz);
+    }
+
+    if (elements.nextQuestionBtn) {
+        elements.nextQuestionBtn.addEventListener('click', () => {
+            if (state.currentQuestionIndex < state.questions.length - 1) {
+                state.currentQuestionIndex++;
+                showQuestion(state.questions[state.currentQuestionIndex]);
+                startTimer();
+            } else {
+                showResults();
+            }
+        });
+    }
+
+    if (elements.prevBtn) {
+        elements.prevBtn.addEventListener('click', () => {
+            if (state.currentQuestionIndex > 0) {
+                state.currentQuestionIndex--;
+                showQuestion(state.questions[state.currentQuestionIndex]);
+                startTimer();
+            }
+        });
+    }
+
+    if (elements.restartQuizBtn) {
+        elements.restartQuizBtn.addEventListener('click', () => {
+            state.currentQuestionIndex = 0;
+            state.score = 0;
+            state.totalAnswered = 0;
+            state.userAnswers = {};
+            state.matchSelections = {};
+            if (elements.quizContent && elements.quizResults) {
+                elements.quizContent.style.display = 'block';
+                elements.quizResults.style.display = 'none';
+            }
+            showQuestion(state.questions[0]);
+            startTimer();
+        });
+    }
+
+    if (elements.newQuizBtn) {
+        elements.newQuizBtn.addEventListener('click', () => {
+            resetSelections('subject');
+            if (elements.subjectCard) {
+                elements.subjectCard.classList.remove('hidden');
+            }
+        });
+    }
+
+    if (elements.viewResultsBtn) {
+        elements.viewResultsBtn.addEventListener('click', () => {
+            window.location.href = 'results.html';
+        });
+    }
+
+    if (elements.userAvatar && elements.dropdownMenu) {
+        elements.userAvatar.addEventListener('click', () => {
+            elements.dropdownMenu.classList.toggle('show');
+        });
+    }
+
+    if (elements.logoutBtn) {
+        elements.logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            });
+        });
+    }
+
+    if (elements.reportBtn) {
+        elements.reportBtn.addEventListener('click', showReportModal);
+    }
+
+    if (elements.submitReportBtn) {
+        elements.submitReportBtn.addEventListener('click', submitReport);
+    }
+
+    if (elements.cancelReportBtn) {
+        elements.cancelReportBtn.addEventListener('click', hideReportModal);
+    }
+
+    if (elements.resetBtn) {
+        elements.resetBtn.addEventListener('click', () => {
+            resetSelections('subject');
+            if (elements.subjectCard) {
+                elements.subjectCard.classList.remove('hidden');
+            }
+        });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!elements.userMenu.contains(e.target) && elements.dropdownMenu.classList.contains('show')) {
+            elements.dropdownMenu.classList.remove('show');
         }
     });
-}
 
-// Close dropdown when clicking outside
-document.addEventListener('click', (e) => {
-    if (!elements.userMenu.contains(e.target) && elements.dropdownMenu.classList.contains('show')) {
-        elements.dropdownMenu.classList.remove('show');
-    }
-});
-
-// Initialize authentication state
-auth.onAuthStateChanged(user => {
-    if (user) {
-        if (elements.userAvatar) {
-            elements.userAvatar.textContent = user.displayName?.charAt(0).toUpperCase() || 'U';
+    // Initialize authentication state
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            if (elements.userAvatar) {
+                elements.userAvatar.textContent = user.displayName?.charAt(0).toUpperCase() || 'U';
+            }
+            checkUrlParams();
+        } else {
+            window.location.href = 'index.html';
         }
-        checkUrlParams();
-    } else {
-        window.location.href = 'index.html';
-    }
-});
-
+    });
 });

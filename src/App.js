@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './Home';
-import Play from './Play'; // Updated to match PascalCase
+import Play from './play'; // Update to './Play' if renaming the file
 import Results from './Results';
 
 function App() {

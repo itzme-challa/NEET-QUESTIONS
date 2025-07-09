@@ -6,6 +6,12 @@ function Home({ setQuizStarted }) {
   const [tests, setTests] = useState([]);
 
   useEffect(() => {
+    if (!db) {
+      console.error('Firebase database not initialized');
+      alert('Failed to initialize database. Please try again later.');
+      return;
+    }
+
     try {
       const dbInstance = getDatabase(db);
       const testsRef = ref(dbInstance, 'tests');

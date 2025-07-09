@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './Home';
 import Play from './play'; // Update to './Play' if renaming the file
-import Results from './Results';
+import Results from './results';
 
 function App() {
   const [quizStarted, setQuizStarted] = useState(false);

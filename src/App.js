@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './Home';
-import Play from './Play'; // Capitalized 'Play'
-import Results from './Results'; // Ensure this matches the file name
+import Play from './Play'; // Updated to match PascalCase
+import Results from './Results';
 
 function App() {
   const [quizStarted, setQuizStarted] = useState(false);

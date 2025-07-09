@@ -1,6 +1,9 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
 
+// Export db at top level
+let db;
+
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
   authDomain: process.env.REACT_APP_AUTH_DOMAIN,
@@ -15,17 +18,17 @@ const firebaseConfig = {
 // Debug environment variables
 console.log('Firebase Config:', {
   apiKey: process.env.REACT_APP_API_KEY ? 'Loaded' : 'Missing',
-  databaseURL: process.env.REACT_APP_DATABASE_URL ? 'Loaded' : 'Missing',
-  projectId: process.env.REACT_APP_PROJECT_ID ? 'Loaded' : 'Missing'
+  databaseURL: process.env.REACT_APP_DATABASE_URL,
+  projectId: process.env.REACT_APP_PROJECT_ID
 });
 
-let db;
 try {
   const app = initializeApp(firebaseConfig);
   db = getDatabase(app);
   console.log('Firebase initialized successfully');
-  export { db }; // Export inside try block to ensure db is initialized
 } catch (error) {
   console.error('Firebase initialization failed:', error);
   throw error;
 }
+
+export { db };

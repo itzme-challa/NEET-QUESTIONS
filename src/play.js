@@ -158,14 +158,22 @@ function Play({ setQuizStarted }) {
   };
 
   const handleSubmit = async () => {
-    const dbRef = ref(getDatabase(db), 'quiz_results/' + Date.now());
-    await set(dbRef, { answers, timestamp: new Date().toISOString() });
-    setQuizStarted(false);
-    navigate('/results');
+    try {
+      const dbRef = ref(getDatabase(db), 'quiz_results/' + Date.now());
+      await set(dbRef, { answers, timestamp: new Date().toISOString() });
+      setQuizStarted(false);
+      navigate('/results');
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      alert('Failed to submit quiz. Please try again.');
+    }
   };
 
   const handleReportSubmit = async () => {
-    if (!reportText.trim()) return;
+    if (!reportText.trim()) {
+      alert('Please enter a problem description.');
+      return;
+    }
     const question = allQuestions[currentQuestion];
     let screenshot = null;
     try {
@@ -174,18 +182,24 @@ function Play({ setQuizStarted }) {
     } catch (error) {
       console.error('Failed to capture screenshot:', error);
     }
-    const reportRef = ref(getDatabase(db), 'reports/' + Date.now());
-    await set(reportRef, {
-      questionNumber: question.questionNumber,
-      subject: question.subject,
-      image: question.image,
-      correctOption: question.correctOption,
-      reportText,
-      screenshot,
-      timestamp: new Date().toISOString()
-    });
-    setReportText('');
-    setShowReport(false);
+    try {
+      const reportRef = ref(getDatabase(db), 'reports/' + Date.now());
+      await set(reportRef, {
+        questionNumber: question.questionNumber,
+        subject: question.subject,
+        image: question.image,
+        correctOption: question.correctOption,
+        reportText,
+        screenshot,
+        timestamp: new Date().toISOString()
+      });
+      setReportText('');
+      setShowReport(false);
+      alert('Report submitted successfully.');
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      alert('Failed to submit report. Please try again.');
+    }
   };
 
   const getStatusColor = (status) => {
@@ -283,7 +297,7 @@ function Play({ setQuizStarted }) {
           <img
             src={allQuestions[currentQuestion].image}
             alt="Question"
-            className="w-full h-auto rounded-lg shadow-md mb-6 mx-auto igg"
+            className="w-full h-auto rounded-lg shadow-md mb-6 mx-auto"
             style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }}
           />
         )}
@@ -292,7 +306,7 @@ function Play({ setQuizStarted }) {
             <div key={option} className="option-container">
               <label
                 className={`block px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg cursor-pointer text-base hover:bg-gray-200 transition ${
-                  selectedOption === option ? 'bg-blue-100 border-blue-300' : ''
+                  selectedOption === option ? 'bg-green-100 border-green-300' : ''
                 }`}
                 onClick={() => handleOptionSelect(option)}
               >

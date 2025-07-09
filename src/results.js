@@ -1,83 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { db } from './firebase';
-
-const questionsData = {
-  "PHYSICS": [
-    {
-      "questionNumber": "Question 1",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/02a847d7-b87c-4acb-b200-f0000337fde6.png",
-      "correctOption": "C"
-    },
-    {
-      "questionNumber": "Question 2",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/997c16b0-9743-437b-8d94-f1731d3d03fe.png",
-      "correctOption": "D"
-    },
-    {
-      "questionNumber": "Question 3",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/1303df44-4d76-43fd-bf65-85fa69cbbad5.png",
-      "correctOption": "B"
-    },
-    {
-      "questionNumber": "Question 4",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/fa60933a-e038-43bf-996f-c767937675ae.png",
-      "correctOption": "B"
-    },
-    {
-      "questionNumber": "Question 5",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/43032f03-6829-49d0-a07f-12e97847b21b.png",
-      "correctOption": "B"
-    },
-    {
-      "questionNumber": "Question 6",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/352d6768-193e-4fa9-9fb0-2efb1a856330.png",
-      "correctOption": "B"
-    },
-    {
-      "questionNumber": "Question 7",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/9af42518-e561-4aaa-beea-9dc55b7d1603.png",
-      "correctOption": "A"
-    },
-    {
-      "questionNumber": "Question 8",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/f99e55ba-963d-42c2-985d-d3ee1a5067f0.png",
-      "correctOption": "B"
-    },
-    {
-      "questionNumber": "Question 9",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/58a9e5af-b15a-437f-888e-63cf8a6d72f8.png",
-      "correctOption": "C"
-    }
-  ],
-  "CHEMISTRY": [
-    {
-      "questionNumber": "Question 1",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/ee9f972c-2ebe-4b77-b591-95fda15e9030.png",
-      "correctOption": "C"
-    }
-  ]
-};
+import { useLocation } from 'react-router-dom';
 
 function Results() {
   const [results, setResults] = useState([]);
+  const [questionsData, setQuestionsData] = useState(null);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const testid = queryParams.get('testid');
 
   useEffect(() => {
-    const dbRef = ref(getDatabase(db), 'quiz_results');
-    onValue(dbRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        setResults(Object.entries(data).map(([id, { answers, timestamp }]) => ({
-          id,
-          answers,
-          timestamp
-        })));
+    if (testid) {
+      // Load questions for results display
+      import(`./data/${testid}.json`)
+        .then(data => {
+          setQuestionsData(data.default);
+        })
+        .catch(error => {
+          console.error('Error loading questions for results:', error);
+          alert('Failed to load results data. Please try again.');
+        });
+
+      // Fetch results from Firebase
+      try {
+        const dbRef = ref(getDatabase(db), `quiz_results/${testid}`);
+        onValue(dbRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            setResults(Object.entries(data).map(([id, { answers, timestamp }]) => ({
+              id,
+              answers,
+              timestamp
+            })));
+          }
+        }, (error) => {
+          console.error('Error fetching results:', error);
+          alert('Failed to load results. Please try again.');
+        });
+      } catch (error) {
+        console.error('Error setting up results listener:', error);
       }
-    }, (error) => {
-      console.error('Error fetching results:', error);
-      alert('Failed to load results. Please try again.');
-    });
-  }, []);
+    }
+  }, [testid]);
+
+  if (!questionsData) {
+    return <div className="text-center p-4">Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">

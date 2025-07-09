@@ -2,54 +2,52 @@
   "PHYSICS": [
     {
       "questionNumber": "Question 1",
-      "image": "https://static.pw.live/static/education/5b09189f728589d913d5f0c0/02a3bc7d-b87c-6b4c-8c20-f0000337fd2e.png",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/02a847d7-b87c-4acb-b200-f0000337fde6.png",
       "correctOption": "C"
     },
     {
       "questionNumber": "Question 2",
-      "image": "https://static.pw.live/static/education/5b09189f234589d913d4f0c/996c16b0-9643-4c7b-b8d9-c473f1d3e3fe.png",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/997c16b0-9743-437b-8d94-f1731d3d03fe.png",
       "correctOption": "D"
     },
     {
       "questionNumber": "Question 3",
-      "image": "https://static.pw.live/static/education/5b09189f728589d913e9f0c0/1303cf44-f4d7-6c3d-b0fc-c5e6a0c0bbad.png",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/1303df44-4d76-43fd-bf65-85fa69cbbad5.png",
       "correctOption": "B"
     },
     {
       "questionNumber": "Question 4",
-      "image": "https://static.pw.live/static/education/5b09189f728589d913f0fc0/fa60c933f0e2-a3b8-fc69fb0-c767b7b67ae.png",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/fa60933a-e038-43bf-996f-c767937675ae.png",
       "correctOption": "B"
     },
     {
       "questionNumber": "Question 5",
-      "image": "https://static.pw.live/static/education/5b09189f728589d913f0fc0/43031f03-692c-3b0d-a07f0-f9e9787b21b.png",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/43032f03-6829-49d0-a07f-12e97847b21b.png",
       "correctOption": "B"
     },
     {
       "questionNumber": "Question 6",
-      "image": "https://static.pw.live/static/education/5b09189f728589d913f0fc0/352d6678-183f-f4a9-0a0fb0-f2eb0ab1a330.png",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/352d6768-193e-4fa9-9fb0-2efb1a856330.png",
       "correctOption": "B"
     },
     {
       "questionNumber": "Question 7",
-      "image": "https://static.pw.live/static/education/5b09189f728589d913f0fc0/9a0c4218-f5c1b-c8aa-bbe0-a0d-c5cb7d1603.png",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/9af42518-e561-4aaa-beea-9dc55b7d1603.png",
       "correctOption": "A"
     },
     {
       "questionNumber": "Question 8",
-      "image": "https://static.pw.live/static/education/5b09189f0c728589d913f0/f9c0c55ba-963d-c3c2-0a85d-d3e3a0c506f0.png",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/f99e55ba-963d-42c2-985d-d3ee1a5067f0.png",
       "correctOption": "B"
     },
     {
       "questionNumber": "Question 9",
-      "image": "https://static.pw.live/static/education/5b09189f728589c9130fc0/58f9e5c0-b1a5-f3c7-f8f8e-f3cf8ca6d72f.png",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/58a9e5af-b15a-437f-888e-63cf8a6d72f8.png",
       "correctOption": "C"
-    }
-  ],
-  ["CHEMISTRY": [
+    },
     {
-      "questionNumber": "Question 1",
-      "image": "https://static.pw.live/static/education/5b09189f728589c0d913f0c0/0e9-f972c6-2be2-b2b7-b591c-95f0ca15e903.png",
+      "questionNumber": "Question 10",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/17561af7-4c8d-4005-b37d-4ba074c114d1.png",
       "correctOption": "C"
     }
   ]

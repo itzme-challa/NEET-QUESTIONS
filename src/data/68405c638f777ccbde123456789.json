@@ -1,0 +1,56 @@
+{
+  "PHYSICS": [
+    {
+      "questionNumber": "Question 1",
+      "image": "https://static.pw.live/static/education/5b09189f728589d913d5f0c0/02a3bc7d-b87c-6b4c-8c20-f0000337fd2e.png",
+      "correctOption": "C"
+    },
+    {
+      "questionNumber": "Question 2",
+      "image": "https://static.pw.live/static/education/5b09189f234589d913d4f0c/996c16b0-9643-4c7b-b8d9-c473f1d3e3fe.png",
+      "correctOption": "D"
+    },
+    {
+      "questionNumber": "Question 3",
+      "image": "https://static.pw.live/static/education/5b09189f728589d913e9f0c0/1303cf44-f4d7-6c3d-b0fc-c5e6a0c0bbad.png",
+      "correctOption": "B"
+    },
+    {
+      "questionNumber": "Question 4",
+      "image": "https://static.pw.live/static/education/5b09189f728589d913f0fc0/fa60c933f0e2-a3b8-fc69fb0-c767b7b67ae.png",
+      "correctOption": "B"
+    },
+    {
+      "questionNumber": "Question 5",
+      "image": "https://static.pw.live/static/education/5b09189f728589d913f0fc0/43031f03-692c-3b0d-a07f0-f9e9787b21b.png",
+      "correctOption": "B"
+    },
+    {
+      "questionNumber": "Question 6",
+      "image": "https://static.pw.live/static/education/5b09189f728589d913f0fc0/352d6678-183f-f4a9-0a0fb0-f2eb0ab1a330.png",
+      "correctOption": "B"
+    },
+    {
+      "questionNumber": "Question 7",
+      "image": "https://static.pw.live/static/education/5b09189f728589d913f0fc0/9a0c4218-f5c1b-c8aa-bbe0-a0d-c5cb7d1603.png",
+      "correctOption": "A"
+    },
+    {
+      "questionNumber": "Question 8",
+      "image": "https://static.pw.live/static/education/5b09189f0c728589d913f0/f9c0c55ba-963d-c3c2-0a85d-d3e3a0c506f0.png",
+      "correctOption": "B"
+    },
+    {
+      "questionNumber": "Question 9",
+      "image": "https://static.pw.live/static/education/5b09189f728589c9130fc0/58f9e5c0-b1a5-f3c7-f8f8e-f3cf8ca6d72f.png",
+      "correctOption": "C"
+    }
+  ],
+  ["CHEMISTRY": [
+    {
+      "questionNumber": "Question 1",
+      "image": "https://static.pw.live/static/education/5b09189f728589c0d913f0c0/0e9-f972c6-2be2-b2b7-b591c-95f0ca15e903.png",
+      "correctOption": "C"
+    }
+  ]
+}

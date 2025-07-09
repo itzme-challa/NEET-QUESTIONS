@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ref, set, getDatabase } from 'firebase/database';
 import { db } from './firebase';
+import html2canvas from 'html2canvas';
 
 const questionsData = {
   "PHYSICS": [
@@ -64,7 +65,18 @@ function Play({ setQuizStarted }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [answers, setAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(3 * 3600); // 3 hours in seconds
+  const [questionStatuses, setQuestionStatuses] = useState(
+    Object.keys(questionsData).flatMap(subject =>
+      questionsData[subject].map(q => ({
+        questionNumber: q.questionNumber,
+        status: 'not-visited' // white
+      }))
+    )
+  );
+  const [timeLeft, setTimeLeft] = useState(3 * 3600); // 3 hours
+  const [showIndex, setShowIndex] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reportText, setReportText] = useState('');
   const navigate = useNavigate();
 
   const allQuestions = [
@@ -72,12 +84,34 @@ function Play({ setQuizStarted }) {
     ...questionsData.CHEMISTRY.map(q => ({ ...q, subject: 'CHEMISTRY' })),
   ];
 
+  // Prevent page refresh
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = 'Are you sure you want to leave? Your progress will be lost.';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  // Timer
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Update question status to visited (blue) when viewing
+  useEffect(() => {
+    setQuestionStatuses(prev =>
+      prev.map((q, index) =>
+        index === currentQuestion && q.status === 'not-visited'
+          ? { ...q, status: 'visited' } // blue
+          : q
+      )
+    );
+  }, [currentQuestion]);
 
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
@@ -89,9 +123,21 @@ function Play({ setQuizStarted }) {
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
     setAnswers({ ...answers, [allQuestions[currentQuestion].questionNumber]: option });
+    setQuestionStatuses(prev =>
+      prev.map((q, index) =>
+        index === currentQuestion ? { ...q, status: 'answered' } : q // green
+      )
+    );
   };
 
   const handleSaveAndNext = () => {
+    if (!selectedOption) {
+      setQuestionStatuses(prev =>
+        prev.map((q, index) =>
+          index === currentQuestion ? { ...q, status: 'unanswered' } : q // red
+        )
+      );
+    }
     if (currentQuestion < allQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedOption(null);
@@ -100,6 +146,11 @@ function Play({ setQuizStarted }) {
 
   const handleSkip = () => {
     setAnswers({ ...answers, [allQuestions[currentQuestion].questionNumber]: 'Skipped' });
+    setQuestionStatuses(prev =>
+      prev.map((q, index) =>
+        index === currentQuestion ? { ...q, status: 'skipped' } : q // yellow
+      )
+    );
     if (currentQuestion < allQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedOption(null);
@@ -113,20 +164,108 @@ function Play({ setQuizStarted }) {
     navigate('/results');
   };
 
+  const handleReportSubmit = async () => {
+    if (!reportText.trim()) return;
+    const question = allQuestions[currentQuestion];
+    let screenshot = null;
+    try {
+      const canvas = await html2canvas(document.querySelector('.question-container'));
+      screenshot = canvas.toDataURL('image/png');
+    } catch (error) {
+      console.error('Failed to capture screenshot:', error);
+    }
+    const reportRef = ref(getDatabase(db), 'reports/' + Date.now());
+    await set(reportRef, {
+      questionNumber: question.questionNumber,
+      subject: question.subject,
+      image: question.image,
+      correctOption: question.correctOption,
+      reportText,
+      screenshot,
+      timestamp: new Date().toISOString()
+    });
+    setReportText('');
+    setShowReport(false);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'not-visited': return 'bg-white';
+      case 'visited': return 'bg-blue-500';
+      case 'answered': return 'bg-green-500';
+      case 'skipped': return 'bg-yellow-500';
+      case 'unanswered': return 'bg-red-500';
+      default: return 'bg-white';
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4 max-w-3xl">
+    <div className="container mx-auto p-4 max-w-3xl relative">
       <div id="timer" className="text-xl font-bold text-center mb-4 text-gray-800">
         {formatTime(timeLeft)}
       </div>
-      <div className="question-container bg-white rounded-xl shadow-md p-6 mb-6">
-        <div className="header-controls flex justify-end gap-3 mb-4">
-          <button className="flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg shadow-sm text-blue-600 font-medium hover:bg-gray-200 transition">
-            <i className="fas fa-th mr-2"></i>Show Index
-          </button>
-          <span className="flex items-center justify-center w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg shadow-sm text-gray-500 cursor-pointer hover:bg-gray-200 transition">
-            <i className="fas fa-flag"></i>
-          </span>
+      <div className="header-controls flex justify-end gap-3 mb-4">
+        <button
+          onClick={() => setShowIndex(!showIndex)}
+          className="flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg shadow-sm text-blue-600 font-medium hover:bg-gray-200 transition"
+          id="question-palette-button"
+        >
+          <i className="fas fa-th mr-2"></i>Show Index
+        </button>
+        <button
+          onClick={() => setShowReport(true)}
+          className="flex items-center justify-center w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg shadow-sm text-gray-500 hover:bg-gray-200 transition"
+        >
+          <i className="fas fa-flag"></i>
+        </button>
+      </div>
+      {showIndex && (
+        <div className="absolute top-16 right-4 bg-white border border-gray-300 rounded-lg shadow-lg p-4 z-10">
+          <div className="grid grid-cols-5 gap-2">
+            {questionStatuses.map((q, index) => (
+              <button
+                key={q.questionNumber}
+                onClick={() => {
+                  setCurrentQuestion(index);
+                  setShowIndex(false);
+                }}
+                className={`w-8 h-8 rounded-full ${getStatusColor(q.status)} text-white font-semibold flex items-center justify-center`}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
         </div>
+      )}
+      {showReport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Report Question</h3>
+            <textarea
+              value={reportText}
+              onChange={(e) => setReportText(e.target.value)}
+              placeholder="Describe the issue with this question"
+              className="w-full p-2 border border-gray-300 rounded-lg mb-4"
+              rows="4"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowReport(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReportSubmit}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Submit Report
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="question-container bg-white rounded-xl shadow-md p-6 mb-6" id="question-container">
         <div className="question-info-bar flex items-center gap-4 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-lg shadow-sm p-3 mb-6 overflow-x-auto">
           <span className="bg-indigo-100 text-indigo-900 font-semibold px-4 py-2 rounded-lg min-w-[120px] text-center">
             {allQuestions[currentQuestion].questionNumber}
@@ -144,7 +283,7 @@ function Play({ setQuizStarted }) {
           <img
             src={allQuestions[currentQuestion].image}
             alt="Question"
-            className="w-full h-auto rounded-lg shadow-md mb-6 mx-auto"
+            className="w-full h-auto rounded-lg shadow-md mb-6 mx-auto igg"
             style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }}
           />
         )}
@@ -167,12 +306,14 @@ function Play({ setQuizStarted }) {
             onClick={handleSaveAndNext}
             className="px-6 py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition"
             disabled={currentQuestion === allQuestions.length - 1}
+            id="save-next-btn"
           >
             Save & Next
           </button>
           <button
             onClick={handleSkip}
             className="px-6 py-3 bg-yellow-500 text-white rounded-lg shadow-md hover:bg-yellow-600 transition"
+            id="skip-btn"
           >
             Skip
           </button>
@@ -180,6 +321,7 @@ function Play({ setQuizStarted }) {
             <button
               onClick={handleSubmit}
               className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition"
+              id="submit-btn"
             >
               Submit Test
             </button>

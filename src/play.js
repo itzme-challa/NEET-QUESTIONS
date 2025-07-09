@@ -131,7 +131,7 @@ function Play({ setQuizStarted, quizStarted }) {
       const dbRef = ref(getDatabase(db), `quiz_results/${testid}/${Date.now()}`);
       await set(dbRef, { answers, timestamp: new Date().toISOString() });
       setQuizStarted(false);
-      navigate('/results');
+      navigate(`/results?testid=${testid}`);
     } catch (error) {
       console.error('Error submitting quiz:', error);
       alert('Failed to submit quiz. Please try again.');

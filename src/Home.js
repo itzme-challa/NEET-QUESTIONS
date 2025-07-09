@@ -7,7 +7,7 @@ function Home({ setQuizStarted }) {
 
   useEffect(() => {
     try {
-      const testsRef = ref(getDatabase(db), 'tests');
+      const testsRef = ref(getDatabase(db) 'tests');
       onValue(testsRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {

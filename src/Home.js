@@ -22,6 +22,7 @@ function Home({ setQuizStarted }) {
       });
     } catch (error) {
       console.error('Error setting up tests listener:', error);
+      alert('Failed to load tests. Please try again.');
     }
   }, []);
 

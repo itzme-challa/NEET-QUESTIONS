@@ -7,18 +7,23 @@ function Home({ setQuizStarted }) {
 
   useEffect(() => {
     try {
-      const testsRef = ref(getDatabase(db), 'tests');
+      const dbInstance = getDatabase(db);
+      const testsRef = ref(dbInstance, 'tests');
       onValue(testsRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const testList = Object.keys(data).flatMap(year =>
-            data[year].map(test => ({ ...test, year }))
-          );
-          setTests(testList);
+        try {
+          const data = snapshot.val();
+          if (data) {
+            const testList = Object.keys(data).flatMap(year =>
+              data[year].map(test => ({ ...test, year }))
+            );
+            setTests(testList);
+          } else {
+            setTests([]);
+          }
+        } catch (error) {
+          console.error('Error processing tests data:', error);
+          alert('Failed to load tests. Please try again.');
         }
-      }, (error) => {
-        console.error('Error fetching tests:', error);
-        alert('Failed to load tests. Please try again.');
       });
     } catch (error) {
       console.error('Error setting up tests listener:', error);

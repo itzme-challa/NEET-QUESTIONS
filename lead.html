@@ -1,827 +1,115 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Leaderboard | NEET Prep Master</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #3b82f6;
-      --primary-dark: #1d4ed8;
-      --secondary: #4cc9f0;
-      --success: #4ade80;
-      --error: #f87171;
-      --warning: #fbbf24;
-      --text-dark: #1f2937;
-      --text-medium: #6b7280;
-      --text-light: #9ca3af;
-      --background: #f3f4f6;
-      --bg-light: #f9fafb;
-      --border-color: #d1d5db;
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      --radius-sm: 0.25rem;
-      --radius-md: 0.5rem;
-      --radius-lg: 0.75rem;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--background);
-      color: var(--text-dark);
-      line-height: 1.5;
-      min-height: 100vh;
-    }
-
-    #app {
-      max-width: 100%;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .header {
-      background-color: white;
-      padding: 1rem;
-      box-shadow: var(--shadow-sm);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-weight: 600;
-      color: var(--primary-dark);
-      text-decoration: none;
-      font-size: 1.25rem;
-    }
-
-    .logo-icon {
-      font-size: 1.5rem;
-      color: var(--primary);
-    }
-
-    .nav-buttons {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .btn {
-      padding: 0.5rem 1rem;
-      border-radius: var(--radius-sm);
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      border: none;
-    }
-
-    .btn-primary {
-      background-color: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background-color: var(--primary-dark);
-    }
-
-    .btn-outline {
-      background-color: transparent;
-      border: 1px solid var(--border-color);
-      color: var(--text-medium);
-    }
-
-    .btn-outline:hover {
-      background-color: var(--bg-light);
-    }
-
-    .main-content {
-      flex: 1;
-      padding: 1rem;
-      max-width: 800px;
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    .card {
-      background-color: white;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 1rem;
-      overflow: hidden;
-    }
-
-    .card-header {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      background-color: var(--bg-light);
-      transition: background-color 0.2s ease;
-    }
-
-    .card-header:hover {
-      background-color: #e5e7eb;
-    }
-
-    .card-title {
-      font-weight: 600;
-      font-size: 1.125rem;
-    }
-
-    .card-toggle {
-      font-size: 1rem;
-      color: var(--text-medium);
-      transition: transform 0.3s ease;
-    }
-
-    .card-toggle.open {
-      transform: rotate(180deg);
-    }
-
-    .card-body {
-      padding: 1rem;
-      display: none;
-    }
-
-    .card-body.open {
-      display: block;
-    }
-
-    .leaderboard-list {
-      list-style: none;
-    }
-
-    .leaderboard-item {
-      display: flex;
-      align-items: center;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid var(--border-color);
-      font-size: 0.875rem;
-    }
-
-    .leaderboard-item:last-child {
-      border-bottom: none;
-    }
-
-    .leaderboard-rank {
-      width: 2rem;
-      font-weight: 600;
-      color: var(--primary);
-    }
-
-    .leaderboard-user {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .leaderboard-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background-color: var(--primary);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 500;
-      font-size: 0.75rem;
-    }
-
-    .leaderboard-score {
-      font-weight: 500;
-      color: var(--text-medium);
-      text-align: right;
-    }
-
-    .user-menu {
-      position: relative;
-    }
-
-    .user-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background-color: var(--primary);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 1rem;
-    }
-
-    .dropdown-menu {
-      position: absolute;
-      right: 0;
-      top: 45px;
-      background-color: white;
-      border-radius: var(--radius-sm);
-      box-shadow: var(--shadow-lg);
-      min-width: 180px;
-      z-index: 20;
-      display: none;
-    }
-
-    .dropdown-menu.show {
-      display: block;
-    }
-
-    .dropdown-item {
-      padding: 0.5rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      text-decoration: none;
-      color: var(--text-dark);
-      font-size: 0.875rem;
-    }
-
-    .dropdown-item:hover {
-      background-color: var(--bg-light);
-    }
-
-    .dropdown-divider {
-      border-top: 1px solid var(--border-color);
-      margin: 0.25rem 0;
-    }
-
-    .loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1.5rem;
-    }
-
-    .spinner {
-      width: 1.5rem;
-      height: 1.5rem;
-      border: 3px solid rgba(0, 0, 0, 0.1);
-      border-radius: 50%;
-      border-top-color: var(--primary);
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 1.5rem;
-      color: var(--text-medium);
-      font-size: 0.875rem;
-    }
-
-    .empty-state-icon {
-      font-size: 1.5rem;
-      margin-bottom: 0.75rem;
-      color: var(--text-light);
-    }
-
-    .error-message {
-      color: var(--error);
-      font-size: 0.75rem;
-      text-align: center;
-      padding: 0.75rem;
-      background-color: #fee2e2;
-      border-radius: var(--radius-sm);
-      margin-bottom: 0.75rem;
-    }
-
-    @media (max-width: 640px) {
-      .main-content {
-        padding: 0.5rem;
-      }
-
-      .card {
-        margin-bottom: 0.5rem;
-      }
-
-      .card-header {
-        padding: 0.5rem 0.75rem;
-      }
-
-      .card-title {
-        font-size: 1rem;
-      }
-
-      .card-body {
-        padding: 0.75rem;
-      }
-
-      .leaderboard-item {
-        font-size: 0.75rem;
-      }
-
-      .leaderboard-rank {
-        width: 1.5rem;
-      }
-
-      .leaderboard-avatar {
-        width: 24px;
-        height: 24px;
-        font-size: 0.625rem;
-      }
-
-      .leaderboard-score {
-        font-size: 0.75rem;
-      }
-
-      .user-avatar {
-        width: 32px;
-        height: 32px;
-        font-size: 0.875rem;
-      }
-
-      .dropdown-menu {
-        min-width: 160px;
-        top: 40px;
-      }
-
-      .dropdown-item {
-        font-size: 0.75rem;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div id="app">
-    <header class="header">
-      <a href="index.html" class="logo">
-        <i class="fas fa-atom logo-icon"></i>
-        <span>NEET Prep Master</span>
-      </a>
-      <div class="nav-buttons">
-        <div class="user-menu" id="userMenu">
-          <div class="user-avatar" id="userAvatar">U</div>
-          <div class="dropdown-menu" id="dropdownMenu">
-            <a href="profile.html" class="dropdown-item">
-              <i class="fas fa-user"></i> Profile
-            </a>
-            <a href="dpp.html" class="dropdown-item">
-              <i class="fas fa-tasks"></i> My DPPs
-            </a>
-            <a href="tests.html" class="dropdown-item">
-              <i class="fas fa-file-alt"></i> My Tests
-            </a>
-            <div class="dropdown-divider"></div>
-            <a href="#" class="dropdown-item" id="logoutBtn">
-              <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="main-content">
-      <div id="leaderboardScreen">
-        <div class="card">
-          <div class="card-header" id="weeklyHeader">
-            <h2 class="card-title">Weekly Toppers</h2>
-            <i class="fas fa-chevron-down card-toggle open" id="weeklyToggle"></i>
-          </div>
-          <div class="card-body open" id="weeklyBody">
-            <div class="loading" id="weeklyLoading">
-              <div class="spinner"></div>
-            </div>
-            <div class="error-message" id="weeklyError" style="display: none;"></div>
-            <ul class="leaderboard-list" id="weeklyToppers"></ul>
-            <div class="empty-state" id="weeklyEmpty" style="display: none;">
-              <i class="fas fa-exclamation-circle empty-state-icon"></i>
-              <div>No weekly toppers available.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header" id="monthlyHeader">
-            <h2 class="card-title">Monthly Toppers</h2>
-            <i class="fas fa-chevron-down card-toggle" id="monthlyToggle"></i>
-          </div>
-          <div class="card-body" id="monthlyBody">
-            <div class="loading" id="monthlyLoading">
-              <div class="spinner"></div>
-            </div>
-            <div class="error-message" id="monthlyError" style="display: none;"></div>
-            <ul class="leaderboard-list" id="monthlyToppers"></ul>
-            <div class="empty-state" id="monthlyEmpty" style="display: none;">
-              <i class="fas fa-exclamation-circle empty-state-icon"></i>
-              <div>No monthly toppers available.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header" id="latestHeader">
-            <h2 class="card-title">Latest Attempts</h2>
-            <i class="fas fa-chevron-down card-toggle" id="latestToggle"></i>
-          </div>
-          <div class="card-body" id="latestBody">
-            <div class="loading" id="latestLoading">
-              <div class="spinner"></div>
-            </div>
-            <div class="error-message" id="latestError" style="display: none;"></div>
-            <ul class="leaderboard-list" id="latestAttempts"></ul>
-            <div class="empty-state" id="latestEmpty" style="display: none;">
-              <i class="fas fa-exclamation-circle empty-state-icon"></i>
-              <div>No recent attempts available.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const firebaseConfig = {
-        apiKey: "AIzaSyD54FxWUlPn03bxD0UnD0oxVcMkI9ovCeQ",
-        authDomain: "community-604af.firebaseapp.com",
-        databaseURL: "https://community-604af-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "community-604af",
-        storageBucket: "community-604af.appspot.com",
-        messagingSenderId: "735063146170",
-        appId: "1:735063146170:web:725bce2c3c64afc0f30c83",
-        measurementId: "G-7YD8RLH33Q"
-      };
-
-      try {
-        firebase.initializeApp(firebaseConfig);
-      } catch (error) {
-        console.error('Firebase initialization failed:', error);
-        alert('Failed to initialize Firebase. Please check your configuration.');
-        return;
-      }
-
-      const auth = firebase.auth();
-      const database = firebase.database();
-
-      const elements = {
-        userAvatar: document.getElementById('userAvatar'),
-        userMenu: document.getElementById('userMenu'),
-        dropdownMenu: document.getElementById('dropdownMenu'),
-        logoutBtn: document.getElementById('logoutBtn'),
-        weeklyToppers: document.getElementById('weeklyToppers'),
-        monthlyToppers: document.getElementById('monthlyToppers'),
-        latestAttempts: document.getElementById('latestAttempts'),
-        weeklyLoading: document.getElementById('weeklyLoading'),
-        monthlyLoading: document.getElementById('monthlyLoading'),
-        latestLoading: document.getElementById('latestLoading'),
-        weeklyEmpty: document.getElementById('weeklyEmpty'),
-        monthlyEmpty: document.getElementById('monthlyEmpty'),
-        latestEmpty: document.getElementById('latestEmpty'),
-        weeklyError: document.getElementById('weeklyError'),
-        monthlyError: document.getElementById('monthlyError'),
-        latestError: document.getElementById('latestError'),
-        weeklyHeader: document.getElementById('weeklyHeader'),
-        monthlyHeader: document.getElementById('monthlyHeader'),
-        latestHeader: document.getElementById('latestHeader'),
-        weeklyBody: document.getElementById('weeklyBody'),
-        monthlyBody: document.getElementById('monthlyBody'),
-        latestBody: document.getElementById('latestBody'),
-        weeklyToggle: document.getElementById('weeklyToggle'),
-        monthlyToggle: document.getElementById('monthlyToggle'),
-        latestToggle: document.getElementById('latestToggle')
-      };
-
-      Object.entries(elements).forEach(([key, element]) => {
-        if (!element) {
-          console.warn(`Element with ID '${key}' not found in DOM.`);
+(async () => {
+  // Function to wait for an element
+  const waitForElement = (selector, timeout = 5000) => {
+    return new Promise((resolve, reject) => {
+      const element = document.querySelector(selector);
+      if (element) return resolve(element);
+      const startTime = Date.now();
+      const interval = setInterval(() => {
+        const el = document.querySelector(selector);
+        if (el) {
+          clearInterval(interval);
+          resolve(el);
+        } else if (Date.now() - startTime > timeout) {
+          clearInterval(interval);
+          reject(new Error(`Timeout waiting for ${selector}`));
         }
-      });
-
-      function showLoading(section, show) {
-        if (elements[`${section}Loading`] && elements[`${section}Empty`] && elements[`${section}Error`]) {
-          elements[`${section}Loading`].style.display = show ? 'flex' : 'none';
-          elements[`${section}Empty`].style.display = 'none';
-          elements[`${section}Error`].style.display = 'none';
-        }
-      }
-
-      function showEmpty(section, message = `No ${section} data available.`) {
-        if (elements[`${section}Empty`] && elements[`${section}Loading`] && elements[`${section}Error`]) {
-          elements[`${section}Empty`].style.display = 'block';
-          elements[`${section}Empty`].querySelector('div').textContent = message;
-          elements[`${section}Loading`].style.display = 'none';
-          elements[`${section}Error`].style.display = 'none';
-        }
-      }
-
-      function showError(section, message) {
-        if (elements[`${section}Error`] && elements[`${section}Loading`] && elements[`${section}Empty`]) {
-          elements[`${section}Error`].textContent = message;
-          elements[`${section}Error`].style.display = 'block';
-          elements[`${section}Loading`].style.display = 'none';
-          elements[`${section}Empty`].style.display = 'none';
-        }
-      }
-
-      function toggleSection(section) {
-        const body = elements[`${section}Body`];
-        const toggle = elements[`${section}Toggle`];
-        if (body && toggle) {
-          const isOpen = body.classList.contains('open');
-          body.classList.toggle('open', !isOpen);
-          toggle.classList.toggle('open', !isOpen);
-        }
-      }
-
-      async function fetchUserData(userId) {
-        try {
-          const snapshot = await database.ref(`users/${userId}`).once('value');
-          const userData = snapshot.val();
-          console.log(`Fetched user data for ${userId}:`, userData);
-          return userData || { name: 'Anonymous', photoURL: null };
-        } catch (error) {
-          console.error(`Error fetching user data for ${userId}:`, error);
-          return { name: 'Anonymous', photoURL: null };
-        }
-      }
-
-      async function loadWeeklyToppers() {
-        showLoading('weekly', true);
-        try {
-          const snapshot = await database.ref('quizHistory').once('value');
-          const allResults = snapshot.val();
-          if (!allResults) {
-            console.warn('No quiz history data found.');
-            showEmpty('weekly', 'No quiz results available for the past week.');
-            return;
-          }
-
-          const weeklyResults = [];
-          const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-
-          for (const userId in allResults) {
-            const userResults = allResults[userId];
-            for (const resultId in userResults) {
-              const result = userResults[resultId];
-              if (!result.date || !Number.isFinite(result.score) || !Number.isFinite(result.total)) {
-                console.warn(`Invalid result data for user ${userId}, result ${resultId}:`, result);
-                continue;
-              }
-              if (result.date > oneWeekAgo) {
-                const user = await fetchUserData(userId);
-                weeklyResults.push({
-                  userId,
-                  displayName: user.name || 'Anonymous',
-                  photoURL: user.photoURL,
-                  score: result.score,
-                  total: result.total,
-                  percentage: (result.score / result.total) * 100,
-                  date: result.date
-                });
-              }
-            }
-          }
-
-          console.log('Weekly results:', weeklyResults);
-          weeklyResults.sort((a, b) => b.percentage - a.percentage || b.date - a.date);
-          const top10 = weeklyResults.slice(0, 10);
-
-          if (elements.weeklyToppers) {
-            elements.weeklyToppers.innerHTML = top10.map((result, index) => `
-              <li class="leaderboard-item">
-                <span class="leaderboard-rank">${index + 1}</span>
-                <div class="leaderboard-user">
-                  <div class="leaderboard-avatar" ${result.photoURL ? `style="background-image: url(${result.photoURL})"` : ''}>
-                    ${result.photoURL ? '' : (result.displayName ? result.displayName.charAt(0).toUpperCase() : 'A')}
-                  </div>
-                  <span>${result.displayName}</span>
-                </div>
-                <span class="leaderboard-score">${result.score}/${result.total} (${Math.round(result.percentage)}%)</span>
-              </li>
-            `).join('');
-          }
-
-          if (top10.length === 0) {
-            showEmpty('weekly', 'No quiz results from the past week.');
-          }
-        } catch (error) {
-          console.error('Error loading weekly toppers:', error);
-          showError('weekly', `Failed to load weekly toppers: ${error.message}`);
-        } finally {
-          showLoading('weekly', false);
-        }
-      }
-
-      async function loadMonthlyToppers() {
-        showLoading('monthly', true);
-        try {
-          const snapshot = await database.ref('quizHistory').once('value');
-          const allResults = snapshot.val();
-          if (!allResults) {
-            console.warn('No quiz history data found.');
-            showEmpty('monthly', 'No quiz results available for the past month.');
-            return;
-          }
-
-          const monthlyResults = [];
-          const oneMonthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-
-          for (const userId in allResults) {
-            const userResults = allResults[userId];
-            for (const resultId in userResults) {
-              const result = userResults[resultId];
-              if (!result.date || !Number.isFinite(result.score) || !Number.isFinite(result.total)) {
-                console.warn(`Invalid result data for user ${userId}, result ${resultId}:`, result);
-                continue;
-              }
-              if (result.date > oneMonthAgo) {
-                const user = await fetchUserData(userId);
-                monthlyResults.push({
-                  userId,
-                  displayName: user.name || 'Anonymous',
-                  photoURL: user.photoURL,
-                  score: result.score,
-                  total: result.total,
-                  percentage: (result.score / result.total) * 100,
-                  date: result.date
-                });
-              }
-            }
-          }
-
-          console.log('Monthly results:', monthlyResults);
-          monthlyResults.sort((a, b) => b.percentage - a.percentage || b.date - a.date);
-          const top20 = monthlyResults.slice(0, 20);
-
-          if (elements.monthlyToppers) {
-            elements.monthlyToppers.innerHTML = top20.map((result, index) => `
-              <li class="leaderboard-item">
-                <span class="leaderboard-rank">${index + 1}</span>
-                <div class="leaderboard-user">
-                  <div class="leaderboard-avatar" ${result.photoURL ? `style="background-image: url(${result.photoURL})"` : ''}>
-                    ${result.photoURL ? '' : (result.displayName ? result.displayName.charAt(0).toUpperCase() : 'A')}
-                  </div>
-                  <span>${result.displayName}</span>
-                </div>
-                <span class="leaderboard-score">${result.score}/${result.total} (${Math.round(result.percentage)}%)</span>
-              </li>
-            `).join('');
-          }
-
-          if (top20.length === 0) {
-            showEmpty('monthly', 'No quiz results from the past month.');
-          }
-        } catch (error) {
-          console.error('Error loading monthly toppers:', error);
-          showError('monthly', `Failed to load monthly toppers: ${error.message}`);
-        } finally {
-          showLoading('monthly', false);
-        }
-      }
-
-      async function loadLatestAttempts() {
-        showLoading('latest', true);
-        try {
-          const snapshot = await database.ref('quizHistory').once('value');
-          const allResults = snapshot.val();
-          if (!allResults) {
-            console.warn('No quiz history data found.');
-            showEmpty('latest', 'No recent quiz attempts available.');
-            return;
-          }
-
-          const latestResults = [];
-          for (const userId in allResults) {
-            const userResults = allResults[userId];
-            for (const resultId in userResults) {
-              const result = userResults[resultId];
-              if (!result.date || !Number.isFinite(result.score) || !Number.isFinite(result.total) || !result.subject) {
-                console.warn(`Invalid result data for user ${userId}, result ${resultId}:`, result);
-                continue;
-              }
-              const user = await fetchUserData(userId);
-              latestResults.push({
-                userId,
-                displayName: user.name || 'Anonymous',
-                photoURL: user.photoURL,
-                score: result.score,
-                total: result.total,
-                percentage: (result.score / result.total) * 100,
-                date: result.date,
-                subject: result.subject
-              });
-            }
-          }
-
-          console.log('Latest results:', latestResults);
-          latestResults.sort((a, b) => b.date - a.date);
-          const top10 = latestResults.slice(0, 10);
-
-          if (elements.latestAttempts) {
-            elements.latestAttempts.innerHTML = top10.map((result, index) => `
-              <li class="leaderboard-item">
-                <span class="leaderboard-rank">${index + 1}</span>
-                <div class="leaderboard-user">
-                  <div class="leaderboard-avatar" ${result.photoURL ? `style="background-image: url(${result.photoURL})"` : ''}>
-                    ${result.photoURL ? '' : (result.displayName ? result.displayName.charAt(0).toUpperCase() : 'A')}
-                  </div>
-                  <span>${result.displayName}</span>
-                </div>
-                <span class="leaderboard-score">${result.score}/${result.total} (${Math.round(result.percentage)}%) - ${result.subject.charAt(0).toUpperCase() + result.subject.slice(1)}</span>
-              </li>
-            `).join('');
-          }
-
-          if (top10.length === 0) {
-            showEmpty('latest', 'No recent quiz attempts available.');
-          }
-        } catch (error) {
-          console.error('Error loading latest attempts:', error);
-          showError('latest', `Failed to load latest attempts: ${error.message}`);
-        } finally {
-          showLoading('latest', false);
-        }
-      }
-
-      function initEventListeners() {
-        if (elements.userAvatar && elements.dropdownMenu) {
-          elements.userAvatar.addEventListener('click', () => {
-            elements.dropdownMenu.classList.toggle('show');
-          });
-        }
-
-        if (elements.logoutBtn) {
-          elements.logoutBtn.addEventListener('click', () => {
-            auth.signOut().then(() => {
-              window.location.href = 'index.html';
-            }).catch(error => {
-              console.error('Error logging out:', error);
-              alert('Failed to log out: ' + error.message);
-            });
-          });
-        }
-
-        if (elements.userMenu && elements.dropdownMenu) {
-          window.addEventListener('click', (e) => {
-            if (!elements.userMenu.contains(e.target)) {
-              elements.dropdownMenu.classList.remove('show');
-            }
-          });
-        }
-
-        if (elements.weeklyHeader) {
-          elements.weeklyHeader.addEventListener('click', () => toggleSection('weekly'));
-        }
-        if (elements.monthlyHeader) {
-          elements.monthlyHeader.addEventListener('click', () => toggleSection('monthly'));
-        }
-        if (elements.latestHeader) {
-          elements.latestHeader.addEventListener('click', () => toggleSection('latest'));
-        }
-      }
-
-      auth.onAuthStateChanged((user) => {
-        if (!user) {
-          console.log('No user authenticated, redirecting to index.html');
-          window.location.href = 'index.html';
-          return;
-        }
-
-        if (elements.userAvatar) {
-          if (user.photoURL) {
-            elements.userAvatar.style.backgroundImage = `url(${user.photoURL})`;
-            elements.userAvatar.textContent = '';
-          } else {
-            elements.userAvatar.textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U';
-          }
-        }
-
-        console.log('User authenticated:', user.uid);
-        initEventListeners();
-        loadWeeklyToppers();
-        loadMonthlyToppers();
-        loadLatestAttempts();
-      });
+      }, 100);
     });
-  </script>
-</body>
-</html>
+  };
+
+  // Click Start button
+  const startButton = await waitForElement('button#start-btn').catch(() => null);
+  if (!startButton) {
+    console.error('Start button not found');
+    return;
+  }
+  startButton.click();
+
+  // Navigate through up to 10 questions using Skip
+  for (let i = 0; i < 10; i++) {
+    await waitForElement('#question-container', 5000).catch(() => null);
+    const skipButton = document.querySelector('#skip-btn');
+    if (!skipButton) {
+      console.error('Skip button not found');
+      break;
+    }
+    skipButton.click();
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  // Submit the quiz
+  const submitButton = await waitForElement('#submit-btn[type="submit"]', 5000).catch(() => null);
+  if (!submitButton) {
+    console.error('Submit button not found');
+    return;
+  }
+  submitButton.click();
+  await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for results page
+
+  // Extract data from results table(s)
+  const results = await waitForElement('table').then(() => {
+    const sections = document.querySelectorAll('#headings');
+    const data = {};
+
+    sections.forEach(section => {
+      const subject = section.querySelector('h3')?.textContent.replace('Section : ', '').trim() || 'Unknown';
+      const table = section.nextElementSibling;
+      const rows = table.querySelectorAll('tbody tr');
+      const sectionData = [];
+
+      for (const row of rows) {
+        const questionNumber = row.querySelector('td:nth-child(1)')?.textContent.trim();
+        if (!questionNumber || questionNumber === 'N/A') continue; // Skip invalid question numbers
+        const image = row.querySelector('.result-image')?.src || null;
+        const answerText = row.querySelector('td:nth-child(3)')?.innerHTML || '';
+        const correctOptionMatch = answerText.match(/Correct Answer: ([A-D])/);
+        const correctOption = correctOptionMatch ? correctOptionMatch[1] : 'N/A';
+
+        sectionData.push({
+          questionNumber: `Question ${questionNumber}`,
+          image,
+          correctOption
+        });
+      }
+
+      if (sectionData.length > 0) {
+        data[subject] = sectionData;
+      }
+    });
+
+    // Ensure exactly 10 questions
+    let totalQuestions = Object.values(data).reduce((sum, arr) => sum + arr.length, 0);
+    if (totalQuestions < 10) {
+      const placeholders = Array(10 - totalQuestions).fill().map((_, i) => ({
+        questionNumber: `Question ${totalQuestions + i + 1}`,
+        image: null,
+        correctOption: 'N/A'
+      }));
+      data['Unknown'] = (data['Unknown'] || []).concat(placeholders);
+    }
+
+    // Trim to exactly 10 questions
+    const finalData = {};
+    let questionCount = 0;
+    for (const subject in data) {
+      const questions = data[subject];
+      const slice = questions.slice(0, Math.min(questions.length, 10 - questionCount));
+      if (slice.length > 0) {
+        finalData[subject] = slice;
+        questionCount += slice.length;
+      }
+      if (questionCount >= 10) break;
+    }
+
+    return finalData;
+  }).catch(() => {
+    console.error('Results table not found');
+    return {};
+  });
+
+  // Output JSON string
+  const jsonString = JSON.stringify(results, null, 2);
+  console.log('Copy the following JSON:');
+  console.log(jsonString);
+})();

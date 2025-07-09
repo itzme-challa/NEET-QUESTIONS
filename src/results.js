@@ -73,6 +73,9 @@ function Results() {
           timestamp
         })));
       }
+    }, (error) => {
+      console.error('Error fetching results:', error);
+      alert('Failed to load results. Please try again.');
     });
   }, []);
 

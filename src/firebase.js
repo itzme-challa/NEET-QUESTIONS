@@ -16,16 +16,24 @@ try {
     measurementId: process.env.REACT_APP_MEASUREMENT_ID
   };
 
+  // Log config (without sensitive data) for debugging
+  console.log('Firebase config loaded:', {
+    databaseURL: firebaseConfig.databaseURL,
+    projectId: firebaseConfig.projectId,
+    hasApiKey: !!firebaseConfig.apiKey
+  });
+
   // Validate required config fields
   if (!firebaseConfig.apiKey || !firebaseConfig.databaseURL || !firebaseConfig.projectId) {
-    throw new Error('Missing required Firebase configuration fields');
+    throw new Error('Missing required Firebase configuration fields: apiKey, databaseURL, or projectId');
   }
 
   const app = initializeApp(firebaseConfig);
   db = getDatabase(app);
+  console.log('Firebase initialized successfully');
 } catch (error) {
-  console.error('Firebase initialization failed:', error);
-  initializationError = error.message;
+  console.error('Firebase initialization failed:', error.message, error.stack);
+  initializationError = `Firebase initialization failed: ${error.message}`;
 }
 
 export { db, initializationError };

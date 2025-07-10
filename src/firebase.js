@@ -12,21 +12,5 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_MEASUREMENT_ID
 };
 
-// Debug environment variables
-console.log('Firebase Config:', {
-  apiKey: process.env.REACT_APP_API_KEY ? 'Loaded' : 'Missing',
-  databaseURL: process.env.REACT_APP_DATABASE_URL ? 'Loaded' : 'Missing',
-  projectId: process.env.REACT_APP_PROJECT_ID ? 'Loaded' : 'Missing'
-});
-
-let db;
-try {
-  const app = initializeApp(firebaseConfig);
-  db = getDatabase(app);
-  console.log('Firebase initialized successfully');
-} catch (error) {
-  console.error('Firebase initialization failed:', error);
-  throw error;
-}
-
-export { db };
+const app = initializeApp(firebaseConfig);
+export const db = getDatabase(app);

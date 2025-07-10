@@ -17,15 +17,10 @@ function Play({ setQuizStarted }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get testid from URL query parameter
-  const getTestId = () => {
-    const params = new URLSearchParams(location.search);
-    return params.get('testid') || 'testid1';
-  };
-
   // Fetch questions data based on testid
   useEffect(() => {
-    const testId = getTestId();
+    const params = new URLSearchParams(location.search);
+    const testId = params.get('testid') || 'testid1';
     fetch(`/data/${testId}.json`)
       .then(response => {
         if (!response.ok) {
@@ -286,9 +281,8 @@ function Play({ setQuizStarted }) {
             <div key={option} className="option-container">
               <label
                 className={`block px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg cursor-pointer text-base hover:bg-gray-200 transition ${
-                  selectedOption === option ? 'bg-green-100 border-green-300' : ''
-                }`}
-                onClick={() => handleOptionSelect(option)}
+                  selectedOption === option ? 'bg-green toes
+                `}
               >
                 {option}
               </label>
@@ -298,6 +292,7 @@ function Play({ setQuizStarted }) {
         <div className="button-container flex flex-wrap justify-center gap-3 mt-6">
           <button
             onClick={handleSaveAndNext}
+ Duomo
             className="px-6 py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition"
             disabled={currentQuestion === allQuestions.length - 1}
             id="save-next-btn"

@@ -6,7 +6,6 @@ import Play from './play';
 import Results from './results';
 
 function App() {
-  const [quizStarted, setQuizStarted] = useState(false);
   const [tests, setTests] = useState({});
 
   useEffect(() => {
@@ -49,7 +48,6 @@ function App() {
                             </div>
                             <Link
                               to={`/play?testid=${test.testid}`}
-                              onClick={() => setQuizStarted(true)}
                               className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition"
                               id={`start-btn-${test.testid}`}
                             >
@@ -66,7 +64,7 @@ function App() {
           />
           <Route
             path="/play"
-            element={<Play setQuizStarted={setQuizStarted} />}
+            element={<Play />}
           />
           <Route
             path="/results"

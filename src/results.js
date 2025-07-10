@@ -6,6 +6,7 @@ import { db } from './firebase';
 function Results() {
   const [results, setResults] = useState([]);
   const [questionsData, setQuestionsData] = useState(null);
+  const [error, setError] = useState(null);
   const location = useLocation();
 
   // Get testid from URL
@@ -16,7 +17,7 @@ function Results() {
     fetch(`/data/${testId}.json`)
       .then(response => {
         if (!response.ok) {
-          throw new Error('Failed to load questions data');
+          throw new Error(`Failed to load questions for test ID: ${testId}`);
         }
         return response.json();
       })
@@ -25,7 +26,7 @@ function Results() {
       })
       .catch(error => {
         console.error('Error loading questions:', error);
-        alert('Failed to load quiz questions. Please try again.');
+        setError('Failed to load quiz questions. Please check the test ID or try again.');
       });
   }, [testId]);
 
@@ -45,12 +46,24 @@ function Results() {
       }
     }, (error) => {
       console.error('Error fetching results:', error);
-      alert('Failed to load results. Please try again.');
+      setError('Failed to load results. Please try again.');
     });
   }, [testId]);
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 font-inter flex items-center justify-center">
+        <div className="text-red-600 text-xl">{error}</div>
+      </div>
+    );
+  }
+
   if (!questionsData) {
-    return <div>Loading results...</div>;
+    return (
+      <div className="min-h-screen bg-gray-100 font-inter flex items-center justify-center">
+        <div className="text-gray-600 text-xl">Loading results...</div>
+      </div>
+    );
   }
 
   return (

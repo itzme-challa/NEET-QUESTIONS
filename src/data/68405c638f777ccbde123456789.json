@@ -2,53 +2,12 @@
   "PHYSICS": [
     {
       "questionNumber": "Question 1",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/02a847d7-b87c-4acb-b200-f0000337fde6.png",
+      "image": "https://static.pw.live/.../image1.png",
       "correctOption": "C"
     },
-    {
-      "questionNumber": "Question 2",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/997c16b0-9743-437b-8d94-f1731d3d03fe.png",
-      "correctOption": "D"
-    },
-    {
-      "questionNumber": "Question 3",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/1303df44-4d76-43fd-bf65-85fa69cbbad5.png",
-      "correctOption": "B"
-    },
-    {
-      "questionNumber": "Question 4",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/fa60933a-e038-43bf-996f-c767937675ae.png",
-      "correctOption": "B"
-    },
-    {
-      "questionNumber": "Question 5",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/43032f03-6829-49d0-a07f-12e97847b21b.png",
-      "correctOption": "B"
-    },
-    {
-      "questionNumber": "Question 6",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/352d6768-193e-4fa9-9fb0-2efb1a856330.png",
-      "correctOption": "B"
-    },
-    {
-      "questionNumber": "Question 7",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/9af42518-e561-4aaa-beea-9dc55b7d1603.png",
-      "correctOption": "A"
-    },
-    {
-      "questionNumber": "Question 8",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/f99e55ba-963d-42c2-985d-d3ee1a5067f0.png",
-      "correctOption": "B"
-    },
-    {
-      "questionNumber": "Question 9",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/58a9e5af-b15a-437f-888e-63cf8a6d72f8.png",
-      "correctOption": "C"
-    },
-    {
-      "questionNumber": "Question 10",
-      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/17561af7-4c8d-4005-b37d-4ba074c114d1.png",
-      "correctOption": "C"
-    }
+    ...
+  ],
+  "CHEMISTRY": [
+    ...
   ]
 }

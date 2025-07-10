@@ -4,7 +4,7 @@ import { ref, set, getDatabase } from 'firebase/database';
 import { db } from './firebase';
 import html2canvas from 'html2canvas';
 
-function Play({ setQuizStarted }) {
+function Play() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -134,7 +134,6 @@ function Play({ setQuizStarted }) {
       const testId = params.get('testid') || 'testid1';
       const dbRef = ref(getDatabase(db), `quiz_results/${testId}/${Date.now()}`);
       await set(dbRef, { answers, timestamp: new Date().toISOString() });
-      setQuizStarted(false);
       navigate(`/results?testid=${testId}`);
     } catch (error) {
       console.error('Error submitting quiz:', error);

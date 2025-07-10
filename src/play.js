@@ -14,6 +14,7 @@ function Play() {
   const [showReport, setShowReport] = useState(false);
   const [reportText, setReportText] = useState('');
   const [questionsData, setQuestionsData] = useState(null);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,7 +25,7 @@ function Play() {
     fetch(`/data/${testId}.json`)
       .then(response => {
         if (!response.ok) {
-          throw new Error('Failed to load questions data');
+          throw new Error(`Failed to load questions for test ID: ${testId}`);
         }
         return response.json();
       })
@@ -41,7 +42,7 @@ function Play() {
       })
       .catch(error => {
         console.error('Error loading questions:', error);
-        alert('Failed to load quiz questions. Please try again.');
+        setError('Failed to load quiz questions. Please check the test ID or try again.');
       });
   }, [location]);
 
@@ -187,8 +188,20 @@ function Play() {
     }
   };
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 font-inter flex items-center justify-center">
+        <div className="text-red-600 text-xl">{error}</div>
+      </div>
+    );
+  }
+
   if (!questionsData) {
-    return <div>Loading questions...</div>;
+    return (
+      <div className="min-h-screen bg-gray-100 font-inter flex items-center justify-center">
+        <div className="text-gray-600 text-xl">Loading questions...</div>
+      </div>
+    );
   }
 
   return (

@@ -227,7 +227,7 @@ function Play({ setQuizStarted }) {
         </div>
       )}
       {showReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ID="report-modal">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Report Question</h3>
             <textarea
@@ -281,8 +281,9 @@ function Play({ setQuizStarted }) {
             <div key={option} className="option-container">
               <label
                 className={`block px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg cursor-pointer text-base hover:bg-gray-200 transition ${
-                  selectedOption === option ? 'bg-green toes
-                `}
+                  selectedOption === option ? 'bg-green-100 border-green-300' : ''
+                }`}
+                onClick={() => handleOptionSelect(option)}
               >
                 {option}
               </label>
@@ -292,7 +293,6 @@ function Play({ setQuizStarted }) {
         <div className="button-container flex flex-wrap justify-center gap-3 mt-6">
           <button
             onClick={handleSaveAndNext}
- Duomo
             className="px-6 py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition"
             disabled={currentQuestion === allQuestions.length - 1}
             id="save-next-btn"

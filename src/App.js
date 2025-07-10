@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { getDatabase, ref, onValue } from 'firebase/database';
-import { db } from './firebase';
+import { db, initializationError } from './firebase';
 import Play from './play';
 import Results from './results';
 
 function App() {
   const [tests, setTests] = useState(null);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(initializationError);
 
   useEffect(() => {
+    if (!db) {
+      setError('Firebase is not initialized. Please check your configuration.');
+      return;
+    }
+
     const dbRef = ref(getDatabase(db), 'tests');
     onValue(dbRef, (snapshot) => {
       const data = snapshot.val();

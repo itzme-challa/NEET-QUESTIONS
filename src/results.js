@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getDatabase, ref, onValue } from 'firebase/database';
-import { db } from './firebase';
+import { db, initializationError } from './firebase';
 
 function Results() {
   const [results, setResults] = useState([]);
   const [questionsData, setQuestionsData] = useState(null);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(initializationError);
   const location = useLocation();
 
   // Get testid from URL
@@ -14,6 +14,8 @@ function Results() {
 
   // Fetch questions data
   useEffect(() => {
+    if (error) return;
+
     fetch(`/data/${testId}.json`)
       .then(response => {
         if (!response.ok) {
@@ -28,10 +30,15 @@ function Results() {
         console.error('Error loading questions:', error);
         setError('Failed to load quiz questions. Please check the test ID or try again.');
       });
-  }, [testId]);
+  }, [testId, error]);
 
   // Fetch results from Firebase
   useEffect(() => {
+    if (!db || error) {
+      setError('Firebase is not initialized. Cannot load results.');
+      return;
+    }
+
     const dbRef = ref(getDatabase(db), `quiz_results/${testId}`);
     onValue(dbRef, (snapshot) => {
       const data = snapshot.val();
@@ -48,7 +55,7 @@ function Results() {
       console.error('Error fetching results:', error);
       setError('Failed to load results. Please try again.');
     });
-  }, [testId]);
+  }, [testId, error]);
 
   if (error) {
     return (

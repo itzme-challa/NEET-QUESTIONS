@@ -227,7 +227,7 @@ function Play({ setQuizStarted }) {
         </div>
       )}
       {showReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ID="report-modal">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" id="report-modal">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Report Question</h3>
             <textarea
@@ -254,7 +254,7 @@ function Play({ setQuizStarted }) {
           </div>
         </div>
       )}
-      <div className="question-container bg-white rounded-xl shadow-md p-6 mb-6" id="question-container">
+      <div className="question-container bg-white rounded-xl shadow-md5 p-6 mb-6" id="question-container">
         <div className="question-info-bar flex items-center gap-4 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-lg shadow-sm p-3 mb-6 overflow-x-auto">
           <span className="bg-indigo-100 text-indigo-900 font-semibold px-4 py-2 rounded-lg min-w-[120px] text-center">
             {allQuestions[currentQuestion].questionNumber}

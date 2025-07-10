@@ -4,11 +4,11 @@ import { ref, set, getDatabase } from 'firebase/database';
 import { db } from './firebase';
 import html2canvas from 'html2canvas';
 
-function Play({ setQuizStarted, quizStarted }) {
+function Play() {
+  const [questionsData, setQuestionsData] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [answers, setAnswers] = useState({});
-  const [questionsData, setQuestionsData] = useState(null);
   const [questionStatuses, setQuestionStatuses] = useState([]);
   const [timeLeft, setTimeLeft] = useState(3 * 3600); // 3 hours
   const [showIndex, setShowIndex] = useState(false);
@@ -17,33 +17,36 @@ function Play({ setQuizStarted, quizStarted }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get testid from URL
-  const queryParams = new URLSearchParams(location.search);
-  const testid = queryParams.get('testid');
+  const query = new URLSearchParams(location.search);
+  const testId = query.get('testId');
 
-  // Load questions from local JSON
   useEffect(() => {
-    if (testid && quizStarted) {
-      import(`./data/${testid}.json`)
-        .then(data => {
-          setQuestionsData(data.default);
+    if (testId) {
+      fetch(`/data/${testId}.json`)
+        .then((response) => response.json())
+        .then((data) => {
+          setQuestionsData(data);
+          const allQuestions = Object.keys(data).flatMap((subject) =>
+            data[subject].map((q) => ({
+              ...q,
+              subject,
+              questionNumber: q.questionNumber || `Question ${index + 1}`,
+            }))
+          );
           setQuestionStatuses(
-            Object.keys(data.default).flatMap(subject =>
-              data.default[subject].map(q => ({
-                questionNumber: q.questionNumber,
-                status: 'not-visited'
-              }))
-            )
+            allQuestions.map((q) => ({
+              questionNumber: q.questionNumber,
+              status: 'not-visited',
+            }))
           );
         })
-        .catch(error => {
-          console.error('Error loading questions:', error);
-          alert('Failed to load questions. Please try again.');
+        .catch((error) => {
+          console.error('Error fetching questions:', error);
+          alert('Failed to load test questions. Please try again.');
         });
     }
-  }, [testid, quizStarted]);
+  }, [testId]);
 
-  // Prevent page refresh
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       e.preventDefault();
@@ -53,18 +56,16 @@ function Play({ setQuizStarted, quizStarted }) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
-  // Timer
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Update question status to visited (blue) when viewing
   useEffect(() => {
-    if (questionStatuses.length > 0) {
-      setQuestionStatuses(prev =>
+    if (questionsData) {
+      setQuestionStatuses((prev) =>
         prev.map((q, index) =>
           index === currentQuestion && q.status === 'not-visited'
             ? { ...q, status: 'visited' }
@@ -72,27 +73,27 @@ function Play({ setQuizStarted, quizStarted }) {
         )
       );
     }
-  }, [currentQuestion]);
-
-  if (!questionsData || !quizStarted) {
-    return <div className="text-center p-4">Loading...</div>;
-  }
-
-  const allQuestions = Object.keys(questionsData).flatMap(subject =>
-    questionsData[subject].map(q => ({ ...q, subject }))
-  );
+  }, [currentQuestion, questionsData]);
 
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hours.toString().padStart(2, '0')}:${minutes
+      .toString()
+      .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
+  const allQuestions = questionsData
+    ? Object.keys(questionsData).flatMap((subject) =>
+        questionsData[subject].map((q) => ({ ...q, subject }))
+      )
+    : [];
 
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
     setAnswers({ ...answers, [allQuestions[currentQuestion].questionNumber]: option });
-    setQuestionStatuses(prev =>
+    setQuestionStatuses((prev) =>
       prev.map((q, index) =>
         index === currentQuestion ? { ...q, status: 'answered' } : q
       )
@@ -101,7 +102,7 @@ function Play({ setQuizStarted, quizStarted }) {
 
   const handleSaveAndNext = () => {
     if (!selectedOption) {
-      setQuestionStatuses(prev =>
+      setQuestionStatuses((prev) =>
         prev.map((q, index) =>
           index === currentQuestion ? { ...q, status: 'unanswered' } : q
         )
@@ -115,7 +116,7 @@ function Play({ setQuizStarted, quizStarted }) {
 
   const handleSkip = () => {
     setAnswers({ ...answers, [allQuestions[currentQuestion].questionNumber]: 'Skipped' });
-    setQuestionStatuses(prev =>
+    setQuestionStatuses((prev) =>
       prev.map((q, index) =>
         index === currentQuestion ? { ...q, status: 'skipped' } : q
       )
@@ -128,10 +129,9 @@ function Play({ setQuizStarted, quizStarted }) {
 
   const handleSubmit = async () => {
     try {
-      const dbRef = ref(getDatabase(db), `quiz_results/${testid}/${Date.now()}`);
+      const dbRef = ref(getDatabase(db), `quiz_results/${testId}/${Date.now()}`);
       await set(dbRef, { answers, timestamp: new Date().toISOString() });
-      setQuizStarted(false);
-      navigate(`/results?testid=${testid}`);
+      navigate(`/results?testId=${testId}`);
     } catch (error) {
       console.error('Error submitting quiz:', error);
       alert('Failed to submit quiz. Please try again.');
@@ -152,7 +152,7 @@ function Play({ setQuizStarted, quizStarted }) {
       console.error('Failed to capture screenshot:', error);
     }
     try {
-      const reportRef = ref(getDatabase(db), `reports/${testid}/${Date.now()}`);
+      const reportRef = ref(getDatabase(db), `reports/${testId}/${Date.now()}`);
       await set(reportRef, {
         questionNumber: question.questionNumber,
         subject: question.subject,
@@ -160,7 +160,7 @@ function Play({ setQuizStarted, quizStarted }) {
         correctOption: question.correctOption,
         reportText,
         screenshot,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       setReportText('');
       setShowReport(false);
@@ -173,14 +173,24 @@ function Play({ setQuizStarted, quizStarted }) {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'not-visited': return 'bg-white';
-      case 'visited': return 'bg-blue-500';
-      case 'answered': return 'bg-green-500';
-      case 'skipped': return 'bg-yellow-500';
-      case 'unanswered': return 'bg-red-500';
-      default: return 'bg-white';
+      case 'not-visited':
+        return 'bg-white';
+      case 'visited':
+        return 'bg-blue-500';
+      case 'answered':
+        return 'bg-green-500';
+      case 'skipped':
+        return 'bg-yellow-500';
+      case 'unanswered':
+        return 'bg-red-500';
+      default:
+        return 'bg-white';
     }
   };
+
+  if (!questionsData) {
+    return <div className="text-center p-4">Loading questions...</div>;
+  }
 
   return (
     <div className="container mx-auto p-4 max-w-3xl relative">
@@ -271,7 +281,7 @@ function Play({ setQuizStarted, quizStarted }) {
           />
         )}
         <div className="options space-y-3">
-          {['A', 'B', 'C', 'D'].map(option => (
+          {['A', 'B', 'C', 'D'].map((option) => (
             <div key={option} className="option-container">
               <label
                 className={`block px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg cursor-pointer text-base hover:bg-gray-200 transition ${

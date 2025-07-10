@@ -11,16 +11,19 @@ function App() {
 
   useEffect(() => {
     if (!db) {
+      console.error('Firebase database not initialized');
       setError('Firebase is not initialized. Please check your configuration.');
       return;
     }
 
+    console.log('Fetching tests from Firebase');
     const dbRef = ref(getDatabase(db), 'tests');
     onValue(dbRef, (snapshot) => {
       const data = snapshot.val();
+      console.log('Tests data received:', data);
       setTests(data || {});
     }, (error) => {
-      console.error('Error fetching tests:', error);
+      console.error('Error fetching tests:', error.message, error.stack);
       setError('Failed to load tests. Please try again.');
     });
   }, []);

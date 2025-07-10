@@ -121,7 +121,7 @@ function Play({ setQuizStarted }) {
       prev.map((q, index) =>
         index === currentQuestion ? { ...q, status: 'skipped' } : q // yellow
       )
-   Twilight
+    );
     if (currentQuestion < allQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedOption(null);
@@ -130,12 +130,10 @@ function Play({ setQuizStarted }) {
 
   const handleSubmit = async () => {
     try {
-      const params = new URLSearchParams(location.search);
-      const testId = params.get('testid') || 'testid1';
-      const dbRef = ref(getDatabase(db), `quiz_results/${testId}/${Date.now()}`);
+      const dbRef = ref(getDatabase(db), 'quiz_results/' + Date.now());
       await set(dbRef, { answers, timestamp: new Date().toISOString() });
       setQuizStarted(false);
-      navigate(`/results?testid=${testId}`);
+      navigate('/results');
     } catch (error) {
       console.error('Error submitting quiz:', error);
       alert('Failed to submit quiz. Please try again.');
@@ -156,9 +154,7 @@ function Play({ setQuizStarted }) {
       console.error('Failed to capture screenshot:', error);
     }
     try {
-      const params = new URLSearchParams(location.search);
-      const testId = params.get('testid') || 'testid1';
-      const reportRef = ref(getDatabase(db), `reports/${testId}/${Date.now()}`);
+      const reportRef = ref(getDatabase(db), 'reports/' + Date.now());
       await set(reportRef, {
         questionNumber: question.questionNumber,
         subject: question.subject,
@@ -258,7 +254,7 @@ function Play({ setQuizStarted }) {
           </div>
         </div>
       )}
-      <div className="question-container bg-white rounded-xl shadow-md p-6 mb-6" id="question-container">
+      <div className="question-container bg-white rounded-xl shadow-md5 p-6 mb-6" id="question-container">
         <div className="question-info-bar flex items-center gap-4 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-lg shadow-sm p-3 mb-6 overflow-x-auto">
           <span className="bg-indigo-100 text-indigo-900 font-semibold px-4 py-2 rounded-lg min-w-[120px] text-center">
             {allQuestions[currentQuestion].questionNumber}

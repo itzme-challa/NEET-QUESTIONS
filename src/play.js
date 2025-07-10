@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ref, set, getDatabase } from 'firebase/database';
-import { db } from './firebase';
+import { db, initializationError } from './firebase';
 import html2canvas from 'html2canvas';
 
 function Play() {
@@ -14,12 +14,15 @@ function Play() {
   const [showReport, setShowReport] = useState(false);
   const [reportText, setReportText] = useState('');
   const [questionsData, setQuestionsData] = useState(null);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(initializationError);
+
   const navigate = useNavigate();
   const location = useLocation();
 
   // Fetch questions data based on testid
   useEffect(() => {
+    if (error) return;
+
     const params = new URLSearchParams(location.search);
     const testId = params.get('testid') || 'testid1';
     fetch(`/data/${testId}.json`)
@@ -44,7 +47,7 @@ function Play() {
         console.error('Error loading questions:', error);
         setError('Failed to load quiz questions. Please check the test ID or try again.');
       });
-  }, [location]);
+  }, [location, error]);
 
   // Prevent page refresh
   useEffect(() => {
@@ -130,6 +133,10 @@ function Play() {
   };
 
   const handleSubmit = async () => {
+    if (!db) {
+      setError('Firebase is not initialized. Cannot submit quiz.');
+      return;
+    }
     try {
       const params = new URLSearchParams(location.search);
       const testId = params.get('testid') || 'testid1';
@@ -138,13 +145,17 @@ function Play() {
       navigate(`/results?testid=${testId}`);
     } catch (error) {
       console.error('Error submitting quiz:', error);
-      alert('Failed to submit quiz. Please try again.');
+      setError('Failed to submit quiz. Please try again.');
     }
   };
 
   const handleReportSubmit = async () => {
     if (!reportText.trim()) {
       alert('Please enter a problem description.');
+      return;
+    }
+    if (!db) {
+      setError('Firebase is not initialized. Cannot submit report.');
       return;
     }
     const question = allQuestions[currentQuestion];
@@ -173,7 +184,7 @@ function Play() {
       alert('Report submitted successfully.');
     } catch (error) {
       console.error('Error submitting report:', error);
-      alert('Failed to submit report. Please try again.');
+      setError('Failed to submit report. Please try again.');
     }
   };
 

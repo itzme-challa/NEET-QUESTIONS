@@ -1,46 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { db } from './firebase';
 
-function Home({ setQuizStarted }) {
+function Home() {
   const [tests, setTests] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!db) {
-      console.error('Firebase database not initialized');
-      alert('Failed to initialize database. Please try again later.');
-      return;
-    }
-
-    try {
-      const dbInstance = getDatabase(db);
-      const testsRef = ref(dbInstance, 'tests');
-      onValue(testsRef, (snapshot) => {
-        try {
-          const data = snapshot.val();
-          if (data) {
-            const testList = Object.keys(data).flatMap(year =>
-              data[year].map(test => ({ ...test, year }))
-            );
-            setTests(testList);
-          } else {
-            setTests([]);
-          }
-        } catch (error) {
-          console.error('Error processing tests data:', error);
-          alert('Failed to load tests. Please try again.');
-        }
-      });
-    } catch (error) {
-      console.error('Error setting up tests listener:', error);
+    const dbRef = ref(getDatabase(db), 'tests');
+    onValue(dbRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const testList = [];
+        Object.entries(data).forEach(([type, testGroup]) => {
+          Object.entries(testGroup).forEach(([testId, test]) => {
+            testList.push({ ...test, type, testId });
+          });
+        });
+        setTests(testList);
+      }
+    }, (error) => {
+      console.error('Error fetching tests:', error);
       alert('Failed to load tests. Please try again.');
-    }
+    });
   }, []);
-
-  const handleStart = (testid) => {
-    setQuizStarted(true);
-    window.open(`/play?testid=${testid}`, '_blank');
-  };
 
   return (
     <div className="container mx-auto p-4 max-w-3xl">
@@ -48,28 +32,24 @@ function Home({ setQuizStarted }) {
       {tests.length === 0 ? (
         <p className="text-center text-gray-600">No tests available.</p>
       ) : (
-        <div className="grid gap-4">
-          {tests.map((test, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl shadow-md p-6 flex justify-between items-center"
-            >
-              <div>
-                <h3 className="text-xl font-semibold text-gray-800">{test.name}</h3>
-                <p className="text-gray-600">Year: {test.year}</p>
-                <p className="text-gray-600">Date: {test.date}</p>
-                <p className="text-gray-600">Test ID: {test.testid}</p>
-              </div>
-              <button
-                onClick={() => handleStart(test.testid)}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition"
-                id={`start-btn-${test.testid}`}
-              >
-                Start
-              </button>
+        tests.map((test) => (
+          <div
+            key={test.testId}
+            className="bg-white rounded-xl shadow-md p-4 mb-4 flex justify-between items-center"
+          >
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800">{test.name}</h2>
+              <p className="text-gray-600">Type: {test.type}</p>
+              <p className="text-gray-600">Date: {test.date}</p>
             </div>
-          ))}
-        </div>
+            <button
+              onClick={() => navigate(`/play?testId=${test.testId}`)}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition"
+            >
+              Start Test
+            </button>
+          </div>
+        ))
       )}
     </div>
   );

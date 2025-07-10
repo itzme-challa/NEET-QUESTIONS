@@ -1,52 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ref, set, getDatabase } from 'firebase/database';
 import { db } from './firebase';
 import html2canvas from 'html2canvas';
 
-function Play() {
-  const [questionsData, setQuestionsData] = useState(null);
+const questionsData = {
+  "PHYSICS": [
+    {
+      "questionNumber": "Question 1",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/02a847d7-b87c-4acb-b200-f0000337fde6.png",
+      "correctOption": "C"
+    },
+    {
+      "questionNumber": "Question 2",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/997c16b0-9743-437b-8d94-f1731d3d03fe.png",
+      "correctOption": "D"
+    },
+    {
+      "questionNumber": "Question 3",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/1303df44-4d76-43fd-bf65-85fa69cbbad5.png",
+      "correctOption": "B"
+    },
+    {
+      "questionNumber": "Question 4",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/fa60933a-e038-43bf-996f-c767937675ae.png",
+      "correctOption": "B"
+    },
+    {
+      "questionNumber": "Question 5",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/43032f03-6829-49d0-a07f-12e97847b21b.png",
+      "correctOption": "B"
+    },
+    {
+      "questionNumber": "Question 6",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/352d6768-193e-4fa9-9fb0-2efb1a856330.png",
+      "correctOption": "B"
+    },
+    {
+      "questionNumber": "Question 7",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/9af42518-e561-4aaa-beea-9dc55b7d1603.png",
+      "correctOption": "A"
+    },
+    {
+      "questionNumber": "Question 8",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/f99e55ba-963d-42c2-985d-d3ee1a5067f0.png",
+      "correctOption": "B"
+    },
+    {
+      "questionNumber": "Question 9",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/58a9e5af-b15a-437f-888e-63cf8a6d72f8.png",
+      "correctOption": "C"
+    }
+  ],
+  "CHEMISTRY": [
+    {
+      "questionNumber": "Question 1",
+      "image": "https://static.pw.live/5b09189f7285894d9130ccd0/ee9f972c-2ebe-4b77-b591-95fda15e9030.png",
+      "correctOption": "C"
+    }
+  ]
+};
+
+function Play({ setQuizStarted }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [answers, setAnswers] = useState({});
-  const [questionStatuses, setQuestionStatuses] = useState([]);
+  const [questionStatuses, setQuestionStatuses] = useState(
+    Object.keys(questionsData).flatMap(subject =>
+      questionsData[subject].map(q => ({
+        questionNumber: q.questionNumber,
+        status: 'not-visited' // white
+      }))
+    )
+  );
   const [timeLeft, setTimeLeft] = useState(3 * 3600); // 3 hours
   const [showIndex, setShowIndex] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [reportText, setReportText] = useState('');
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const query = new URLSearchParams(location.search);
-  const testId = query.get('testId');
+  const allQuestions = [
+    ...questionsData.PHYSICS.map(q => ({ ...q, subject: 'PHYSICS' })),
+    ...questionsData.CHEMISTRY.map(q => ({ ...q, subject: 'CHEMISTRY' })),
+  ];
 
-  useEffect(() => {
-    if (testId) {
-      fetch(`/data/${testId}.json`)
-        .then((response) => response.json())
-        .then((data) => {
-          setQuestionsData(data);
-          const allQuestions = Object.keys(data).flatMap((subject) =>
-            data[subject].map((q) => ({
-              ...q,
-              subject,
-              questionNumber: q.questionNumber || `Question ${index + 1}`,
-            }))
-          );
-          setQuestionStatuses(
-            allQuestions.map((q) => ({
-              questionNumber: q.questionNumber,
-              status: 'not-visited',
-            }))
-          );
-        })
-        .catch((error) => {
-          console.error('Error fetching questions:', error);
-          alert('Failed to load test questions. Please try again.');
-        });
-    }
-  }, [testId]);
-
+  // Prevent page refresh
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       e.preventDefault();
@@ -56,55 +94,47 @@ function Play() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
+  // Timer
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // Update question status to visited (blue) when viewing
   useEffect(() => {
-    if (questionsData) {
-      setQuestionStatuses((prev) =>
-        prev.map((q, index) =>
-          index === currentQuestion && q.status === 'not-visited'
-            ? { ...q, status: 'visited' }
-            : q
-        )
-      );
-    }
-  }, [currentQuestion, questionsData]);
+    setQuestionStatuses(prev =>
+      prev.map((q, index) =>
+        index === currentQuestion && q.status === 'not-visited'
+          ? { ...q, status: 'visited' } // blue
+          : q
+      )
+    );
+  }, [currentQuestion]);
 
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes
-      .toString()
-      .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-
-  const allQuestions = questionsData
-    ? Object.keys(questionsData).flatMap((subject) =>
-        questionsData[subject].map((q) => ({ ...q, subject }))
-      )
-    : [];
 
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
     setAnswers({ ...answers, [allQuestions[currentQuestion].questionNumber]: option });
-    setQuestionStatuses((prev) =>
+    setQuestionStatuses(prev =>
       prev.map((q, index) =>
-        index === currentQuestion ? { ...q, status: 'answered' } : q
+        index === currentQuestion ? { ...q, status: 'answered' } : q // green
       )
     );
   };
 
   const handleSaveAndNext = () => {
     if (!selectedOption) {
-      setQuestionStatuses((prev) =>
+      setQuestionStatuses(prev =>
         prev.map((q, index) =>
-          index === currentQuestion ? { ...q, status: 'unanswered' } : q
+          index === currentQuestion ? { ...q, status: 'unanswered' } : q // red
         )
       );
     }
@@ -116,9 +146,9 @@ function Play() {
 
   const handleSkip = () => {
     setAnswers({ ...answers, [allQuestions[currentQuestion].questionNumber]: 'Skipped' });
-    setQuestionStatuses((prev) =>
+    setQuestionStatuses(prev =>
       prev.map((q, index) =>
-        index === currentQuestion ? { ...q, status: 'skipped' } : q
+        index === currentQuestion ? { ...q, status: 'skipped' } : q // yellow
       )
     );
     if (currentQuestion < allQuestions.length - 1) {
@@ -129,9 +159,10 @@ function Play() {
 
   const handleSubmit = async () => {
     try {
-      const dbRef = ref(getDatabase(db), `quiz_results/${testId}/${Date.now()}`);
+      const dbRef = ref(getDatabase(db), 'quiz_results/' + Date.now());
       await set(dbRef, { answers, timestamp: new Date().toISOString() });
-      navigate(`/results?testId=${testId}`);
+      setQuizStarted(false);
+      navigate('/results');
     } catch (error) {
       console.error('Error submitting quiz:', error);
       alert('Failed to submit quiz. Please try again.');
@@ -152,7 +183,7 @@ function Play() {
       console.error('Failed to capture screenshot:', error);
     }
     try {
-      const reportRef = ref(getDatabase(db), `reports/${testId}/${Date.now()}`);
+      const reportRef = ref(getDatabase(db), 'reports/' + Date.now());
       await set(reportRef, {
         questionNumber: question.questionNumber,
         subject: question.subject,
@@ -160,7 +191,7 @@ function Play() {
         correctOption: question.correctOption,
         reportText,
         screenshot,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
       setReportText('');
       setShowReport(false);
@@ -173,24 +204,14 @@ function Play() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'not-visited':
-        return 'bg-white';
-      case 'visited':
-        return 'bg-blue-500';
-      case 'answered':
-        return 'bg-green-500';
-      case 'skipped':
-        return 'bg-yellow-500';
-      case 'unanswered':
-        return 'bg-red-500';
-      default:
-        return 'bg-white';
+      case 'not-visited': return 'bg-white';
+      case 'visited': return 'bg-blue-500';
+      case 'answered': return 'bg-green-500';
+      case 'skipped': return 'bg-yellow-500';
+      case 'unanswered': return 'bg-red-500';
+      default: return 'bg-white';
     }
   };
-
-  if (!questionsData) {
-    return <div className="text-center p-4">Loading questions...</div>;
-  }
 
   return (
     <div className="container mx-auto p-4 max-w-3xl relative">
@@ -281,7 +302,7 @@ function Play() {
           />
         )}
         <div className="options space-y-3">
-          {['A', 'B', 'C', 'D'].map((option) => (
+          {['A', 'B', 'C', 'D'].map(option => (
             <div key={option} className="option-container">
               <label
                 className={`block px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg cursor-pointer text-base hover:bg-gray-200 transition ${

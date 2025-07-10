@@ -6,20 +6,35 @@ import Play from './play';
 import Results from './results';
 
 function App() {
-  const [tests, setTests] = useState({});
+  const [tests, setTests] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const dbRef = ref(getDatabase(db), 'tests');
     onValue(dbRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        setTests(data);
-      }
+      setTests(data || {});
     }, (error) => {
       console.error('Error fetching tests:', error);
-      alert('Failed to load tests. Please try again.');
+      setError('Failed to load tests. Please try again.');
     });
   }, []);
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-100 font-inter flex items-center justify-center">
+        <div className="text-red-600 text-xl">{error}</div>
+      </div>
+    );
+  }
+
+  if (!tests) {
+    return (
+      <div className="min-h-screen bg-gray-100 font-inter flex items-center justify-center">
+        <div className="text-gray-600 text-xl">Loading tests...</div>
+      </div>
+    );
+  }
 
   return (
     <Router>
@@ -37,7 +52,7 @@ function App() {
                     <div key={type} className="mb-8">
                       <h2 className="text-2xl font-semibold text-gray-800 mb-4">{type}</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {tests[type].map((test, index) => (
+                        {Array.isArray(tests[type]) && tests[type].map((test, index) => (
                           <div
                             key={test.testid}
                             className="bg-white p-4 rounded-lg shadow-md flex justify-between items-center"

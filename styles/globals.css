@@ -3,12 +3,12 @@ body {
   padding: 0;
   box-sizing: border-box;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #ffffff;
+  background-color: #f4f7fa;
 }
 
 .container {
   min-height: 100vh;
-  padding: 12px;
+  padding: 16px;
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -17,20 +17,21 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
-  background-color: transparent;
-  margin-bottom: 12px;
+  padding: 12px 16px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
 }
 
 .branding {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .logo {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -41,14 +42,14 @@ body {
 }
 
 .website-name {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: #1a237e;
   margin: 0;
 }
 
 .website-subname {
-  font-size: 11px;
+  font-size: 12px;
   color: #666666;
   margin: 0;
 }
@@ -59,12 +60,12 @@ body {
 }
 
 .profile-btn {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: linear-gradient(135deg, #1976d2, #42a5f5);
   color: white;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -80,30 +81,30 @@ body {
 }
 
 .max-container {
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 10px;
+  padding: 0 16px;
 }
 
 .page-title {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
   color: #1a237e;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   text-align: center;
 }
 
 .test-grid {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
 .test-card {
   background-color: white;
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 16px;
+  padding: 20px;
   transition: transform 0.3s, box-shadow 0.3s;
 }
 
@@ -113,21 +114,21 @@ body {
 }
 
 .test-title {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
   color: #1a237e;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .test-info {
-  font-size: 12px;
+  font-size: 14px;
   color: #555555;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .test-buttons {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
   flex-wrap: nowrap;
 }
@@ -136,27 +137,27 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .timer {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
+  gap: 8px;
+  font-size: 16px;
   font-weight: 600;
   color: #1a237e;
   background: #e8eaf6;
-  padding: 6px 10px;
-  border-radius: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
 }
 
 .question-container {
   background-color: white;
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  margin-bottom: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
   transition: box-shadow 0.3s;
 }
 
@@ -167,22 +168,22 @@ body {
 .header-controls {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .btn {
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s, transform 0.2s;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   border: none;
-  min-width: 36px;
+  min-width: 40px;
   justify-content: center;
 }
 
@@ -262,8 +263,8 @@ body {
   background: #ffffff;
   border: 1px solid #d1d5db;
   color: #616161;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -282,19 +283,19 @@ body {
     display: none;
   }
   .btn {
-    padding: 6px;
-    min-width: 36px;
+    padding: 8px;
+    min-width: 40px;
   }
   .header {
-    padding: 8px 10px;
+    padding: 10px 12px;
   }
   .test-buttons {
     flex-direction: row;
-    gap: 6px;
+    gap: 8px;
   }
   .button-container {
     flex-direction: row;
-    gap: 6px;
+    gap: 8px;
   }
 }
 
@@ -314,9 +315,9 @@ body {
 .popup-content {
   background-color: white;
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px;
   max-width: 90%;
-  width: 360px;
+  width: 400px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
   animation: popupFadeIn 0.3s ease;
   overflow: hidden;
@@ -328,17 +329,17 @@ body {
 }
 
 .popup-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: #1a237e;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   text-align: center;
 }
 
 .profile-name {
-  font-size: 13px;
+  font-size: 14px;
   color: #333333;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .input-container {
@@ -348,10 +349,10 @@ body {
 
 .input-field {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 16px;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: 8px;
+  font-size: 14px;
   background-color: #f9fafb;
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
@@ -365,24 +366,24 @@ body {
 
 .popup-buttons {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: center;
-  margin-top: 12px;
+  margin-top: 16px;
   flex-wrap: nowrap;
 }
 
 .popup-text {
-  font-size: 13px;
+  font-size: 14px;
   color: #333333;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   line-height: 1.5;
 }
 
 .popup-link {
   display: inline-block;
-  padding: 4px 8px;
+  padding: 6px 10px;
   margin: 0 4px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
@@ -408,61 +409,61 @@ body {
 .question-info-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   background: #f8fafc;
   border-radius: 8px;
-  padding: 8px 12px;
-  margin-bottom: 12px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
 .question-number {
   background-color: #e8eaf6;
-  border-radius: 6px;
-  padding: 6px 10px;
+  border-radius: 8px;
+  padding: 8px 12px;
   color: #1a237e;
   font-weight: 600;
-  min-width: 90px;
+  min-width: 100px;
   text-align: center;
 }
 
 .section-info {
   background-color: #f1f5f9;
-  border-radius: 6px;
-  padding: 6px 10px;
+  border-radius: 8px;
+  padding: 8px 12px;
   color: #333333;
-  min-width: 90px;
+  min-width: 100px;
   text-align: center;
 }
 
 .marks-box {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .correct-marks {
   background-color: #e8f5e9;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #2e7d32;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 6px 10px;
 }
 
 .wrong-marks {
   background-color: #ffebee;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #c62828;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 6px 10px;
 }
 
 .question-type {
   background-color: #e3f2fd;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #1976d2;
   font-weight: 600;
-  padding: 6px 10px;
-  min-width: 70px;
+  padding: 8px 12px;
+  min-width: 80px;
   text-align: center;
 }
 
@@ -471,25 +472,25 @@ body {
   height: auto;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin: 10px auto;
+  margin: 12px auto;
   display: block;
 }
 
 .options {
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 .option-container {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .option-label {
   display: block;
-  padding: 10px 12px;
+  padding: 12px 16px;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 8px;
   background-color: #f9fafb;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
 }
@@ -504,54 +505,54 @@ body {
 }
 
 .option-input {
-  margin-right: 6px;
+  margin-right: 8px;
 }
 
 .button-container {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
-  margin-top: 16px;
+  margin-top: 20px;
 }
 
 .result-container {
   background-color: white;
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 16px;
+  padding: 20px;
   text-align: center;
 }
 
 .result-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: #1a237e;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .result-score {
-  font-size: 14px;
+  font-size: 16px;
   color: #333333;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .loading {
   text-align: center;
   color: #333333;
-  font-size: 13px;
-  padding: 12px;
+  font-size: 14px;
+  padding: 16px;
 }
 
 .flag-section {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .flag-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 16px;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 13px;
+  border-radius: 8px;
+  font-size: 14px;
   background-color: #f9fafb;
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
@@ -564,15 +565,29 @@ body {
 }
 
 .question-index {
+  margin-bottom: 16px;
+}
+
+.subject-section {
+  margin-bottom: 16px;
+}
+
+.subject-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a237e;
+  margin-bottom: 8px;
+}
+
+.subject-questions {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
-  gap: 6px;
-  margin-bottom: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 8px;
 }
 
 .index-btn {
-  padding: 6px;
-  border-radius: 6px;
+  padding: 8px;
+  border-radius: 8px;
   background-color: #ffffff;
   text-align: center;
   font-weight: 500;
@@ -616,7 +631,7 @@ body {
 
 .index-popup-close {
   width: 100%;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 @media (max-width: 640px) {
@@ -626,10 +641,13 @@ body {
   .question-info-bar {
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
+    gap: 8px;
   }
   .popup-content {
     width: 95%;
-    padding: 12px;
+    padding: 16px;
+  }
+  .subject-questions {
+    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
   }
 }

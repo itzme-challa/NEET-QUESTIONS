@@ -22,12 +22,14 @@ export default function Admin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeTab, setActiveTab] = useState('json-converter'); // Default to JSON Converter tab
   const [year, setYear] = useState('');
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
   const [testId, setTestId] = useState('');
   const [inputJson, setInputJson] = useState('');
   const [outputJson, setOutputJson] = useState('');
+  const [testJson, setTestJson] = useState('');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
   const router = useRouter();
@@ -129,13 +131,16 @@ export default function Admin() {
 
   const handleSubmitTest = async (e) => {
     e.preventDefault();
-    if (!year || !name || !date || !testId || !outputJson) {
+    if (!year || !name || !date || !testId || !testJson) {
       setMessage('Error: All fields and valid JSON are required.');
       setMessageType('error');
       return;
     }
 
     try {
+      // Validate JSON
+      const jsonObject = JSON.parse(testJson);
+
       // Save test metadata to Firebase
       await set(ref(database, `tests/${year}/${testId}`), {
         name,
@@ -143,7 +148,7 @@ export default function Admin() {
       });
 
       // Save JSON questions to Firebase
-      await set(ref(database, `data/${testId}`), JSON.parse(outputJson));
+      await set(ref(database, `data/${testId}`), jsonObject);
 
       setMessage(`Test ${name} added successfully to Firebase!`);
       setMessageType('success');
@@ -151,8 +156,7 @@ export default function Admin() {
       setName('');
       setDate('');
       setTestId('');
-      setInputJson('');
-      setOutputJson('');
+      setTestJson('');
     } catch (error) {
       setMessage(`Error saving to Firebase: ${error.message}`);
       setMessageType('error');
@@ -165,6 +169,7 @@ export default function Admin() {
     setPassword('');
     setMessage('Logged out successfully.');
     setMessageType('success');
+    setActiveTab('json-converter');
   };
 
   return (
@@ -231,91 +236,186 @@ export default function Admin() {
           </div>
         ) : (
           <div>
-            <h3 className="popup-title">Add New Test</h3>
-            <form onSubmit={handleSubmitTest}>
-              <div className="input-container">
-                <input
-                  type="text"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  placeholder="Year (e.g., 2025)"
-                  className="input-field"
-                  required
-                />
-              </div>
-              <div className="input-container">
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Test Name"
-                  className="input-field"
-                  required
-                />
-              </div>
-              <div className="input-container">
-                <input
-                  type="text"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  placeholder="Date (e.g., 2025-07-11)"
-                  className="input-field"
-                  required
-                />
-              </div>
-              <div className="input-container">
-                <input
-                  type="text"
-                  value={testId}
-                  onChange={(e) => setTestId(e.target.value)}
-                  placeholder="Test ID (e.g., test123)"
-                  className="input-field"
-                  required
-                />
-              </div>
-              <div className="input-container">
-                <textarea
-                  value={inputJson}
-                  onChange={(e) => setInputJson(e.target.value)}
-                  placeholder="Paste your JSON-like text here..."
-                  className="input-field"
-                  rows={10}
-                ></textarea>
-              </div>
-              <div className="button-container">
-                <button type="button" onClick={convertToJson} className="btn btn-primary">
-                  <i className="fas fa-cogs"></i>
-                  <span className="btn-text">Convert to JSON</span>
-                </button>
-                <button type="button" onClick={copyToClipboard} className="btn btn-secondary" style={{ display: outputJson ? 'flex' : 'none' }}>
-                  <i className="fas fa-copy"></i>
-                  <span className="btn-text">Copy to Clipboard</span>
-                </button>
-                <button type="button" onClick={downloadJson} className="btn btn-gray" style={{ display: outputJson ? 'flex' : 'none' }}>
-                  <i className="fas fa-download"></i>
-                  <span className="btn-text">Download JSON</span>
-                </button>
-              </div>
-              <div className="input-container">
-                <div className="output" style={{ backgroundColor: 'white', padding: '15px', border: '1px solid #ccc', fontFamily: 'monospace', fontSize: '14px', whiteSpace: 'pre-wrap', minHeight: '200px' }}>
-                  {outputJson || 'Converted JSON will appear here...'}
+            <div className="tab-container">
+              <button
+                className={`tab-btn ${activeTab === 'json-converter' ? 'tab-btn-active' : ''}`}
+                onClick={() => setActiveTab('json-converter')}
+              >
+                JSON Converter
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'add-test' ? 'tab-btn-active' : ''}`}
+                onClick={() => setActiveTab('add-test')}
+              >
+                Add Test to Firebase
+              </button>
+            </div>
+
+            {activeTab === 'json-converter' && (
+              <div className="section">
+                <h3 className="popup-title">JSON Converter</h3>
+                <div className="input-container">
+                  <textarea
+                    value={inputJson}
+                    onChange={(e) => setInputJson(e.target.value)}
+                    placeholder="Paste your JSON-like text here..."
+                    className="input-field"
+                    rows={10}
+                  ></textarea>
                 </div>
+                <div className="button-container">
+                  <button type="button" onClick={convertToJson} className="btn btn-primary">
+                    <i className="fas fa-cogs"></i>
+                    <span className="btn-text">Convert to JSON</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={copyToClipboard}
+                    className="btn btn-secondary"
+                    style={{ display: outputJson ? 'flex' : 'none' }}
+                  >
+                    <i className="fas fa-copy"></i>
+                    <span className="btn-text">Copy to Clipboard</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={downloadJson}
+                    className="btn btn-gray"
+                    style={{ display: outputJson ? 'flex' : 'none' }}
+                  >
+                    <i className="fas fa-download"></i>
+                    <span className="btn-text">Download JSON</span>
+                  </button>
+                </div>
+                <div className="input-container">
+                  <div
+                    className="output"
+                    style={{
+                      backgroundColor: 'white',
+                      padding: '15px',
+                      border: '1px solid #ccc',
+                      fontFamily: 'monospace',
+                      fontSize: '14px',
+                      whiteSpace: 'pre-wrap',
+                      minHeight: '200px'
+                    }}
+                  >
+                    {outputJson || 'Converted JSON will appear here...'}
+                  </div>
+                </div>
+                {message && activeTab === 'json-converter' && (
+                  <div className={messageType}>{message}</div>
+                )}
               </div>
-              <div className="button-container">
-                <button type="submit" className="btn btn-primary">
-                  <i className="fas fa-save"></i>
-                  <span className="btn-text">Add Test to Firebase</span>
-                </button>
-                <button type="button" onClick={() => router.push('/')} className="btn btn-gray">
-                  <i className="fas fa-home"></i>
-                  <span className="btn-text">Back to Home</span>
-                </button>
+            )}
+
+            {activeTab === 'add-test' && (
+              <div className="section">
+                <h3 className="popup-title">Add New Test to Firebase</h3>
+                <form onSubmit={handleSubmitTest}>
+                  <div className="input-container">
+                    <input
+                      type="text"
+                      value={year}
+                      onChange={(e) => setYear(e.target.value)}
+                      placeholder="Year (e.g., 2025)"
+                      className="input-field"
+                      required
+                    />
+                  </div>
+                  <div className="input-container">
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Test Name"
+                      className="input-field"
+                      required
+                    />
+                  </div>
+                  <div className="input-container">
+                    <input
+                      type="text"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      placeholder="Date (e.g., 2025-07-11)"
+                      className="input-field"
+                      required
+                    />
+                  </div>
+                  <div className="input-container">
+                    <input
+                      type="text"
+                      value={testId}
+                      onChange={(e) => setTestId(e.target.value)}
+                      placeholder="Test ID (e.g., test123)"
+                      className="input-field"
+                      required
+                    />
+                  </div>
+                  <div className="input-container">
+                    <textarea
+                      value={testJson}
+                      onChange={(e) => setTestJson(e.target.value)}
+                      placeholder="Paste your valid JSON here..."
+                      className="input-field"
+                      rows={10}
+                    ></textarea>
+                  </div>
+                  <div className="button-container">
+                    <button type="submit" className="btn btn-primary">
+                      <i className="fas fa-save"></i>
+                      <span className="btn-text">Add Test to Firebase</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => router.push('/')}
+                      className="btn btn-gray"
+                    >
+                      <i className="fas fa-home"></i>
+                      <span className="btn-text">Back to Home</span>
+                    </button>
+                  </div>
+                </form>
+                {message && activeTab === 'add-test' && (
+                  <div className={messageType}>{message}</div>
+                )}
               </div>
-            </form>
-            {message && <div className={messageType}>{message}</div>}
+            )}
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        .tab-container {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 20px;
+          justify-content: center;
+        }
+        .tab-btn {
+          padding: 10px 20px;
+          background-color: #e0e0e0;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          font-size: 16px;
+          transition: background-color 0.3s;
+        }
+        .tab-btn:hover {
+          background-color: #d0d0d0;
+        }
+        .tab-btn-active {
+          background-color: #007bff;
+          color: white;
+        }
+        .tab-btn-active:hover {
+          background-color: #0056b3;
+        }
+        .section {
+          margin-top: 20px;
+        }
+      `}</style>
     </div>
   );
 }

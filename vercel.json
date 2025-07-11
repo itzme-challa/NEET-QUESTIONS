@@ -12,6 +12,10 @@
       "dest": "/data/$1"
     },
     {
+      "src": "/logo.png",
+      "dest": "/logo.png"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }

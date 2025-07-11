@@ -29,8 +29,13 @@ export default function Play() {
   const [timeLeft, setTimeLeft] = useState(3 * 60 * 60); // 3 hours
   const [showIndex, setShowIndex] = useState(false);
   const [score, setScore] = useState(null);
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
+    // Get cached name
+    const name = localStorage.getItem('quizUserName') || '';
+    setUserName(name);
+
     if (testid) {
       // Fetch quiz data
       const fetchQuiz = async () => {
@@ -82,7 +87,7 @@ export default function Play() {
       await set(ref(database, `flags/${testid}/${currentQuestion}`), {
         reason: flagReason,
         timestamp: new Date().toISOString(),
-        user: localStorage.getItem('quizUserName')
+        user: userName || 'Anonymous'
       });
       setFlagReason('');
     } catch (error) {
@@ -91,6 +96,11 @@ export default function Play() {
   };
 
   const handleSubmit = async () => {
+    if (!userName) {
+      alert('Please enter your name on the home page before submitting.');
+      return;
+    }
+
     let score = 0;
     const allQuestions = [
       ...(quizData.PHYSICS || []),
@@ -106,9 +116,10 @@ export default function Play() {
     setScore(score);
 
     try {
-      await set(ref(database, `results/${testid}/${localStorage.getItem('quizUserName')}`), {
+      await set(ref(database, `results/${testid}/${userName}`), {
         score,
         answers,
+        name: userName,
         date: new Date().toISOString()
       });
     } catch (error) {
@@ -122,46 +133,46 @@ export default function Play() {
     ...(quizData.MATHS || [])
   ] : [];
 
-  if (!quizData) return <div className="text-center text-gray-600 p-4">Loading quiz...</div>;
+  if (!quizData) return <div className="loading">Loading quiz...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 font-sans">
+    <div className="container">
       <Head>
         <title>Quiz - {testid}</title>
       </Head>
 
-      <div className="max-w-3xl mx-auto">
-        <div id="timer" className="text-2xl font-bold text-gray-800 mb-4">{formatTime(timeLeft)}</div>
+      <div className="max-container">
+        <div id="timer" className="timer">{formatTime(timeLeft)}</div>
         
-        <div className="bg-white rounded-lg shadow-custom p-6 mb-6 hover:shadow-custom-hover transition">
-          <div className="flex justify-end gap-3 mb-4">
+        <div className="question-container">
+          <div className="header-controls">
             <button 
               onClick={() => setShowIndex(!showIndex)}
-              className="flex items-center gap-2 bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-primary font-medium shadow-custom hover:bg-gray-200 transition"
+              className="btn btn-index"
             >
               <i className="fas fa-th"></i> Show Index
             </button>
             <button 
               onClick={() => setFlagged({ ...flagged, [currentQuestion]: true })}
-              className="flex items-center justify-center w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg shadow-custom hover:bg-gray-200 transition"
+              className="btn btn-flag"
             >
-              <i className="fas fa-flag text-gray-600"></i>
+              <i className="fas fa-flag"></i>
             </button>
           </div>
 
           {flagged[currentQuestion] && (
-            <div className="mb-4">
+            <div className="flag-section">
               <input
                 type="text"
                 value={flagReason}
                 onChange={(e) => setFlagReason(e.target.value)}
                 placeholder="Reason for flagging (max 50 chars)"
                 maxLength={50}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="flag-input"
               />
               <button 
                 onClick={handleFlag}
-                className="mt-2 bg-error text-white px-4 py-2 rounded-lg shadow-custom hover:bg-red-700 transition"
+                className="btn btn-error"
               >
                 Submit Flag
               </button>
@@ -169,18 +180,12 @@ export default function Play() {
           )}
 
           {showIndex && (
-            <div className="grid grid-cols-5 gap-2 mb-4">
+            <div className="question-index">
               {allQuestions.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentQuestion(index)}
-                  className={`p-2 rounded-lg font-medium ${
-                    index === currentQuestion
-                      ? 'bg-primary text-white'
-                      : answers[index]
-                      ? 'bg-green-200 text-success'
-                      : 'bg-gray-200 text-gray-800'
-                  } hover:bg-gray-300 transition`}
+                  className={`index-btn ${index === currentQuestion ? 'index-btn-active' : answers[index] ? 'index-btn-answered' : ''}`}
                 >
                   {index + 1}
                 </button>
@@ -188,69 +193,66 @@ export default function Play() {
             </div>
           )}
 
-          <div className="flex items-center gap-6 bg-gradient-to-r from-gray-50 to-white border border-gray-300 rounded-lg p-3 mb-6 shadow-custom">
-            <span className="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-lg font-semibold">
-              Question {currentQuestion + 1}
-            </span>
-            <span className="bg-gray-200 px-4 py-2 rounded-lg text-gray-800">
+          <div className="question-info-bar">
+            <span className="question-number">Question {currentQuestion + 1}</span>
+            <span className="section-info">
               {allQuestions[currentQuestion]?.questionNumber.includes('PHYSICS') ? 'Physics' : 
                allQuestions[currentQuestion]?.questionNumber.includes('CHEMISTRY') ? 'Chemistry' : 'Maths'}
             </span>
-            <div className="flex gap-4">
-              <span className="bg-green-100 text-success px-3 py-1 rounded-lg font-semibold">+4</span>
-              <span className="bg-red-100 text-error px-3 py-1 rounded-lg font-semibold">-1</span>
+            <div className="marks-box">
+              <span className="correct-marks">+4</span>
+              <span className="wrong-marks">-1</span>
             </div>
-            <span className="bg-blue-100 text-primary px-4 py-2 rounded-lg font-semibold">MCQ</span>
+            <span className="question-type">MCQ</span>
           </div>
 
           {allQuestions[currentQuestion]?.image && (
             <img 
               src={allQuestions[currentQuestion].image} 
-              className="max-w-full h-auto rounded-lg shadow-custom-hover mx-auto mb-4" 
+              className="question-image" 
               alt="Question"
             />
           )}
 
-          <div className="grid gap-3">
+          <div className="options">
             {['A', 'B', 'C', 'D'].map((option) => (
-              <label 
-                key={option} 
-                className={`p-3 border border-gray-300 rounded-lg cursor-pointer bg-gray-100 hover:bg-gray-200 transition ${
-                  answers[currentQuestion] === option ? 'bg-blue-100 border-primary' : ''
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={`question-${currentQuestion}`}
-                  value={option}
-                  checked={answers[currentQuestion] === option}
-                  onChange={() => handleAnswer(currentQuestion, option)}
-                  className="mr-2 accent-primary"
-                />
-                {option}
-              </label>
+              <div key={option} className="option-container">
+                <label 
+                  className={`option-label ${answers[currentQuestion] === option ? 'option-selected' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name={`question-${currentQuestion}`}
+                    value={option}
+                    checked={answers[currentQuestion] === option}
+                    onChange={() => handleAnswer(currentQuestion, option)}
+                    className="option-input"
+                  />
+                  {option}
+                </label>
+              </div>
             ))}
           </div>
 
-          <div className="flex justify-center gap-3 mt-6 flex-wrap">
+          <div className="button-container">
             {currentQuestion > 0 && (
               <button 
                 onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                className="bg-gray-500 text-white px-4 py-2 rounded-lg shadow-custom hover:bg-gray-600 transition"
+                className="btn btn-gray"
               >
                 Previous
               </button>
             )}
             <button 
               onClick={() => setCurrentQuestion(currentQuestion + 1)}
-              className="bg-warning text-white px-4 py-2 rounded-lg shadow-custom hover:bg-orange-600 transition"
+              className="btn btn-warning"
               disabled={currentQuestion === allQuestions.length - 1}
             >
               Skip
             </button>
             <button 
               onClick={() => setCurrentQuestion(currentQuestion + 1)}
-              className="bg-secondary text-white px-4 py-2 rounded-lg shadow-custom hover:bg-green-600 transition"
+              className="btn btn-secondary"
               disabled={currentQuestion === allQuestions.length - 1}
             >
               Save & Next
@@ -258,7 +260,7 @@ export default function Play() {
             {currentQuestion === allQuestions.length - 1 && (
               <button 
                 onClick={handleSubmit}
-                className="bg-primary text-white px-4 py-2 rounded-lg shadow-custom hover:bg-blue-700 transition"
+                className="btn btn-primary"
               >
                 Submit Test
               </button>
@@ -267,12 +269,12 @@ export default function Play() {
         </div>
 
         {score !== null && (
-          <div className="bg-white p-6 rounded-lg shadow-custom text-center hover:shadow-custom-hover transition">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Quiz Completed!</h2>
-            <p className="text-xl text-gray-800">Your Score: {score}</p>
+          <div className="result-container">
+            <h2 className="result-title">Quiz Completed!</h2>
+            <p className="result-score">Your Score: {score}</p>
             <button 
               onClick={() => router.push('/')}
-              className="mt-4 bg-primary text-white px-6 py-3 rounded-lg shadow-custom hover:bg-blue-700 transition"
+              className="btn btn-primary"
             >
               Back to Home
             </button>

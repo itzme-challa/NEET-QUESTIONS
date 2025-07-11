@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Page Not Found</title>
+  <link rel="stylesheet" href="styles/globals.css">
+  <style>
+    .error-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px;
+      background-color: #f4f7fa;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .error-title {
+      font-size: 48px;
+      font-weight: 700;
+      color: #1a237e;
+      margin-bottom: 16px;
+    }
+
+    .error-message {
+      font-size: 18px;
+      color: #333333;
+      margin-bottom: 24px;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+
+    .error-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .contact-link {
+      font-size: 14px;
+      color: #1976d2;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .contact-link:hover {
+      color: #1565c0;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+      .error-container {
+        padding: 12px;
+      }
+
+      .error-title {
+        font-size: 36px;
+      }
+
+      .error-message {
+        font-size: 16px;
+      }
+
+      .error-actions {
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container error-container">
+    <h1 class="error-title">404 - Page Not Found</h1>
+    <p class="error-message">
+      Oops! The page you're looking for doesn't exist or has been moved. 
+      Please return to the homepage or contact our admin for assistance.
+    </p>
+    <div class="error-actions">
+      <a href="/" class="btn btn-primary">
+        <span class="btn-text">Go to Homepage</span>
+      </a>
+      <a href="mailto:itzme.eduhub.contact@gmail.com?subject=404%20Error%20-%20Page%20Not%20Found" class="contact-link">
+        Contact Admin (itzme.eduhub.contact@gmail.com)
+      </a>
+    </div>
+  </div>
+</body>
+</html>

@@ -21,56 +21,111 @@ const database = getDatabase(app);
 export default function Results() {
   const router = useRouter();
   const { testid, userName } = router.query;
+  const [results, setResults] = useState(null);
   const [quizData, setQuizData] = useState(null);
-  const [userResults, setUserResults] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profileName, setProfileName] = useState('');
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const [tempName, setTempName] = useState('');
+  const [testDetails, setTestDetails] = useState({ name: '', date: '' });
+  const [showImagePopup, setShowImagePopup] = useState(null);
 
   useEffect(() => {
-    if (testid && userName) {
-      const fetchData = async () => {
-        try {
-          // Fetch quiz data
-          const quizResponse = await fetch(`/data/${testid}.json`);
-          if (!quizResponse.ok) throw new Error('Quiz data not found');
-          const quizData = await quizResponse.json();
-          setQuizData(quizData);
+    setProfileName(localStorage.getItem('quizUserName') || '');
 
-          // Fetch user results
+    if (testid && userName) {
+      const fetchResults = async () => {
+        try {
           const resultsRef = ref(database, `results/${testid}/${userName}`);
-          const resultsSnapshot = await get(resultsRef);
-          if (!resultsSnapshot.exists()) throw new Error('Results not found');
-          setUserResults(resultsSnapshot.val());
-          setLoading(false);
+          const snapshot = await get(resultsRef);
+          if (snapshot.exists()) {
+            setResults(snapshot.val());
+          } else {
+            setResults(null);
+          }
         } catch (error) {
-          console.error('Error fetching data:', error);
-          setLoading(false);
+          console.error('Error fetching results:', error);
         }
       };
-      fetchData();
+
+      const fetchQuizData = async () => {
+        try {
+          const response = await fetch(`/data/${testid}.json`);
+          if (!response.ok) throw new Error('Quiz data not found');
+          const data = await response.json();
+          setQuizData(data);
+        } catch (error) {
+          console.error('Error fetching quiz data:', error);
+        }
+      };
+
+      const fetchTestDetails = async () => {
+        try {
+          const testsRef = ref(database, `tests`);
+          const snapshot = await get(testsRef);
+          const testData = snapshot.val();
+          let testName = '';
+          let testDate = '';
+          for (const year in testData) {
+            if (testData[year][testid]) {
+              testName = testData[year][testid].name;
+              testDate = testData[year][testid].date;
+              break;
+            }
+          }
+          setTestDetails({ name: testName, date: testDate });
+        } catch (error) {
+          console.error('Error fetching test details:', error);
+        }
+      };
+
+      Promise.all([fetchResults(), fetchQuizData(), fetchTestDetails()]).then(() => {
+        setLoading(false);
+      });
     }
   }, [testid, userName]);
 
-  if (loading) return <div className="loading">Loading results...</div>;
+  const handleProfileClick = () => {
+    setTempName(profileName);
+    setShowProfilePopup(true);
+  };
 
-  if (!quizData || !userResults) return <div className="loading">Error loading results</div>;
+  const handleProfileSubmit = (e) => {
+    e.preventDefault();
+    if (tempName.trim()) {
+      setProfileName(tempName.trim());
+      localStorage.setItem('quizUserName', tempName.trim());
+      setShowProfilePopup(false);
+    } else {
+      alert('Please enter a valid name.');
+    }
+  };
 
-  const allQuestions = [
+  const allQuestions = quizData ? [
     ...(quizData.PHYSICS || []),
     ...(quizData.CHEMISTRY || []),
     ...(quizData.MATHS || []),
     ...(quizData.BIOLOGY || []),
     ...(quizData.BOTANY || []),
     ...(quizData.ZOOLOGY || [])
-  ];
+  ] : [];
 
-  const subjectQuestions = Object.keys(quizData).reduce((acc, subject) => {
-    acc[subject] = quizData[subject].map((q, index) => ({
-      ...q,
-      globalIndex: allQuestions.findIndex((question) => question === q),
-      questionNumber: `Question ${index + 1}`
-    }));
-    return acc;
-  }, {});
+  const subjectQuestions = quizData
+    ? Object.keys(quizData).reduce((acc, subject) => {
+        acc[subject] = quizData[subject].map((q, index) => ({
+          ...q,
+          globalIndex: allQuestions.findIndex(
+            (question) => question === q
+          ),
+          questionNumber: `Question ${index + 1}`
+        }));
+        return acc;
+      }, {})
+    : {};
+
+  if (loading) return <div className="loading">Loading results...</div>;
+
+  if (!results || !quizData) return <div className="loading">No results found.</div>;
 
   return (
     <div className="container">
@@ -87,53 +142,106 @@ export default function Results() {
           </div>
         </div>
         <div className="profile">
-          <button className="profile-btn" title="User Profile" disabled>
-            {userName ? userName[0].toUpperCase() : 'P'}
+          <button onClick={handleProfileClick} className="profile-btn" title="User Profile">
+            {profileName ? profileName[0].toUpperCase() : 'P'}
           </button>
         </div>
       </header>
 
+      {showProfilePopup && (
+        <div className="popup">
+          <div className="popup-content">
+            <h3 className="popup-title">User Profile</h3>
+            <p className="profile-name">Name: {profileName || 'Not set'}</p>
+            <form onSubmit={handleProfileSubmit}>
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="input-field"
+                />
+              </div>
+              <div className="popup-buttons">
+                <button type="submit" className="btn btn-primary">
+                  <i className="fas fa-save"></i>
+                  <span className="btn-text">Save</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setShowProfilePopup(false)}
+                  className="btn btn-gray"
+                >
+                  <i className="fas fa-times"></i>
+                  <span className="btn-text">Cancel</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showImagePopup && (
+        <div className="image-popup">
+          <div className="image-popup-content">
+            <img src={showImagePopup} alt="Question Enlarged" />
+            <button 
+              className="image-popup-close"
+              onClick={() => setShowImagePopup(null)}
+              title="Close Image"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-container">
-        <h2 className="page-title">Quiz Results</h2>
+        <h2 className="page-title">Results - {testDetails.name}</h2>
         <div className="result-summary">
-          <p>Name: {userResults.name}</p>
-          <p>Score: {userResults.score}</p>
-          <p>Date: {new Date(userResults.date).toLocaleString()}</p>
+          <p>Name: {results.name}</p>
+          <p>Score: {results.score}</p>
+          <p>Percentage: {((results.score / 720) * 100).toFixed(2)}%</p>
+          <p>Date: {new Date(results.date).toLocaleString()}</p>
+          <p>Test: {testDetails.name}</p>
+          <p>Test Date: {testDetails.date}</p>
         </div>
 
-        {Object.keys(subjectQuestions).map((subject) => (
-          <div key={subject} className="subject-results">
-            <h3 className="subject-title">{subject}</h3>
-            {subjectQuestions[subject].map((q) => {
-              const userAnswer = userResults.answers[q.globalIndex];
-              const isCorrect = userAnswer === q.correctOption;
-              const status = userAnswer
-                ? isCorrect
-                  ? 'Correct'
-                  : 'Incorrect'
-                : 'Unanswered';
-              return (
-                <div key={q.globalIndex} className="result-card">
-                  <div className="result-question">
-                    <span className="question-number">{q.questionNumber}</span>
-                    {q.image ? (
-                      <img src={q.image} className="question-image" alt="Question" />
-                    ) : (
-                      <p className="question-text">{q.text || 'Question content not available'}</p>
-                    )}
+        <div className="subject-results">
+          {Object.keys(subjectQuestions).map((subject) => (
+            <div key={subject} className="subject-section">
+              <h4 className="subject-title">{subject}</h4>
+              {subjectQuestions[subject].map((q, index) => {
+                const userAnswer = results.answers[q.globalIndex];
+                const isCorrect = userAnswer === q.correctOption;
+                const isUnanswered = !userAnswer;
+                return (
+                  <div key={q.globalIndex} className="result-card">
+                    <div className="result-question">
+                      <p className="question-text">{q.questionNumber}: {q.question}</p>
+                      {q.image && (
+                        <img 
+                          src={q.image} 
+                          alt="Question Image" 
+                          className="question-image"
+                          onClick={() => setShowImagePopup(q.image)}
+                        />
+                      )}
+                      <div className="result-details">
+                        <p>Your Answer: {userAnswer || 'Unanswered'}</p>
+                        <p>Correct Answer: {q.correctOption}</p>
+                        <p className={`result-status-${isCorrect ? 'correct' : isUnanswered ? 'unanswered' : 'incorrect'}`}>
+                          Status: {isCorrect ? 'Correct' : isUnanswered ? 'Unanswered' : 'Incorrect'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="result-details">
-                    <p className={`result-status result-status-${status.toLowerCase()}`}>
-                      Status: {status}
-                    </p>
-                    <p>Your Answer: {userAnswer || 'None'}</p>
-                    <p>Correct Answer: {q.correctOption}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                );
+              })}
+            </div>
+          ))}
+        </div>
 
         <div className="result-actions">
           <button 

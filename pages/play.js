@@ -30,6 +30,9 @@ export default function Play() {
   const [showIndex, setShowIndex] = useState(false);
   const [score, setScore] = useState(null);
   const [userName, setUserName] = useState('');
+  const [showNamePopup, setShowNamePopup] = useState(false);
+  const [tempName, setTempName] = useState('');
+  const [skippedQuestions, setSkippedQuestions] = useState(new Set());
 
   useEffect(() => {
     // Get cached name
@@ -75,6 +78,36 @@ export default function Play() {
 
   const handleAnswer = (questionId, option) => {
     setAnswers({ ...answers, [questionId]: option });
+    setSkippedQuestions((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(questionId);
+      return newSet;
+    });
+  };
+
+  const handleSkip = () => {
+    setSkippedQuestions((prev) => new Set(prev).add(currentQuestion));
+    if (currentQuestion < allQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (!answers[currentQuestion]) {
+      setSkippedQuestions((prev) => new Set(prev).add(currentQuestion));
+    }
+    if (currentQuestion < allQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    }
+  };
+
+  const getDeviceInfo = () => {
+    return {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      screen: `${window.screen.width}x${window.screen.height}`,
+      language: navigator.language
+    };
   };
 
   const handleFlag = async () => {
@@ -84,10 +117,17 @@ export default function Play() {
     }
     setFlagged({ ...flagged, [currentQuestion]: flagReason });
     try {
+      const question = allQuestions[currentQuestion];
       await set(ref(database, `flags/${testid}/${currentQuestion}`), {
         reason: flagReason,
         timestamp: new Date().toISOString(),
-        user: userName || 'Anonymous'
+        user: userName || 'Anonymous',
+        questionDetails: {
+          questionNumber: question.questionNumber,
+          image: question.image || '',
+          correctOption: question.correctOption
+        },
+        deviceDetails: getDeviceInfo()
       });
       setFlagReason('');
     } catch (error) {
@@ -96,8 +136,8 @@ export default function Play() {
   };
 
   const handleSubmit = async () => {
-    if (!userName) {
-      alert('Please enter your name on the home page before submitting.');
+    if (!userName.trim()) {
+      setShowNamePopup(true);
       return;
     }
 
@@ -124,6 +164,18 @@ export default function Play() {
       });
     } catch (error) {
       console.error('Error saving results:', error);
+    }
+  };
+
+  const handleNamePopupSubmit = (e) => {
+    e.preventDefault();
+    if (tempName.trim()) {
+      setUserName(tempName.trim());
+      localStorage.setItem('quizUserName', tempName.trim());
+      setShowNamePopup(false);
+      handleSubmit();
+    } else {
+      alert('Please enter a valid name.');
     }
   };
 
@@ -160,6 +212,40 @@ export default function Play() {
             </button>
           </div>
 
+          {showIndex && (
+            <div className="index-popup">
+              <div className="index-popup-content">
+                <h3 className="index-popup-title">Question Index</h3>
+                <div className="question-index">
+                  {allQuestions.map((q, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setCurrentQuestion(index);
+                        setShowIndex(false);
+                      }}
+                      className={`index-btn ${
+                        index === currentQuestion ? 'index-btn-active' :
+                        answers[index] ? 'index-btn-answered' :
+                        skippedQuestions.has(index) ? 'index-btn-skipped' :
+                        'index-btn-not-visited'
+                      }`}
+                      title={q.questionNumber}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => setShowIndex(false)}
+                  className="btn btn-gray index-popup-close"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+
           {flagged[currentQuestion] && (
             <div className="flag-section">
               <input
@@ -176,20 +262,6 @@ export default function Play() {
               >
                 Submit Flag
               </button>
-            </div>
-          )}
-
-          {showIndex && (
-            <div className="question-index">
-              {allQuestions.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentQuestion(index)}
-                  className={`index-btn ${index === currentQuestion ? 'index-btn-active' : answers[index] ? 'index-btn-answered' : ''}`}
-                >
-                  {index + 1}
-                </button>
-              ))}
             </div>
           )}
 
@@ -244,15 +316,15 @@ export default function Play() {
               </button>
             )}
             <button 
-              onClick={() => setCurrentQuestion(currentQuestion + 1)}
+              onClick={handleSkip}
               className="btn btn-warning"
               disabled={currentQuestion === allQuestions.length - 1}
             >
               Skip
             </button>
             <button 
-              onClick={() => setCurrentQuestion(currentQuestion + 1)}
-              className="btn btn-secondary"
+              onClick={handleNext}
+              className={`btn ${answers[currentQuestion] ? 'btn-secondary' : 'btn-error'}`}
               disabled={currentQuestion === allQuestions.length - 1}
             >
               Save & Next
@@ -267,6 +339,36 @@ export default function Play() {
             )}
           </div>
         </div>
+
+        {showNamePopup && (
+          <div className="name-popup">
+            <div className="name-popup-content">
+              <h3 className="name-popup-title">Enter Your Name</h3>
+              <form onSubmit={handleNamePopupSubmit}>
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="name-input"
+                  required
+                />
+                <div className="name-popup-buttons">
+                  <button type="submit" className="btn btn-primary">
+                    Save & Submit
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setShowNamePopup(false)}
+                    className="btn btn-gray"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {score !== null && (
           <div className="result-container">

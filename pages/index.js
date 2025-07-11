@@ -28,6 +28,8 @@ export default function Home() {
   const [tempName, setTempName] = useState('');
   const [showNamePopup, setShowNamePopup] = useState(false);
   const [selectedTestId, setSelectedTestId] = useState(null);
+  const [showInstructionsPopup, setShowInstructionsPopup] = useState(false);
+  const [currentTestId, setCurrentTestId] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -90,8 +92,8 @@ export default function Home() {
   };
 
   const handleInstructions = (testId) => {
-    // Placeholder for instructions logic
-    alert(`Instructions for test ${testId}: Please read all questions carefully. You have 3 hours to complete the test.`);
+    setCurrentTestId(testId);
+    setShowInstructionsPopup(true);
   };
 
   const handleNamePopupSubmit = (e) => {
@@ -187,6 +189,27 @@ export default function Home() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showInstructionsPopup && (
+        <div className="popup">
+          <div className="popup-content">
+            <h3 className="popup-title">Test Instructions</h3>
+            <p className="popup-text">
+              Please read all questions carefully. You have 3 hours to complete the test. Select one option per question. Use the flag option to report issues.
+            </p>
+            <div className="popup-buttons">
+              <button 
+                type="button"
+                onClick={() => setShowInstructionsPopup(false)}
+                className="btn btn-gray"
+              >
+                <i className="fas fa-times"></i>
+                <span className="btn-text">Close</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

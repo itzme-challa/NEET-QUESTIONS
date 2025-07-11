@@ -75,7 +75,12 @@ body {
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.profile-btn:hover {
+.profile-btn:disabled {
+  background: #b0bec5;
+  cursor: not-allowed;
+}
+
+.profile-btn:hover:not(:disabled) {
   transform: scale(1.05);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
@@ -711,6 +716,73 @@ body {
   margin-top: 12px;
 }
 
+.result-summary {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.result-summary p {
+  font-size: 16px;
+  color: #333333;
+  margin: 8px 0;
+}
+
+.subject-results {
+  margin-bottom: 24px;
+}
+
+.result-card {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.result-question {
+  margin-bottom: 12px;
+}
+
+.question-text {
+  font-size: 14px;
+  color: #333333;
+}
+
+.result-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.result-details p {
+  font-size: 14px;
+  margin: 0;
+}
+
+.result-status-correct {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.result-status-incorrect {
+  color: #c62828;
+  font-weight: 600;
+}
+
+.result-status-unanswered {
+  color: #424242;
+  font-weight: 600;
+}
+
+.result-actions {
+  text-align: center;
+  margin-top: 20px;
+}
+
 @media (max-width: 640px) {
   .test-grid {
     grid-template-columns: 1fr;
@@ -729,5 +801,8 @@ body {
   }
   .question-index {
     max-height: 50vh;
+  }
+  .result-card {
+    padding: 16px;
   }
 }

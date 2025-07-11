@@ -8,16 +8,19 @@ body {
   box-sizing: border-box;
 }
 
-.question {
-  transition: box-shadow 0.3s;
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-.question:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+::-webkit-scrollbar-track {
+  background: #eceff1;
 }
 
-img.igg {
-  border-radius: 7px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: 0.3s;
+::-webkit-scrollbar-thumb {
+  background: #90a4ae;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #78909c;
 }

@@ -26,16 +26,16 @@
   }
   startButton.click();
 
-  // Navigate through up to 10 questions using Skip
-  for (let i = 0; i < 10; i++) {
+  // Navigate through up to 180 questions using Skip
+  for (let i = 0; i < 180; i++) {
     await waitForElement('#question-container', 5000).catch(() => null);
     const skipButton = document.querySelector('#skip-btn');
     if (!skipButton) {
-      console.error('Skip button not found');
+      console.error(`Skip button not found at question ${i + 1}`);
       break;
     }
     skipButton.click();
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 500)); // Small delay to ensure page updates
   }
 
   // Submit the quiz
@@ -78,10 +78,10 @@
       }
     });
 
-    // Ensure exactly 10 questions
+    // Ensure all questions are included (no trimming to 10)
     let totalQuestions = Object.values(data).reduce((sum, arr) => sum + arr.length, 0);
-    if (totalQuestions < 10) {
-      const placeholders = Array(10 - totalQuestions).fill().map((_, i) => ({
+    if (totalQuestions < 180) {
+      const placeholders = Array(180 - totalQuestions).fill().map((_, i) => ({
         questionNumber: `Question ${totalQuestions + i + 1}`,
         image: null,
         correctOption: 'N/A'
@@ -89,20 +89,7 @@
       data['Unknown'] = (data['Unknown'] || []).concat(placeholders);
     }
 
-    // Trim to exactly 10 questions
-    const finalData = {};
-    let questionCount = 0;
-    for (const subject in data) {
-      const questions = data[subject];
-      const slice = questions.slice(0, Math.min(questions.length, 10 - questionCount));
-      if (slice.length > 0) {
-        finalData[subject] = slice;
-        questionCount += slice.length;
-      }
-      if (questionCount >= 10) break;
-    }
-
-    return finalData;
+    return data;
   }).catch(() => {
     console.error('Results table not found');
     return {};

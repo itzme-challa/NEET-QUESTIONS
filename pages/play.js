@@ -26,7 +26,7 @@ export default function Play() {
   const [answers, setAnswers] = useState({});
   const [flagged, setFlagged] = useState({});
   const [flagReason, setFlagReason] = useState('');
-  const [timeLeft, setTimeLeft] = useState(3 * 60 * 60); // 3 hours
+  const [timeLeft, setTimeLeft] = useState(0); // Initialized to 0, set dynamically
   const [showIndex, setShowIndex] = useState(false);
   const [score, setScore] = useState(null);
   const [userName, setUserName] = useState('');
@@ -51,6 +51,17 @@ export default function Play() {
           if (!response.ok) throw new Error('Quiz data not found');
           const data = await response.json();
           setQuizData(data);
+          // Calculate total questions and set timer: (total questions × 1 + 15) minutes
+          const allQuestions = [
+            ...(data.PHYSICS || []),
+            ...(data.CHEMISTRY || []),
+            ...(data.MATHS || []),
+            ...(data.BIOLOGY || []),
+            ...(data.BOTANY || []),
+            ...(data.ZOOLOGY || [])
+          ];
+          const totalQuestions = allQuestions.length;
+          setTimeLeft((totalQuestions * 1 + 15) * 60); // Convert to seconds
         } catch (error) {
           console.error('Error fetching quiz:', error);
         }
@@ -70,8 +81,31 @@ export default function Play() {
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [testid]);
+    // Keyboard navigation
+    const handleKeyDown = (e) => {
+      if (showIndex || showNamePopup || showSubmitPopup || showProfilePopup || showInstructionsPopup) return;
+      if (e.key === 'ArrowLeft' && currentQuestion > 0) {
+        setCurrentQuestion(currentQuestion - 1);
+      } else if (e.key === 'ArrowRight' && currentQuestion < allQuestions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+      } else if (['1', '2', '3', '4'].includes(e.key)) {
+        const options = ['A', 'B', 'C', 'D'];
+        handleAnswer(currentQuestion, options[parseInt(e.key) - 1]);
+      } else if (e.key === 'c') {
+        handleClearSelection();
+      } else if (e.key === 's') {
+        handleSkip();
+      } else if (e.key === 'n') {
+        handleNext();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [testid, currentQuestion, showIndex, showNamePopup, showSubmitPopup, showProfilePopup, showInstructionsPopup]);
 
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
@@ -90,6 +124,24 @@ export default function Play() {
     setMissedQuestions((prev) => {
       const newSet = new Set(prev);
       newSet.delete(questionId);
+      return newSet;
+    });
+  };
+
+  const handleClearSelection = () => {
+    setAnswers((prev) => {
+      const newAnswers = { ...prev };
+      delete newAnswers[currentQuestion];
+      return newAnswers;
+    });
+    setMissedQuestions((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(currentQuestion);
+      return newSet;
+    });
+    setSkippedQuestions((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(currentQuestion);
       return newSet;
     });
   };
@@ -259,6 +311,9 @@ export default function Play() {
 
   const skippedIndices = Array.from(skippedQuestions).map(idx => idx + 1);
   const missedIndices = Array.from(missedQuestions).map(idx => idx + 1);
+  const answeredCount = Object.keys(answers).length;
+  const flaggedCount = Object.keys(flagged).length;
+  const progress = allQuestions.length > 0 ? ((answeredCount / allQuestions.length) * 100).toFixed(1) : 0;
 
   return (
     <div className="container">
@@ -353,6 +408,12 @@ export default function Play() {
         <div className="popup">
           <div className="popup-content">
             <h3 className="popup-title">Question Index</h3>
+            <div className="question-status">
+              <p>Answered: {answeredCount} / {allQuestions.length} ({progress}%)</p>
+              <p>Skipped: {skippedQuestions.size}</p>
+              <p>Missed: {missedQuestions.size}</p>
+              <p>Flagged: {flaggedCount}</p>
+            </div>
             <div className="question-index">
               {Object.keys(subjectQuestions).length > 0 ? (
                 Object.keys(subjectQuestions).map((subject) => (
@@ -371,6 +432,7 @@ export default function Play() {
                             answers[q.globalIndex] ? 'index-btn-answered' :
                             missedQuestions.has(q.globalIndex) ? 'index-btn-missed' :
                             skippedQuestions.has(q.globalIndex) ? 'index-btn-skipped' :
+                            flagged[q.globalIndex] ? 'index-btn-flagged' :
                             'index-btn-not-visited'
                           }`}
                           title={`${subject} ${q.questionNumber}`}
@@ -457,7 +519,8 @@ export default function Play() {
           <div className="popup-content">
             <h3 className="popup-title">Test Instructions</h3>
             <p className="popup-text">
-              Read each question carefully. Select one option per question. Use the flag option to report issues. You have 3 hours to complete the test.
+              Read each question carefully. Select one option per question or clear your selection. Use the flag option to report issues. 
+              Time allotted: {(allQuestions.length * 1 + 15)} minutes. Keyboard shortcuts: Arrow Left/Right (navigate), 1-4 (select option), C (clear), S (skip), N (next).
             </p>
             <div className="popup-buttons">
               <button 
@@ -482,6 +545,12 @@ export default function Play() {
           <div className="timer">
             <i className="fas fa-clock"></i>
             <span>{formatTime(timeLeft)}</span>
+          </div>
+          <div className="progress-container">
+            <span>Progress: {answeredCount}/{allQuestions.length} ({progress}%)</span>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+            </div>
           </div>
         </div>
         
@@ -573,17 +642,26 @@ export default function Play() {
               <button 
                 onClick={() => setCurrentQuestion(currentQuestion - 1)}
                 className="btn btn-gray"
-                title="Previous"
+                title="Previous (←)"
               >
                 <i className="fas fa-arrow-left"></i>
                 <span className="btn-text">Previous</span>
               </button>
             )}
             <button 
+              onClick={handleClearSelection}
+              className="btn btn-gray"
+              title="Clear Selection (C)"
+              disabled={!answers[currentQuestion]}
+            >
+              <i className="fas fa-eraser"></i>
+              <span className="btn-text">Clear</span>
+            </button>
+            <button 
               onClick={handleSkip}
               className="btn btn-warning"
               disabled={currentQuestion === allQuestions.length - 1}
-              title="Skip"
+              title="Skip (S)"
             >
               <i className="fas fa-forward"></i>
               <span className="btn-text">Skip</span>
@@ -592,7 +670,7 @@ export default function Play() {
               onClick={handleNext}
               className={`btn ${answers[currentQuestion] ? 'btn-secondary' : 'btn-error'}`}
               disabled={currentQuestion === allQuestions.length - 1}
-              title="Save & Next"
+              title="Save & Next (N)"
             >
               <i className="fas fa-save"></i>
               <span className="btn-text">Save & Next</span>

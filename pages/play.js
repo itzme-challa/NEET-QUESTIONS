@@ -170,6 +170,8 @@ export default function Play() {
     const allQuestions = [
       ...(quizData?.PHYSICS || []),
       ...(quizData?.CHEMISTRY || []),
+      ...(quizData?.MATHS || []),
+      ...(quizData?.BIOLOGY || []),
       ...(quizData?.BOTANY || []),
       ...(quizData?.ZOOLOGY || [])
     ];
@@ -234,8 +236,10 @@ export default function Play() {
   const allQuestions = quizData ? [
     ...(quizData.PHYSICS || []),
     ...(quizData.CHEMISTRY || []),
-    ...(quizData.Botany || []),
-    ...(quizData.Zoology || [])
+    ...(quizData.MATHS || []),
+    ...(quizData.BIOLOGY || []),
+    ...(quizData.BOTANY || []),
+    ...(quizData.ZOOLOGY || [])
   ] : [];
 
   const subjectQuestions = quizData

@@ -60,33 +60,32 @@ export default function Home() {
 
   const handleNameSubmit = (e) => {
     e.preventDefault();
-    localStorage.setItem('quizUserName', name);
+    if (name.trim()) {
+      localStorage.setItem('quizUserName', name.trim());
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 font-sans">
+    <div className="container">
       <Head>
         <title>Quiz App - Home</title>
       </Head>
       
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Available Tests</h1>
+      <div className="max-container">
+        <h1 className="page-title">Available Tests</h1>
         
         {!name && (
-          <form onSubmit={handleNameSubmit} className="mb-8 bg-white p-6 rounded-lg shadow-custom">
-            <div className="flex items-center gap-4">
+          <form onSubmit={handleNameSubmit} className="name-form">
+            <div className="form-group">
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
-                className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                className="name-input"
                 required
               />
-              <button
-                type="submit"
-                className="bg-primary text-white px-6 py-3 rounded-lg shadow-custom hover:bg-blue-700 transition"
-              >
+              <button type="submit" className="btn btn-primary">
                 Save Name
               </button>
             </div>
@@ -94,21 +93,16 @@ export default function Home() {
         )}
 
         {loading ? (
-          <div className="text-center text-gray-600">Loading tests...</div>
+          <div className="loading">Loading tests...</div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="test-grid">
             {tests.map((test) => (
-              <div
-                key={test.id}
-                className="bg-white p-6 rounded-lg shadow-custom hover:shadow-custom-hover transition"
-              >
-                <h2 className="text-xl font-semibold text-gray-800">{test.name}</h2>
-                <p className="text-gray-600 mt-1">Year: {test.year}</p>
-                <p className="text-gray-600">Date: {test.date}</p>
+              <div key={test.id} className="test-card">
+                <h2 className="test-title">{test.name}</h2>
+                <p className="test-info">Year: {test.year}</p>
+                <p className="test-info">Date: {test.date}</p>
                 <Link href={`/play?testid=${test.id}`}>
-                  <button className="mt-4 bg-secondary text-white px-6 py-3 rounded-lg shadow-custom hover:bg-green-600 transition">
-                    Start Test
-                  </button>
+                  <button className="btn btn-secondary">Start Test</button>
                 </Link>
               </div>
             ))}

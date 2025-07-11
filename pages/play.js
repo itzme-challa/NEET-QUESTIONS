@@ -170,8 +170,8 @@ export default function Play() {
     const allQuestions = [
       ...(quizData?.PHYSICS || []),
       ...(quizData?.CHEMISTRY || []),
-      ...(quizData?.MATHS || []),
-      ...(quizData?.BIOLOGY || [])
+      ...(quizData?.BOTANY || []),
+      ...(quizData?.ZOOLOGY || [])
     ];
 
     allQuestions.forEach((q, index) => {
@@ -234,8 +234,8 @@ export default function Play() {
   const allQuestions = quizData ? [
     ...(quizData.PHYSICS || []),
     ...(quizData.CHEMISTRY || []),
-    ...(quizData.MATHS || []),
-    ...(quizData.BIOLOGY || [])
+    ...(quizData.Botany || []),
+    ...(quizData.Zoology || [])
   ] : [];
 
   const subjectQuestions = quizData

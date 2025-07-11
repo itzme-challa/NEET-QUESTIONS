@@ -44,6 +44,12 @@
         #copyButton:hover {
             background-color: #218838;
         }
+        #downloadButton {
+            background-color: #6c757d;
+        }
+        #downloadButton:hover {
+            background-color: #5a6268;
+        }
         #output {
             background-color: white;
             padding: 15px;
@@ -61,13 +67,23 @@
             color: green;
             margin-top: 10px;
         }
+        .button-container {
+            display: flex;
+            gap: 10px;
+        }
+        .button-container button {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
     <h1>JSON Text Converter</h1>
     <textarea id="inputText" placeholder="Paste your JSON-like text here..."></textarea>
     <button onclick="convertToJson()">Convert to JSON</button>
-    <button id="copyButton" onclick="copyToClipboard()" style="display: none;">Copy to Clipboard</button>
+    <div class="button-container">
+        <button id="copyButton" onclick="copyToClipboard()" style="display: none;">Copy to Clipboard</button>
+        <button id="downloadButton" onclick="downloadJson()" style="display: none;">Download JSON</button>
+    </div>
     <div id="output"></div>
     <div id="message"></div>
 
@@ -77,11 +93,13 @@
             const outputDiv = document.getElementById('output');
             const messageDiv = document.getElementById('message');
             const copyButton = document.getElementById('copyButton');
+            const downloadButton = document.getElementById('downloadButton');
 
             // Reset previous output and messages
             outputDiv.textContent = '';
             messageDiv.textContent = '';
             copyButton.style.display = 'none';
+            downloadButton.style.display = 'none';
 
             if (!inputText) {
                 messageDiv.textContent = 'Error: Input is empty.';
@@ -105,6 +123,7 @@
                 // Display the formatted JSON
                 outputDiv.textContent = formattedJson;
                 copyButton.style.display = 'block';
+                downloadButton.style.display = 'block';
                 messageDiv.textContent = 'Successfully converted to JSON!';
                 messageDiv.className = 'success';
             } catch (error) {
@@ -124,6 +143,53 @@
                 messageDiv.textContent = 'Error copying to clipboard: ' + err;
                 messageDiv.className = 'error';
             });
+        }
+
+        function generateRandomId() {
+            const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function downloadJson() {
+            const outputText = document.getElementById('output').textContent;
+            const messageDiv = document.getElementById('message');
+            
+            try {
+                // Generate filename in format ddmmyy_randomid.json
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = String(now.getFullYear()).slice(-2);
+                const randomId = generateRandomId();
+                const filename = `${day}${month}${year}_${randomId}.json`;
+                
+                // Create a Blob with the JSON content
+                const blob = new Blob([outputText], { type: 'application/json' });
+                
+                // Create a download link
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+                messageDiv.textContent = `JSON downloaded as ${filename}!`;
+                messageDiv.className = 'success';
+            } catch (error) {
+                messageDiv.textContent = 'Error downloading file: ' + error;
+                messageDiv.className = 'error';
+            }
         }
     </script>
 </body>

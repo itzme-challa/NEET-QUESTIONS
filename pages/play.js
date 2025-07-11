@@ -26,7 +26,6 @@ export default function Play() {
   const [answers, setAnswers] = useState({});
   const [flagged, setFlagged] = useState({});
   const [flagReason, setFlagReason] = useState('');
-  const [showFlagPopup, setShowFlagPopup] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [showIndex, setShowIndex] = useState(false);
   const [score, setScore] = useState(null);
@@ -38,7 +37,6 @@ export default function Play() {
   const [showSubmitPopup, setShowSubmitPopup] = useState(false);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
   const [showInstructionsPopup, setShowInstructionsPopup] = useState(false);
-  const [showImagePopup, setShowImagePopup] = useState(null);
 
   useEffect(() => {
     const name = localStorage.getItem('quizUserName') || '';
@@ -79,7 +77,7 @@ export default function Play() {
     }, 1000);
 
     const handleKeyDown = (e) => {
-      if (showIndex || showNamePopup || showSubmitPopup || showProfilePopup || showInstructionsPopup || showFlagPopup || showImagePopup) return;
+      if (showIndex || showNamePopup || showSubmitPopup || showProfilePopup || showInstructionsPopup) return;
       if (e.key === 'ArrowLeft' && currentQuestion > 0) {
         setCurrentQuestion(currentQuestion - 1);
       } else if (e.key === 'ArrowRight' && currentQuestion < allQuestions.length - 1) {
@@ -101,7 +99,7 @@ export default function Play() {
       clearInterval(timer);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [testid, currentQuestion, showIndex, showNamePopup, showSubmitPopup, showProfilePopup, showInstructionsPopup, showFlagPopup, showImagePopup]);
+  }, [testid, currentQuestion, showIndex, showNamePopup, showSubmitPopup, showProfilePopup, showInstructionsPopup]);
 
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
@@ -201,7 +199,6 @@ export default function Play() {
       });
       setFlagged({ ...flagged, [currentQuestion]: true });
       setFlagReason('');
-      setShowFlagPopup(false);
       alert('Flag submitted successfully.');
     } catch (error) {
       console.error('Error flagging question:', error);
@@ -312,7 +309,6 @@ export default function Play() {
   const answeredCount = Object.keys(answers).length;
   const flaggedCount = Object.keys(flagged).length;
   const progress = allQuestions.length > 0 ? ((answeredCount / allQuestions.length) * 100).toFixed(1) : 0;
-  const question = allQuestions[currentQuestion];
 
   return (
     <div className="container">
@@ -399,40 +395,6 @@ export default function Play() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {showFlagPopup && (
-        <div className="popup">
-          <div className="popup-content">
-            <h3 className="popup-title">Flag Question</h3>
-            <div className="input-container">
-              <input
-                type="text"
-                value={flagReason}
-                onChange={(e) => setFlagReason(e.target.value)}
-                placeholder="Reason for flagging (max 50 chars)"
-                maxLength={50}
-                className="input-field"
-              />
-            </div>
-            <div className="popup-buttons">
-              <button 
-                onClick={handleFlag}
-                className="btn btn-error"
-              >
-                <i className="fas fa-flag"></i>
-                <span className="btn-text">Submit Flag</span>
-              </button>
-              <button 
-                onClick={() => setShowFlagPopup(false)}
-                className="btn btn-gray"
-              >
-                <i className="fas fa-times"></i>
-                <span className="btn-text">Cancel</span>
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -569,21 +531,6 @@ export default function Play() {
         </div>
       )}
 
-      {showImagePopup && (
-        <div className="image-popup">
-          <div className="image-popup-content">
-            <img src={showImagePopup} alt="Question Enlarged" />
-            <button 
-              className="image-popup-close"
-              onClick={() => setShowImagePopup(null)}
-              title="Close Image"
-            >
-              <i className="fas fa-times"></i>
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="max-container">
         <div className="timer-container">
           <button onClick={handleInstructions} className="btn btn-info" title="Test Instructions">
@@ -610,9 +557,10 @@ export default function Play() {
               title="Show Index"
             >
               <i className="fas fa-th"></i>
+              <span className="btn-text">Index</span>
             </button>
             <button 
-              onClick={() => setShowFlagPopup(true)}
+              onClick={() => setFlagged({ ...flagged, [currentQuestion]: true })}
               className="btn btn-flag"
               title="Flag Question"
             >
@@ -620,9 +568,35 @@ export default function Play() {
             </button>
           </div>
 
+          {flagged[currentQuestion] && (
+            <div className="flag-section">
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={flagReason}
+                  onChange={(e) => setFlagReason(e.target.value)}
+                  placeholder="Reason for flagging (max 50 chars)"
+                  maxLength={50}
+                  className="input-field"
+                />
+              </div>
+              <button 
+                onClick={handleFlag}
+                className="btn btn-error"
+              >
+                <i className="fas fa-flag"></i>
+                <span className="btn-text">Submit Flag</span>
+              </button>
+            </div>
+          )}
+
           <div className="question-info-bar">
             <span className="question-number">Question {currentQuestion + 1}</span>
-            <span className="section-info">{question.subject}</span>
+            <span className="section-info">
+              {Object.keys(subjectQuestions).find(subject => 
+                subjectQuestions[subject].some(q => q.globalIndex === currentQuestion)
+              ) || 'Unknown'}
+            </span>
             <div className="marks-box">
               <span className="correct-marks">+4</span>
               <span className="wrong-marks">-1</span>
@@ -630,19 +604,20 @@ export default function Play() {
             <span className="question-type">MCQ</span>
           </div>
 
-          <p className="question-text">{question.question}</p>
-          {question.image && (
+          {allQuestions[currentQuestion]?.image && (
             <img 
-              src={question.image} 
-              alt="Question Image" 
-              className="question-image"
-              onClick={() => setShowImagePopup(question.image)}
+              src={allQuestions[currentQuestion].image} 
+              className="question-image" 
+              alt="Question"
             />
           )}
+
           <div className="options">
-            {question.options.map((option, index) => (
-              <div key={index} className="option-container">
-                <label className={`option-label ${answers[currentQuestion] === option ? 'option-selected' : ''}`}>
+            {['A', 'B', 'C', 'D'].map((option) => (
+              <div key={option} className="option-container">
+                <label 
+                  className={`option-label ${answers[currentQuestion] === option ? 'option-selected' : ''}`}
+                >
                   <input
                     type="radio"
                     name={`question-${currentQuestion}`}
@@ -656,41 +631,72 @@ export default function Play() {
               </div>
             ))}
           </div>
+
           <div className="button-container">
+            {currentQuestion > 0 && (
+              <button 
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                className="btn btn-gray"
+                title="Previous (←)"
+              >
+                <i className="fas fa-arrow-left"></i>
+                <span className="btn-text">Previous</span>
+              </button>
+            )}
             <button 
               onClick={handleClearSelection}
-              className="btn btn-warning"
-              title="Clear Selection"
+              className="btn btn-gray"
+              title="Clear Selection (C)"
+              disabled={!answers[currentQuestion]}
             >
               <i className="fas fa-eraser"></i>
               <span className="btn-text">Clear</span>
             </button>
             <button 
               onClick={handleSkip}
-              className="btn btn-gray"
-              title="Skip Question"
+              className="btn btn-warning"
+              disabled={currentQuestion === allQuestions.length - 1}
+              title="Skip (S)"
             >
               <i className="fas fa-forward"></i>
               <span className="btn-text">Skip</span>
             </button>
             <button 
               onClick={handleNext}
-              className="btn btn-primary"
-              title="Next Question"
+              className={`btn ${answers[currentQuestion] ? 'btn-secondary' : 'btn-error'}`}
+              disabled={currentQuestion === allQuestions.length - 1}
+              title="Save & Next (N)"
             >
-              <i className="fas fa-arrow-right"></i>
-              <span className="btn-text">Next</span>
+              <i className="fas fa-save"></i>
+              <span className="btn-text">Save & Next</span>
             </button>
-            <button 
-              onClick={() => setShowSubmitPopup(true)}
-              className="btn btn-error"
-              title="Submit Quiz"
-            >
-              <i className="fas fa-check-circle"></i>
-              <span className="btn-text">Submit</span>
-            </button>
+            {currentQuestion === allQuestions.length - 1 && (
+              <button 
+                onClick={() => setShowSubmitPopup(true)}
+                className="btn btn-primary"
+                title="Submit Test"
+              >
+                <i className="fas fa-check"></i>
+                <span className="btn-text">Submit Test</span>
+              </button>
+            )}
           </div>
         </div>
+
+        {score !== null && (
+          <div className="result-container">
+            <h2 className="result-title">Quiz Completed!</h2>
+            <p className="result-score">Your Score: {score}</p>
+            <button 
+              onClick={() => router.push(`/results?testid=${testid}&userName=${userName}`)}
+              className="btn btn-primary"
+              title="View Results"
+            >
+              <i className="fas fa-list"></i>
+              <span className="btn-text">View Results</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

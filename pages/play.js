@@ -331,44 +331,54 @@ export default function Play() {
       )}
 
       {showIndex && (
-        <div className="popup">
-          <div className="popup-content">
-            <h3 className="popup-title">Question Index</h3>
-            <div className="question-index">
-              {allQuestions.length > 0 ? (
-                allQuestions.map((q, index) => (
+  <div className="popup">
+    <div className="popup-content">
+      <h3 className="popup-title">Question Index</h3>
+      <div className="question-index">
+        {quizData && Object.keys(quizData).map((subject) => (
+          <div key={subject} className="subject-section">
+            <h4>{subject}</h4>
+            <div className="subject-questions">
+              {quizData[subject].map((q, index) => {
+                const globalIndex = [
+                  ...(quizData.PHYSICS || []).slice(0, subject === 'PHYSICS' ? index : quizData.PHYSICS.length),
+                  ...(quizData.CHEMISTRY || []).slice(0, subject === 'CHEMISTRY' ? index : quizData.CHEMISTRY.length),
+                  ...(quizData.MATHS || []).slice(0, subject === 'MATHS' ? index : quizData.MATHS.length)
+                ].length + (subject === 'PHYSICS' ? index : subject === 'CHEMISTRY' ? quizData.PHYSICS.length + index : quizData.PHYSICS.length + quizData.CHEMISTRY.length + index);
+                return (
                   <button
-                    key={index}
+                    key={`${subject}-${index}`}
                     onClick={() => {
-                      setCurrentQuestion(index);
+                      setCurrentQuestion(globalIndex);
                       setShowIndex(false);
                     }}
                     className={`index-btn ${
-                      index === currentQuestion ? 'index-btn-active' :
-                      answers[index] ? 'index-btn-answered' :
-                      missedQuestions.has(index) ? 'index-btn-missed' :
-                      skippedQuestions.has(index) ? 'index-btn-skipped' :
+                      globalIndex === currentQuestion ? 'index-btn-active' :
+                      answers[globalIndex] ? 'index-btn-answered' :
+                      missedQuestions.has(globalIndex) ? 'index-btn-missed' :
+                      skippedQuestions.has(globalIndex) ? 'index-btn-skipped' :
                       'index-btn-not-visited'
                     }`}
                     title={`Question ${index + 1}`}
                   >
                     {index + 1}
                   </button>
-                ))
-              ) : (
-                <p>No questions available</p>
-              )}
+                );
+              })}
             </div>
-            <button 
-              onClick={() => setShowIndex(false)}
-              className="btn btn-gray index-popup-close"
-            >
-              <i className="fas fa-times"></i>
-              <span className="btn-text">Close</span>
-            </button>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
+      <button 
+        onClick={() => setShowIndex(false)}
+        className="btn btn-gray index-popup-close"
+      >
+        <i className="fas fa-times"></i>
+        <span className="btn-text">Close</span>
+      </button>
+    </div>
+  </div>
+)}
 
       {showSubmitPopup && (
         <div className="popup">

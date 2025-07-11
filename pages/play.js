@@ -35,6 +35,7 @@ export default function Play() {
   const [skippedQuestions, setSkippedQuestions] = useState(new Set());
   const [missedQuestions, setMissedQuestions] = useState(new Set());
   const [showSubmitPopup, setShowSubmitPopup] = useState(false);
+  const [showProfilePopup, setShowProfilePopup] = useState(false); // Added for profile popup
 
   useEffect(() => {
     // Get cached name
@@ -196,6 +197,22 @@ export default function Play() {
     }
   };
 
+  const handleProfileClick = () => {
+    setTempName(userName);
+    setShowProfilePopup(true);
+  };
+
+  const handleProfileSubmit = (e) => {
+    e.preventDefault();
+    if (tempName.trim()) {
+      setUserName(tempName.trim());
+      localStorage.setItem('quizUserName', tempName.trim());
+      setShowProfilePopup(false);
+    } else {
+      alert('Please enter a valid name.');
+    }
+  };
+
   const handleConfirmSubmit = () => {
     setShowSubmitPopup(false);
     handleSubmit();
@@ -227,7 +244,7 @@ export default function Play() {
           </div>
         </div>
         <div className="profile">
-          <button onClick={() => setShowProfilePopup(true)} className="profile-btn">
+          <button onClick={handleProfileClick} className="profile-btn">
             {userName ? userName[0].toUpperCase() : 'P'}
           </button>
         </div>
@@ -238,7 +255,7 @@ export default function Play() {
           <div className="profile-popup-content">
             <h3 className="profile-popup-title">User Profile</h3>
             <p className="profile-name">Name: {userName || 'Not set'}</p>
-            <form onSubmit={handleNameSubmit}>
+            <form onSubmit={handleProfileSubmit}>
               <input
                 type="text"
                 value={tempName}
@@ -306,7 +323,7 @@ export default function Play() {
                       setCurrentQuestion(idx - 1);
                       setShowSubmitPopup(false);
                     }}
-                    className="submit-popup-link"
+                    className="submit-popup-link submit-popup-link-skipped"
                   >
                     {idx}
                   </button>
@@ -322,7 +339,7 @@ export default function Play() {
                       setCurrentQuestion(idx - 1);
                       setShowSubmitPopup(false);
                     }}
-                    className="submit-popup-link"
+                    className="submit-popup-link submit-popup-link-missed"
                   >
                     {idx}
                   </button>
@@ -346,7 +363,9 @@ export default function Play() {
       )}
 
       <div className="max-container">
-        <div id="timer" className="timer">{formatTime(timeLeft)}</div>
+        <div id="timer" className="timer">
+          <i className="fas fa-clock"></i> {formatTime(timeLeft)}
+        </div>
         
         <div className="question-container">
           <div className="header-controls">
@@ -363,41 +382,6 @@ export default function Play() {
               <i className="fas fa-flag"></i>
             </button>
           </div>
-
-          {showIndex && (
-            <div className="index-popup">
-              <div className="index-popup-content">
-                <h3 className="index-popup-title">Question Index</h3>
-                <div className="question-index">
-                  {allQuestions.map((q, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setCurrentQuestion(index);
-                        setShowIndex(false);
-                      }}
-                      className={`index-btn ${
-                        index === currentQuestion ? 'index-btn-active' :
-                        answers[index] ? 'index-btn-answered' :
-                        missedQuestions.has(index) ? 'index-btn-missed' :
-                        skippedQuestions.has(index) ? 'index-btn-skipped' :
-                        'index-btn-not-visited'
-                      }`}
-                      title={q.questionNumber}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
-                </div>
-                <button 
-                  onClick={() => setShowIndex(false)}
-                  className="btn btn-gray index-popup-close"
-                >
-                  <i className="fas fa-times"></i> Close
-                </button>
-              </div>
-            </div>
-          )}
 
           {flagged[currentQuestion] && (
             <div className="flag-section">

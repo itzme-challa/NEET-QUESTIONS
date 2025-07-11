@@ -26,7 +26,7 @@ export default function Play() {
   const [answers, setAnswers] = useState({});
   const [flagged, setFlagged] = useState({});
   const [flagReason, setFlagReason] = useState('');
-  const [timeLeft, setTimeLeft] = useState(0); // Initialized to 0, set dynamically
+  const [timeLeft, setTimeLeft] = useState(0);
   const [showIndex, setShowIndex] = useState(false);
   const [score, setScore] = useState(null);
   const [userName, setUserName] = useState('');
@@ -39,19 +39,16 @@ export default function Play() {
   const [showInstructionsPopup, setShowInstructionsPopup] = useState(false);
 
   useEffect(() => {
-    // Get cached name
     const name = localStorage.getItem('quizUserName') || '';
     setUserName(name);
 
     if (testid) {
-      // Fetch quiz data
       const fetchQuiz = async () => {
         try {
           const response = await fetch(`/data/${testid}.json`);
           if (!response.ok) throw new Error('Quiz data not found');
           const data = await response.json();
           setQuizData(data);
-          // Calculate total questions and set timer: (total questions × 1 + 15) minutes
           const allQuestions = [
             ...(data.PHYSICS || []),
             ...(data.CHEMISTRY || []),
@@ -60,8 +57,7 @@ export default function Play() {
             ...(data.BOTANY || []),
             ...(data.ZOOLOGY || [])
           ];
-          const totalQuestions = allQuestions.length;
-          setTimeLeft((totalQuestions * 1 + 15) * 60); // Convert to seconds
+          setTimeLeft((allQuestions.length * 1 + 15) * 60);
         } catch (error) {
           console.error('Error fetching quiz:', error);
         }
@@ -69,7 +65,6 @@ export default function Play() {
       fetchQuiz();
     }
 
-    // Timer
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 0) {
@@ -81,7 +76,6 @@ export default function Play() {
       });
     }, 1000);
 
-    // Keyboard navigation
     const handleKeyDown = (e) => {
       if (showIndex || showNamePopup || showSubmitPopup || showProfilePopup || showInstructionsPopup) return;
       if (e.key === 'ArrowLeft' && currentQuestion > 0) {
@@ -242,6 +236,7 @@ export default function Play() {
         name: userName,
         date: new Date().toISOString()
       });
+      router.push(`/results?testid=${testid}&userName=${userName}`);
     } catch (error) {
       console.error('Error saving results:', error);
       alert('Failed to save results. Please try again.');
@@ -693,12 +688,12 @@ export default function Play() {
             <h2 className="result-title">Quiz Completed!</h2>
             <p className="result-score">Your Score: {score}</p>
             <button 
-              onClick={() => router.push('/')}
+              onClick={() => router.push(`/results?testid=${testid}&userName=${userName}`)}
               className="btn btn-primary"
-              title="Back to Home"
+              title="View Results"
             >
-              <i className="fas fa-home"></i>
-              <span className="btn-text">Back to Home</span>
+              <i className="fas fa-list"></i>
+              <span className="btn-text">View Results</span>
             </button>
           </div>
         )}

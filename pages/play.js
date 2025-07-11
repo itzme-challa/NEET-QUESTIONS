@@ -36,6 +36,7 @@ export default function Play() {
   const [missedQuestions, setMissedQuestions] = useState(new Set());
   const [showSubmitPopup, setShowSubmitPopup] = useState(false);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const [showInstructionsPopup, setShowInstructionsPopup] = useState(false);
 
   useEffect(() => {
     // Get cached name
@@ -226,7 +227,7 @@ export default function Play() {
   };
 
   const handleInstructions = () => {
-    alert('Test Instructions: Read each question carefully. Select one option per question. Use the flag option to report issues. You have 3 hours to complete the test.');
+    setShowInstructionsPopup(true);
   };
 
   const allQuestions = quizData ? [
@@ -267,13 +268,15 @@ export default function Play() {
             <h3 className="popup-title">User Profile</h3>
             <p className="profile-name">Name: {userName || 'Not set'}</p>
             <form onSubmit={handleProfileSubmit}>
-              <input
-                type="text"
-                value={tempName}
-                onChange={(e) => setTempName(e.target.value)}
-                placeholder="Enter your name"
-                className="input-field"
-              />
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="input-field"
+                />
+              </div>
               <div className="popup-buttons">
                 <button type="submit" className="btn btn-primary">
                   <i className="fas fa-save"></i>
@@ -298,14 +301,16 @@ export default function Play() {
           <div className="popup-content">
             <h3 className="popup-title">Enter Your Name</h3>
             <form onSubmit={handleNamePopupSubmit}>
-              <input
-                type="text"
-                value={tempName}
-                onChange={(e) => setTempName(e.target.value)}
-                placeholder="Enter your name"
-                className="input-field"
-                required
-              />
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="input-field"
+                  required
+                />
+              </div>
               <div className="popup-buttons">
                 <button type="submit" className="btn btn-primary">
                   <i className="fas fa-save"></i>
@@ -421,6 +426,27 @@ export default function Play() {
         </div>
       )}
 
+      {showInstructionsPopup && (
+        <div className="popup">
+          <div className="popup-content">
+            <h3 className="popup-title">Test Instructions</h3>
+            <p className="popup-text">
+              Read each question carefully. Select one option per question. Use the flag option to report issues. You have 3 hours to complete the test.
+            </p>
+            <div className="popup-buttons">
+              <button 
+                type="button"
+                onClick={() => setShowInstructionsPopup(false)}
+                className="btn btn-gray"
+              >
+                <i className="fas fa-times"></i>
+                <span className="btn-text">Close</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-container">
         <div className="timer-container">
           <button onClick={handleInstructions} className="btn btn-info" title="Test Instructions">
@@ -454,14 +480,16 @@ export default function Play() {
 
           {flagged[currentQuestion] && (
             <div className="flag-section">
-              <input
-                type="text"
-                value={flagReason}
-                onChange={(e) => setFlagReason(e.target.value)}
-                placeholder="Reason for flagging (max 50 chars)"
-                maxLength={50}
-                className="input-field"
-              />
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={flagReason}
+                  onChange={(e) => setFlagReason(e.target.value)}
+                  placeholder="Reason for flagging (max 50 chars)"
+                  maxLength={50}
+                  className="input-field"
+                />
+              </div>
               <button 
                 onClick={handleFlag}
                 className="btn btn-error"

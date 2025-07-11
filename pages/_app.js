@@ -1,5 +1,6 @@
 import '../styles/globals.css'
 import Head from 'next/head'
+import React from 'react' // Added React import
 
 class ErrorBoundary extends React.Component {
   state = { error: null };
@@ -8,7 +9,7 @@ class ErrorBoundary extends React.Component {
   }
   render() {
     if (this.state.error) {
-      return <div>Error: {this.state.error.message}</div>;
+      return <div className="text-red-500 text-center p-4">Error: {this.state.error.message}</div>;
     }
     return this.props.children;
   }

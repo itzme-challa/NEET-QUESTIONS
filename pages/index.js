@@ -62,7 +62,17 @@ export default function Home() {
     e.preventDefault();
     if (name.trim()) {
       localStorage.setItem('quizUserName', name.trim());
+    } else {
+      alert('Please enter a valid name.');
     }
+  };
+
+  const handleStartTest = (testId) => {
+    if (!name.trim()) {
+      alert('Please enter your name before starting the test.');
+      return false;
+    }
+    return true;
   };
 
   return (
@@ -72,26 +82,23 @@ export default function Home() {
       </Head>
       
       <div className="max-container">
+        <form onSubmit={handleNameSubmit} className="name-form">
+          <div className="form-group">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name"
+              className="name-input"
+            />
+            <button type="submit" className="btn btn-primary">
+              Save Name
+            </button>
+          </div>
+        </form>
+
         <h1 className="page-title">Available Tests</h1>
         
-        {!name && (
-          <form onSubmit={handleNameSubmit} className="name-form">
-            <div className="form-group">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
-                className="name-input"
-                required
-              />
-              <button type="submit" className="btn btn-primary">
-                Save Name
-              </button>
-            </div>
-          </form>
-        )}
-
         {loading ? (
           <div className="loading">Loading tests...</div>
         ) : (
@@ -101,8 +108,10 @@ export default function Home() {
                 <h2 className="test-title">{test.name}</h2>
                 <p className="test-info">Year: {test.year}</p>
                 <p className="test-info">Date: {test.date}</p>
-                <Link href={`/play?testid=${test.id}`}>
-                  <button className="btn btn-secondary">Start Test</button>
+                <Link href={name.trim() ? `/play?testid=${test.id}` : '#'} onClick={() => handleStartTest(test.id)}>
+                  <button className="btn btn-secondary" disabled={!name.trim()}>
+                    Start Test
+                  </button>
                 </Link>
               </div>
             ))}

@@ -296,6 +296,7 @@ body {
   .button-container {
     flex-direction: row;
     gap: 8px;
+    flex-wrap: wrap;
   }
 }
 
@@ -565,7 +566,28 @@ body {
 }
 
 .question-index {
+  max-height: 60vh;
+  overflow-y: auto;
   margin-bottom: 16px;
+  padding-right: 8px;
+}
+
+.question-index::-webkit-scrollbar {
+  width: 8px;
+}
+
+.question-index::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.question-index::-webkit-scrollbar-thumb {
+  background: #1976d2;
+  border-radius: 4px;
+}
+
+.question-index::-webkit-scrollbar-thumb:hover {
+  background: #1565c0;
 }
 
 .subject-section {
@@ -649,5 +671,8 @@ body {
   }
   .subject-questions {
     grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  }
+  .question-index {
+    max-height: 50vh;
   }
 }

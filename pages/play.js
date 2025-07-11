@@ -33,6 +33,8 @@ export default function Play() {
   const [showNamePopup, setShowNamePopup] = useState(false);
   const [tempName, setTempName] = useState('');
   const [skippedQuestions, setSkippedQuestions] = useState(new Set());
+  const [missedQuestions, setMissedQuestions] = useState(new Set());
+  const [showSubmitPopup, setShowSubmitPopup] = useState(false);
 
   useEffect(() => {
     // Get cached name
@@ -59,7 +61,7 @@ export default function Play() {
       setTimeLeft((prev) => {
         if (prev <= 0) {
           clearInterval(timer);
-          handleSubmit();
+          setShowSubmitPopup(true);
           return 0;
         }
         return prev - 1;
@@ -83,10 +85,20 @@ export default function Play() {
       newSet.delete(questionId);
       return newSet;
     });
+    setMissedQuestions((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(questionId);
+      return newSet;
+    });
   };
 
   const handleSkip = () => {
     setSkippedQuestions((prev) => new Set(prev).add(currentQuestion));
+    setMissedQuestions((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(currentQuestion);
+      return newSet;
+    });
     if (currentQuestion < allQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     }
@@ -94,7 +106,12 @@ export default function Play() {
 
   const handleNext = () => {
     if (!answers[currentQuestion]) {
-      setSkippedQuestions((prev) => new Set(prev).add(currentQuestion));
+      setMissedQuestions((prev) => new Set(prev).add(currentQuestion));
+      setSkippedQuestions((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(currentQuestion);
+        return newSet;
+      });
     }
     if (currentQuestion < allQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
@@ -115,12 +132,11 @@ export default function Play() {
       alert('Flag reason must be under 50 characters');
       return;
     }
-    setFlagged({ ...flagged, [currentQuestion]: flagReason });
     try {
       const question = allQuestions[currentQuestion];
-      await set(ref(database, `flags/${testid}/${currentQuestion}`), {
+      const timestamp = new Date().toISOString();
+      await set(ref(database, `flags/${testid}/${currentQuestion}/${timestamp}`), {
         reason: flagReason,
-        timestamp: new Date().toISOString(),
         user: userName || 'Anonymous',
         questionDetails: {
           questionNumber: question.questionNumber,
@@ -129,6 +145,7 @@ export default function Play() {
         },
         deviceDetails: getDeviceInfo()
       });
+      setFlagged({ ...flagged, [currentQuestion]: true });
       setFlagReason('');
     } catch (error) {
       console.error('Error flagging question:', error);
@@ -173,10 +190,15 @@ export default function Play() {
       setUserName(tempName.trim());
       localStorage.setItem('quizUserName', tempName.trim());
       setShowNamePopup(false);
-      handleSubmit();
+      setShowSubmitPopup(true);
     } else {
       alert('Please enter a valid name.');
     }
+  };
+
+  const handleConfirmSubmit = () => {
+    setShowSubmitPopup(false);
+    handleSubmit();
   };
 
   const allQuestions = quizData ? [
@@ -187,11 +209,141 @@ export default function Play() {
 
   if (!quizData) return <div className="loading">Loading quiz...</div>;
 
+  const skippedIndices = Array.from(skippedQuestions).map(idx => idx + 1);
+  const missedIndices = Array.from(missedQuestions).map(idx => idx + 1);
+
   return (
     <div className="container">
       <Head>
-        <title>Quiz - {testid}</title>
+        <title>PW ONLINE - Quiz {testid}</title>
       </Head>
+
+      <div className="header">
+        <div className="branding">
+          <img src="/logo.png" alt="PW ONLINE Logo" className="logo" />
+          <div className="branding-text">
+            <h1 className="website-name">PW ONLINE</h1>
+            <p className="website-subname">EDUHUB-KMR</p>
+          </div>
+        </div>
+        <div className="profile">
+          <button onClick={() => setShowProfilePopup(true)} className="profile-btn">
+            {userName ? userName[0].toUpperCase() : 'P'}
+          </button>
+        </div>
+      </div>
+
+      {showProfilePopup && (
+        <div className="profile-popup">
+          <div className="profile-popup-content">
+            <h3 className="profile-popup-title">User Profile</h3>
+            <p className="profile-name">Name: {userName || 'Not set'}</p>
+            <form onSubmit={handleNameSubmit}>
+              <input
+                type="text"
+                value={tempName}
+                onChange={(e) => setTempName(e.target.value)}
+                placeholder="Enter your name"
+                className="name-input"
+              />
+              <div className="profile-popup-buttons">
+                <button type="submit" className="btn btn-primary">
+                  <i className="fas fa-save"></i> Save
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setShowProfilePopup(false)}
+                  className="btn btn-gray"
+                >
+                  <i className="fas fa-times"></i> Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showNamePopup && (
+        <div className="name-popup">
+          <div className="name-popup-content">
+            <h3 className="name-popup-title">Enter Your Name</h3>
+            <form onSubmit={handleNamePopupSubmit}>
+              <input
+                type="text"
+                value={tempName}
+                onChange={(e) => setTempName(e.target.value)}
+                placeholder="Enter your name"
+                className="name-input"
+                required
+              />
+              <div className="name-popup-buttons">
+                <button type="submit" className="btn btn-primary">
+                  <i className="fas fa-save"></i> Save & Submit
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setShowNamePopup(false)}
+                  className="btn btn-gray"
+                >
+                  <i className="fas fa-times"></i> Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showSubmitPopup && (
+        <div className="submit-popup">
+          <div className="submit-popup-content">
+            <h3 className="submit-popup-title">Confirm Submission</h3>
+            {skippedIndices.length > 0 && (
+              <p className="submit-popup-text">
+                Skipped Questions: {skippedIndices.map(idx => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setCurrentQuestion(idx - 1);
+                      setShowSubmitPopup(false);
+                    }}
+                    className="submit-popup-link"
+                  >
+                    {idx}
+                  </button>
+                ))}
+              </p>
+            )}
+            {missedIndices.length > 0 && (
+              <p className="submit-popup-text">
+                Missed Questions: {missedIndices.map(idx => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setCurrentQuestion(idx - 1);
+                      setShowSubmitPopup(false);
+                    }}
+                    className="submit-popup-link"
+                  >
+                    {idx}
+                  </button>
+                ))}
+              </p>
+            )}
+            <p className="submit-popup-text">Are you sure you want to submit?</p>
+            <div className="submit-popup-buttons">
+              <button onClick={handleConfirmSubmit} className="btn btn-primary">
+                <i className="fas fa-check"></i> Submit
+              </button>
+              <button 
+                onClick={() => setShowSubmitPopup(false)}
+                className="btn btn-gray"
+              >
+                <i className="fas fa-times"></i> Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-container">
         <div id="timer" className="timer">{formatTime(timeLeft)}</div>
@@ -227,6 +379,7 @@ export default function Play() {
                       className={`index-btn ${
                         index === currentQuestion ? 'index-btn-active' :
                         answers[index] ? 'index-btn-answered' :
+                        missedQuestions.has(index) ? 'index-btn-missed' :
                         skippedQuestions.has(index) ? 'index-btn-skipped' :
                         'index-btn-not-visited'
                       }`}
@@ -240,7 +393,7 @@ export default function Play() {
                   onClick={() => setShowIndex(false)}
                   className="btn btn-gray index-popup-close"
                 >
-                  Close
+                  <i className="fas fa-times"></i> Close
                 </button>
               </div>
             </div>
@@ -260,7 +413,7 @@ export default function Play() {
                 onClick={handleFlag}
                 className="btn btn-error"
               >
-                Submit Flag
+                <i className="fas fa-flag"></i> Submit Flag
               </button>
             </div>
           )}
@@ -312,7 +465,7 @@ export default function Play() {
                 onClick={() => setCurrentQuestion(currentQuestion - 1)}
                 className="btn btn-gray"
               >
-                Previous
+                <i className="fas fa-arrow-left"></i> Previous
               </button>
             )}
             <button 
@@ -320,55 +473,25 @@ export default function Play() {
               className="btn btn-warning"
               disabled={currentQuestion === allQuestions.length - 1}
             >
-              Skip
+              <i className="fas fa-forward"></i> Skip
             </button>
             <button 
               onClick={handleNext}
               className={`btn ${answers[currentQuestion] ? 'btn-secondary' : 'btn-error'}`}
               disabled={currentQuestion === allQuestions.length - 1}
             >
-              Save & Next
+              <i className="fas fa-save"></i> Save & Next
             </button>
             {currentQuestion === allQuestions.length - 1 && (
               <button 
-                onClick={handleSubmit}
+                onClick={() => setShowSubmitPopup(true)}
                 className="btn btn-primary"
               >
-                Submit Test
+                <i className="fas fa-check"></i> Submit Test
               </button>
             )}
           </div>
         </div>
-
-        {showNamePopup && (
-          <div className="name-popup">
-            <div className="name-popup-content">
-              <h3 className="name-popup-title">Enter Your Name</h3>
-              <form onSubmit={handleNamePopupSubmit}>
-                <input
-                  type="text"
-                  value={tempName}
-                  onChange={(e) => setTempName(e.target.value)}
-                  placeholder="Enter your name"
-                  className="name-input"
-                  required
-                />
-                <div className="name-popup-buttons">
-                  <button type="submit" className="btn btn-primary">
-                    Save & Submit
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setShowNamePopup(false)}
-                    className="btn btn-gray"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
         {score !== null && (
           <div className="result-container">
@@ -378,7 +501,7 @@ export default function Play() {
               onClick={() => router.push('/')}
               className="btn btn-primary"
             >
-              Back to Home
+              <i className="fas fa-home"></i> Back to Home
             </button>
           </div>
         )}

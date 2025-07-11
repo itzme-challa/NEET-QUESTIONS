@@ -29,7 +29,6 @@ export default function Admin() {
   const [testId, setTestId] = useState('');
   const [inputJson, setInputJson] = useState('');
   const [outputJson, setOutputJson] = useState('');
-  const [testJson, setTestJson] = useState('');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
   const router = useRouter();
@@ -131,24 +130,18 @@ export default function Admin() {
 
   const handleSubmitTest = async (e) => {
     e.preventDefault();
-    if (!year || !name || !date || !testId || !testJson) {
-      setMessage('Error: All fields and valid JSON are required.');
+    if (!year || !name || !date || !testId) {
+      setMessage('Error: All fields are required.');
       setMessageType('error');
       return;
     }
 
     try {
-      // Validate JSON
-      const jsonObject = JSON.parse(testJson);
-
       // Save test metadata to Firebase
       await set(ref(database, `tests/${year}/${testId}`), {
         name,
         date
       });
-
-      // Save JSON questions to Firebase
-      await set(ref(database, `data/${testId}`), jsonObject);
 
       setMessage(`Test ${name} added successfully to Firebase!`);
       setMessageType('success');
@@ -156,7 +149,6 @@ export default function Admin() {
       setName('');
       setDate('');
       setTestId('');
-      setTestJson('');
     } catch (error) {
       setMessage(`Error saving to Firebase: ${error.message}`);
       setMessageType('error');
@@ -352,15 +344,6 @@ export default function Admin() {
                       className="input-field"
                       required
                     />
-                  </div>
-                  <div className="input-container">
-                    <textarea
-                      value={testJson}
-                      onChange={(e) => setTestJson(e.target.value)}
-                      placeholder="Paste your valid JSON here..."
-                      className="input-field"
-                      rows={10}
-                    ></textarea>
                   </div>
                   <div className="button-container">
                     <button type="submit" className="btn btn-primary">

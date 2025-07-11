@@ -64,40 +64,49 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-100 p-4 font-sans">
       <Head>
-        <title>Quiz App</title>
+        <title>Quiz App - Home</title>
       </Head>
       
       <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Available Tests</h1>
+        
         {!name && (
-          <form onSubmit={handleNameSubmit} className="mb-8">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              className="p-2 border rounded mr-2"
-              required
-            />
-            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-              Save Name
-            </button>
+          <form onSubmit={handleNameSubmit} className="mb-8 bg-white p-6 rounded-lg shadow-custom">
+            <div className="flex items-center gap-4">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name"
+                className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              />
+              <button
+                type="submit"
+                className="bg-primary text-white px-6 py-3 rounded-lg shadow-custom hover:bg-blue-700 transition"
+              >
+                Save Name
+              </button>
+            </div>
           </form>
         )}
 
-        <h1 className="text-3xl font-bold mb-6">Available Tests</h1>
         {loading ? (
-          <p>Loading tests...</p>
+          <div className="text-center text-gray-600">Loading tests...</div>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-6 md:grid-cols-2">
             {tests.map((test) => (
-              <div key={test.id} className="bg-white p-4 rounded-lg shadow">
-                <h2 className="text-xl font-semibold">{test.name}</h2>
-                <p className="text-gray-600">Year: {test.year}</p>
+              <div
+                key={test.id}
+                className="bg-white p-6 rounded-lg shadow-custom hover:shadow-custom-hover transition"
+              >
+                <h2 className="text-xl font-semibold text-gray-800">{test.name}</h2>
+                <p className="text-gray-600 mt-1">Year: {test.year}</p>
                 <p className="text-gray-600">Date: {test.date}</p>
                 <Link href={`/play?testid=${test.id}`}>
-                  <button className="mt-2 bg-green-500 text-white px-4 py-2 rounded">
+                  <button className="mt-4 bg-secondary text-white px-6 py-3 rounded-lg shadow-custom hover:bg-green-600 transition">
                     Start Test
                   </button>
                 </Link>

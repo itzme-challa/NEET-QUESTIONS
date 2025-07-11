@@ -243,6 +243,15 @@ export default function Home() {
                     <i className="fas fa-info-circle"></i>
                     <span className="btn-text">Instructions</span>
                   </button>
+                  <Link href={`/leaderboard?testid=${test.id}`} passHref>
+                    <button 
+                      className="btn btn-primary"
+                      title="View Leaderboard"
+                    >
+                      <i className="fas fa-trophy"></i>
+                      <span className="btn-text">Leaderboard</span>
+                    </button>
+                  </Link>
                 </div>
               </div>
             ))}

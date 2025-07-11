@@ -49,7 +49,6 @@ export default function Play() {
           const response = await fetch(`/data/${testid}.json`);
           if (!response.ok) throw new Error('Quiz data not found');
           const data = await response.json();
-          console.log('Quiz data:', data); // Debug log
           setQuizData(data);
         } catch (error) {
           console.error('Error fetching quiz:', error);
@@ -140,8 +139,7 @@ export default function Play() {
     }
     try {
       const question = allQuestions[currentQuestion];
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-'); // Sanitize timestamp
-      console.log('Flagging question:', { testid, currentQuestion, timestamp, flagReason }); // Debug log
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       await set(ref(database, `flags/${testid}/${currentQuestion}/${timestamp}`), {
         reason: flagReason,
         user: userName || 'Anonymous',
@@ -227,6 +225,10 @@ export default function Play() {
     handleSubmit();
   };
 
+  const handleInstructions = () => {
+    alert('Test Instructions: Read each question carefully. Select one option per question. Use the flag option to report issues. You have 3 hours to complete the test.');
+  };
+
   const allQuestions = quizData ? [
     ...(quizData.PHYSICS || []),
     ...(quizData.CHEMISTRY || []),
@@ -244,7 +246,7 @@ export default function Play() {
         <title>PW ONLINE - Quiz {testid}</title>
       </Head>
 
-      <div className="header">
+      <header className="header">
         <div className="branding">
           <img src="/logo.png" alt="PW ONLINE Logo" className="logo" />
           <div className="branding-text">
@@ -253,16 +255,16 @@ export default function Play() {
           </div>
         </div>
         <div className="profile">
-          <button onClick={handleProfileClick} className="profile-btn">
+          <button onClick={handleProfileClick} className="profile-btn" title="User Profile">
             {userName ? userName[0].toUpperCase() : 'P'}
           </button>
         </div>
-      </div>
+      </header>
 
       {showProfilePopup && (
-        <div className="profile-popup">
-          <div className="profile-popup-content">
-            <h3 className="profile-popup-title">User Profile</h3>
+        <div className="popup">
+          <div className="popup-content">
+            <h3 className="popup-title">User Profile</h3>
             <p className="profile-name">Name: {userName || 'Not set'}</p>
             <form onSubmit={handleProfileSubmit}>
               <input
@@ -270,18 +272,20 @@ export default function Play() {
                 value={tempName}
                 onChange={(e) => setTempName(e.target.value)}
                 placeholder="Enter your name"
-                className="name-input"
+                className="input-field"
               />
-              <div className="profile-popup-buttons">
+              <div className="popup-buttons">
                 <button type="submit" className="btn btn-primary">
-                  <i className="fas fa-save"></i> Save
+                  <i className="fas fa-save"></i>
+                  <span className="btn-text">Save</span>
                 </button>
                 <button 
                   type="button"
                   onClick={() => setShowProfilePopup(false)}
                   className="btn btn-gray"
                 >
-                  <i className="fas fa-times"></i> Cancel
+                  <i className="fas fa-times"></i>
+                  <span className="btn-text">Cancel</span>
                 </button>
               </div>
             </form>
@@ -290,28 +294,30 @@ export default function Play() {
       )}
 
       {showNamePopup && (
-        <div className="name-popup">
-          <div className="name-popup-content">
-            <h3 className="name-popup-title">Enter Your Name</h3>
+        <div className="popup">
+          <div className="popup-content">
+            <h3 className="popup-title">Enter Your Name</h3>
             <form onSubmit={handleNamePopupSubmit}>
               <input
                 type="text"
                 value={tempName}
                 onChange={(e) => setTempName(e.target.value)}
                 placeholder="Enter your name"
-                className="name-input"
+                className="input-field"
                 required
               />
-              <div className="name-popup-buttons">
+              <div className="popup-buttons">
                 <button type="submit" className="btn btn-primary">
-                  <i className="fas fa-save"></i> Save & Submit
+                  <i className="fas fa-save"></i>
+                  <span className="btn-text">Save & Submit</span>
                 </button>
                 <button 
                   type="button"
                   onClick={() => setShowNamePopup(false)}
                   className="btn btn-gray"
                 >
-                  <i className="fas fa-times"></i> Cancel
+                  <i className="fas fa-times"></i>
+                  <span className="btn-text">Cancel</span>
                 </button>
               </div>
             </form>
@@ -320,9 +326,9 @@ export default function Play() {
       )}
 
       {showIndex && (
-        <div className="index-popup">
-          <div className="index-popup-content">
-            <h3 className="index-popup-title">Question Index</h3>
+        <div className="popup">
+          <div className="popup-content">
+            <h3 className="popup-title">Question Index</h3>
             <div className="question-index">
               {allQuestions.length > 0 ? (
                 allQuestions.map((q, index) => (
@@ -339,7 +345,7 @@ export default function Play() {
                       skippedQuestions.has(index) ? 'index-btn-skipped' :
                       'index-btn-not-visited'
                     }`}
-                    title={q.questionNumber}
+                    title={`Question ${index + 1}`}
                   >
                     {index + 1}
                   </button>
@@ -352,18 +358,19 @@ export default function Play() {
               onClick={() => setShowIndex(false)}
               className="btn btn-gray index-popup-close"
             >
-              <i className="fas fa-times"></i> Close
+              <i className="fas fa-times"></i>
+              <span className="btn-text">Close</span>
             </button>
           </div>
         </div>
       )}
 
       {showSubmitPopup && (
-        <div className="submit-popup">
-          <div className="submit-popup-content">
-            <h3 className="submit-popup-title">Confirm Submission</h3>
+        <div className="popup">
+          <div className="popup-content">
+            <h3 className="popup-title">Confirm Submission</h3>
             {skippedIndices.length > 0 && (
-              <p className="submit-popup-text">
+              <p className="popup-text">
                 Skipped Questions: {skippedIndices.map(idx => (
                   <button
                     key={idx}
@@ -371,7 +378,8 @@ export default function Play() {
                       setCurrentQuestion(idx - 1);
                       setShowSubmitPopup(false);
                     }}
-                    className="submit-popup-link submit-popup-link-skipped"
+                    className="popup-link popup-link-skipped"
+                    title={`Go to Question ${idx}`}
                   >
                     {idx}
                   </button>
@@ -379,7 +387,7 @@ export default function Play() {
               </p>
             )}
             {missedIndices.length > 0 && (
-              <p className="submit-popup-text">
+              <p className="popup-text">
                 Missed Questions: {missedIndices.map(idx => (
                   <button
                     key={idx}
@@ -387,23 +395,26 @@ export default function Play() {
                       setCurrentQuestion(idx - 1);
                       setShowSubmitPopup(false);
                     }}
-                    className="submit-popup-link submit-popup-link-missed"
+                    className="popup-link popup-link-missed"
+                    title={`Go to Question ${idx}`}
                   >
                     {idx}
                   </button>
                 ))}
               </p>
             )}
-            <p className="submit-popup-text">Are you sure you want to submit?</p>
-            <div className="submit-popup-buttons">
+            <p className="popup-text">Are you sure you want to submit?</p>
+            <div className="popup-buttons">
               <button onClick={handleConfirmSubmit} className="btn btn-primary">
-                <i className="fas fa-check"></i> Submit
+                <i className="fas fa-check"></i>
+                <span className="btn-text">Submit</span>
               </button>
               <button 
                 onClick={() => setShowSubmitPopup(false)}
                 className="btn btn-gray"
               >
-                <i className="fas fa-times"></i> Cancel
+                <i className="fas fa-times"></i>
+                <span className="btn-text">Cancel</span>
               </button>
             </div>
           </div>
@@ -411,8 +422,15 @@ export default function Play() {
       )}
 
       <div className="max-container">
-        <div id="timer" className="timer">
-          <i className="fas fa-clock"></i> {formatTime(timeLeft)}
+        <div className="timer-container">
+          <button onClick={handleInstructions} className="btn btn-info" title="Test Instructions">
+            <i className="fas fa-info-circle"></i>
+            <span className="btn-text">Instructions</span>
+          </button>
+          <div className="timer">
+            <i className="fas fa-clock"></i>
+            <span>{formatTime(timeLeft)}</span>
+          </div>
         </div>
         
         <div className="question-container">
@@ -420,12 +438,15 @@ export default function Play() {
             <button 
               onClick={() => setShowIndex(true)}
               className="btn btn-index"
+              title="Show Index"
             >
-              <i className="fas fa-th"></i> Show Index
+              <i className="fas fa-th"></i>
+              <span className="btn-text">Index</span>
             </button>
             <button 
               onClick={() => setFlagged({ ...flagged, [currentQuestion]: true })}
               className="btn btn-flag"
+              title="Flag Question"
             >
               <i className="fas fa-flag"></i>
             </button>
@@ -439,13 +460,14 @@ export default function Play() {
                 onChange={(e) => setFlagReason(e.target.value)}
                 placeholder="Reason for flagging (max 50 chars)"
                 maxLength={50}
-                className="flag-input"
+                className="input-field"
               />
               <button 
                 onClick={handleFlag}
                 className="btn btn-error"
               >
-                <i className="fas fa-flag"></i> Submit Flag
+                <i className="fas fa-flag"></i>
+                <span className="btn-text">Submit Flag</span>
               </button>
             </div>
           )}
@@ -496,30 +518,38 @@ export default function Play() {
               <button 
                 onClick={() => setCurrentQuestion(currentQuestion - 1)}
                 className="btn btn-gray"
+                title="Previous"
               >
-                <i className="fas fa-arrow-left"></i> Previous
+                <i className="fas fa-arrow-left"></i>
+                <span className="btn-text">Previous</span>
               </button>
             )}
             <button 
               onClick={handleSkip}
               className="btn btn-warning"
               disabled={currentQuestion === allQuestions.length - 1}
+              title="Skip"
             >
-              <i className="fas fa-forward"></i> Skip
+              <i className="fas fa-forward"></i>
+              <span className="btn-text">Skip</span>
             </button>
             <button 
               onClick={handleNext}
               className={`btn ${answers[currentQuestion] ? 'btn-secondary' : 'btn-error'}`}
               disabled={currentQuestion === allQuestions.length - 1}
+              title="Save & Next"
             >
-              <i className="fas fa-save"></i> Save & Next
+              <i className="fas fa-save"></i>
+              <span className="btn-text">Save & Next</span>
             </button>
             {currentQuestion === allQuestions.length - 1 && (
               <button 
                 onClick={() => setShowSubmitPopup(true)}
                 className="btn btn-primary"
+                title="Submit Test"
               >
-                <i className="fas fa-check"></i> Submit Test
+                <i className="fas fa-check"></i>
+                <span className="btn-text">Submit Test</span>
               </button>
             )}
           </div>
@@ -532,8 +562,10 @@ export default function Play() {
             <button 
               onClick={() => router.push('/')}
               className="btn btn-primary"
+              title="Back to Home"
             >
-              <i className="fas fa-home"></i> Back to Home
+              <i className="fas fa-home"></i>
+              <span className="btn-text">Back to Home</span>
             </button>
           </div>
         )}

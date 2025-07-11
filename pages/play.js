@@ -171,7 +171,7 @@ export default function Play() {
       ...(quizData?.PHYSICS || []),
       ...(quizData?.CHEMISTRY || []),
       ...(quizData?.MATHS || []),
-      ...(quizData?.BIOLOGY || []) // Added support for additional subjects
+      ...(quizData?.BIOLOGY || [])
     ];
 
     allQuestions.forEach((q, index) => {
@@ -235,10 +235,9 @@ export default function Play() {
     ...(quizData.PHYSICS || []),
     ...(quizData.CHEMISTRY || []),
     ...(quizData.MATHS || []),
-    ...(quizData.BIOLOGY || []) // Added support for additional subjects
+    ...(quizData.BIOLOGY || [])
   ] : [];
 
-  // Create subject-wise question mapping for the index
   const subjectQuestions = quizData
     ? Object.keys(quizData).reduce((acc, subject) => {
         acc[subject] = quizData[subject].map((q, index) => ({

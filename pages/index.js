@@ -33,10 +33,8 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Get cached name
     setUserName(localStorage.getItem('quizUserName') || '');
     
-    // Fetch tests from Firebase
     const fetchTests = async () => {
       try {
         const testsRef = ref(database, 'tests');
@@ -135,13 +133,15 @@ export default function Home() {
             <h3 className="popup-title">User Profile</h3>
             <p className="profile-name">Name: {userName || 'Not set'}</p>
             <form onSubmit={handleNameSubmit}>
-              <input
-                type="text"
-                value={tempName}
-                onChange={(e) => setTempName(e.target.value)}
-                placeholder="Enter your name"
-                className="input-field"
-              />
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="input-field"
+                />
+              </div>
               <div className="popup-buttons">
                 <button type="submit" className="btn btn-primary">
                   <i className="fas fa-save"></i>
@@ -166,14 +166,16 @@ export default function Home() {
           <div className="popup-content">
             <h3 className="popup-title">Enter Your Name</h3>
             <form onSubmit={handleNamePopupSubmit}>
-              <input
-                type="text"
-                value={tempName}
-                onChange={(e) => setTempName(e.target.value)}
-                placeholder="Enter your name"
-                className="input-field"
-                required
-              />
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="input-field"
+                  required
+                />
+              </div>
               <div className="popup-buttons">
                 <button type="submit" className="btn btn-primary">
                   <i className="fas fa-save"></i>
@@ -223,6 +225,11 @@ export default function Home() {
           <div className="test-grid">
             {tests.map((test) => (
               <div key={test.id} className="test-card">
+                <Link href={`/leaderboard?testid=${test.id}`} passHref>
+                  <button className="leaderboard-btn" title="View Leaderboard">
+                    <i className="fas fa-trophy"></i>
+                  </button>
+                </Link>
                 <h3 className="test-title">{test.name}</h3>
                 <p className="test-info">Year: {test.year}</p>
                 <p className="test-info">Date: {test.date}</p>
@@ -243,15 +250,6 @@ export default function Home() {
                     <i className="fas fa-info-circle"></i>
                     <span className="btn-text">Instructions</span>
                   </button>
-                  <Link href={`/leaderboard?testid=${test.id}`} passHref>
-                    <button 
-                      className="btn btn-primary"
-                      title="View Leaderboard"
-                    >
-                      <i className="fas fa-trophy"></i>
-                      <span className="btn-text">Leaderboard</span>
-                    </button>
-                  </Link>
                 </div>
               </div>
             ))}

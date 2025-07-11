@@ -76,4 +76,246 @@ export default function Admin() {
 
     navigator.clipboard.writeText(outputJson).then(() => {
       setMessage('JSON copied to clipboard!');
-      setMessage
+      setMessageType('success');
+    }).catch((err) => {
+      setMessage(`Error copying to clipboard: ${err}`);
+      setMessageType('error');
+    });
+  };
+
+  const generateRandomId = () => {
+    const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const downloadJson = () => {
+    if (!outputJson) {
+      setMessage('Error: No JSON to download.');
+      setMessageType('error');
+      return;
+    }
+
+    try {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = String(now.getFullYear()).slice(-2);
+      const randomId = generateRandomId();
+      const filename = `${day}${month}${year}_${randomId}.json`;
+
+      const blob = new Blob([outputJson], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+
+      setMessage(`JSON downloaded as ${filename}!`);
+      setMessageType('success');
+    } catch (error) {
+      setMessage(`Error downloading file: ${error}`);
+      setMessageType('error');
+    }
+  };
+
+  const handleSubmitTest = async (e) => {
+    e.preventDefault();
+    if (!year || !name || !date || !testId || !outputJson) {
+      setMessage('Error: All fields and valid JSON are required.');
+      setMessageType('error');
+      return;
+    }
+
+    try {
+      // Save test metadata to Firebase
+      await set(ref(database, `tests/${year}/${testId}`), {
+        name,
+        date
+      });
+
+      // Save JSON questions to Firebase
+      await set(ref(database, `data/${testId}`), JSON.parse(outputJson));
+
+      setMessage(`Test ${name} added successfully to Firebase!`);
+      setMessageType('success');
+      setYear('');
+      setName('');
+      setDate('');
+      setTestId('');
+      setInputJson('');
+      setOutputJson('');
+    } catch (error) {
+      setMessage(`Error saving to Firebase: ${error.message}`);
+      setMessageType('error');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setUsername('');
+    setPassword('');
+    setMessage('Logged out successfully.');
+    setMessageType('success');
+  };
+
+  return (
+    <div className="container">
+      <Head>
+        <title>PW ONLINE - Admin Panel</title>
+      </Head>
+
+      <header className="header">
+        <div className="branding">
+          <img src="/logo.png" alt="PW ONLINE Logo" className="logo" />
+          <div className="branding-text">
+            <h1 className="website-name">PW ONLINE</h1>
+            <p className="website-subname">EDUHUB-KMR</p>
+          </div>
+        </div>
+        {isAuthenticated && (
+          <div className="profile">
+            <button onClick={handleLogout} className="btn btn-error" title="Logout">
+              <i className="fas fa-sign-out-alt"></i>
+              <span className="btn-text">Logout</span>
+            </button>
+          </div>
+        )}
+      </header>
+
+      <div className="max-container">
+        <h2 className="page-title">Admin Panel</h2>
+
+        {!isAuthenticated ? (
+          <div className="popup">
+            <div className="popup-content">
+              <h3 className="popup-title">Admin Login</h3>
+              <form onSubmit={handleLogin}>
+                <div className="input-container">
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Username"
+                    className="input-field"
+                    required
+                  />
+                </div>
+                <div className="input-container">
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    className="input-field"
+                    required
+                  />
+                </div>
+                <div className="popup-buttons">
+                  <button type="submit" className="btn btn-primary">
+                    <i className="fas fa-sign-in-alt"></i>
+                    <span className="btn-text">Login</span>
+                  </button>
+                </div>
+              </form>
+              {message && <div className={messageType}>{message}</div>}
+            </div>
+          </div>
+        ) : (
+          <div>
+            <h3 className="popup-title">Add New Test</h3>
+            <form onSubmit={handleSubmitTest}>
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  placeholder="Year (e.g., 2025)"
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Test Name"
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  placeholder="Date (e.g., 2025-07-11)"
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div className="input-container">
+                <input
+                  type="text"
+                  value={testId}
+                  onChange={(e) => setTestId(e.target.value)}
+                  placeholder="Test ID (e.g., test123)"
+                  className="input-field"
+                  required
+                />
+              </div>
+              <div className="input-container">
+                <textarea
+                  value={inputJson}
+                  onChange={(e) => setInputJson(e.target.value)}
+                  placeholder="Paste your JSON-like text here..."
+                  className="input-field"
+                  rows={10}
+                ></textarea>
+              </div>
+              <div className="button-container">
+                <button type="button" onClick={convertToJson} className="btn btn-primary">
+                  <i className="fas fa-cogs"></i>
+                  <span className="btn-text">Convert to JSON</span>
+                </button>
+                <button type="button" onClick={copyToClipboard} className="btn btn-secondary" style={{ display: outputJson ? 'flex' : 'none' }}>
+                  <i className="fas fa-copy"></i>
+                  <span className="btn-text">Copy to Clipboard</span>
+                </button>
+                <button type="button" onClick={downloadJson} className="btn btn-gray" style={{ display: outputJson ? 'flex' : 'none' }}>
+                  <i className="fas fa-download"></i>
+                  <span className="btn-text">Download JSON</span>
+                </button>
+              </div>
+              <div className="input-container">
+                <div className="output" style={{ backgroundColor: 'white', padding: '15px', border: '1px solid #ccc', fontFamily: 'monospace', fontSize: '14px', whiteSpace: 'pre-wrap', minHeight: '200px' }}>
+                  {outputJson || 'Converted JSON will appear here...'}
+                </div>
+              </div>
+              <div className="button-container">
+                <button type="submit" className="btn btn-primary">
+                  <i className="fas fa-save"></i>
+                  <span className="btn-text">Add Test to Firebase</span>
+                </button>
+                <button type="button" onClick={() => router.push('/')} className="btn btn-gray">
+                  <i className="fas fa-home"></i>
+                  <span className="btn-text">Back to Home</span>
+                </button>
+              </div>
+            </form>
+            {message && <div className={messageType}>{message}</div>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

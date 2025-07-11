@@ -224,11 +224,6 @@
       "questionNumber": "Question 45",
       "image": "https://static.pw.live/5b09189f7285894d9130ccd0/b7d2a628-37ca-468d-9c65-53fa98307c95.png",
       "correctOption": "A"
-    },
-    {
-      "questionNumber": "Question Total Marks: 0",
-      "image": null,
-      "correctOption": "N/A"
     }
   ],
   "CHEMISTRY": [
@@ -456,11 +451,6 @@
       "questionNumber": "Question 45",
       "image": "https://static.pw.live/5b09189f7285894d9130ccd0/21a2abab-aefc-46e6-b09c-df2060cea235.png",
       "correctOption": "A"
-    },
-    {
-      "questionNumber": "Question Total Marks: 0",
-      "image": null,
-      "correctOption": "N/A"
     }
   ],
   "BOTANY": [
@@ -688,11 +678,6 @@
       "questionNumber": "Question 45",
       "image": "https://static.pw.live/5b09189f7285894d9130ccd0/23b62c99-aa94-4cb0-b7bd-e2788e90dc89.png",
       "correctOption": "C"
-    },
-    {
-      "questionNumber": "Question Total Marks: 0",
-      "image": null,
-      "correctOption": "N/A"
     }
   ],
   "ZOOLOGY": [
@@ -920,11 +905,6 @@
       "questionNumber": "Question 45",
       "image": "https://static.pw.live/5b09189f7285894d9130ccd0/eb3b2b1e-e939-4c97-aeed-9cb0c82decb3.png",
       "correctOption": "B"
-    },
-    {
-      "questionNumber": "Question Total Marks: 0",
-      "image": null,
-      "correctOption": "N/A"
     }
   ]
 }

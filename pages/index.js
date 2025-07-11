@@ -28,6 +28,7 @@ export default function Home() {
   const [tempName, setTempName] = useState('');
   const [showNamePopup, setShowNamePopup] = useState(false);
   const [selectedTestId, setSelectedTestId] = useState(null);
+  const router = useRouter();
 
   useEffect(() => {
     // Get cached name
@@ -84,7 +85,13 @@ export default function Home() {
       setShowNamePopup(true);
       return false;
     }
+    router.push(`/play?testid=${testId}`);
     return true;
+  };
+
+  const handleInstructions = (testId) => {
+    // Placeholder for instructions logic
+    alert(`Instructions for test ${testId}: Please read all questions carefully. You have 3 hours to complete the test.`);
   };
 
   const handleNamePopupSubmit = (e) => {
@@ -99,15 +106,13 @@ export default function Home() {
     }
   };
 
-  const router = useRouter();
-
   return (
     <div className="container">
       <Head>
         <title>PW ONLINE - Home</title>
       </Head>
       
-      <div className="header">
+      <header className="header">
         <div className="branding">
           <img src="/logo.png" alt="PW ONLINE Logo" className="logo" />
           <div className="branding-text">
@@ -116,16 +121,16 @@ export default function Home() {
           </div>
         </div>
         <div className="profile">
-          <button onClick={handleProfileClick} className="profile-btn">
+          <button onClick={handleProfileClick} className="profile-btn" title="User Profile">
             {userName ? userName[0].toUpperCase() : 'P'}
           </button>
         </div>
-      </div>
+      </header>
 
       {showProfilePopup && (
-        <div className="profile-popup">
-          <div className="profile-popup-content">
-            <h3 className="profile-popup-title">User Profile</h3>
+        <div className="popup">
+          <div className="popup-content">
+            <h3 className="popup-title">User Profile</h3>
             <p className="profile-name">Name: {userName || 'Not set'}</p>
             <form onSubmit={handleNameSubmit}>
               <input
@@ -133,18 +138,20 @@ export default function Home() {
                 value={tempName}
                 onChange={(e) => setTempName(e.target.value)}
                 placeholder="Enter your name"
-                className="name-input"
+                className="input-field"
               />
-              <div className="profile-popup-buttons">
+              <div className="popup-buttons">
                 <button type="submit" className="btn btn-primary">
-                  <i className="fas fa-save"></i> Save
+                  <i className="fas fa-save"></i>
+                  <span className="btn-text">Save</span>
                 </button>
                 <button 
                   type="button"
                   onClick={() => setShowProfilePopup(false)}
                   className="btn btn-gray"
                 >
-                  <i className="fas fa-times"></i> Cancel
+                  <i className="fas fa-times"></i>
+                  <span className="btn-text">Cancel</span>
                 </button>
               </div>
             </form>
@@ -153,28 +160,30 @@ export default function Home() {
       )}
 
       {showNamePopup && (
-        <div className="name-popup">
-          <div className="name-popup-content">
-            <h3 className="name-popup-title">Enter Your Name</h3>
+        <div className="popup">
+          <div className="popup-content">
+            <h3 className="popup-title">Enter Your Name</h3>
             <form onSubmit={handleNamePopupSubmit}>
               <input
                 type="text"
                 value={tempName}
                 onChange={(e) => setTempName(e.target.value)}
                 placeholder="Enter your name"
-                className="name-input"
+                className="input-field"
                 required
               />
-              <div className="name-popup-buttons">
+              <div className="popup-buttons">
                 <button type="submit" className="btn btn-primary">
-                  <i className="fas fa-save"></i> Save & Start
+                  <i className="fas fa-save"></i>
+                  <span className="btn-text">Save & Start</span>
                 </button>
                 <button 
                   type="button"
                   onClick={() => setShowNamePopup(false)}
                   className="btn btn-gray"
                 >
-                  <i className="fas fa-times"></i> Cancel
+                  <i className="fas fa-times"></i>
+                  <span className="btn-text">Cancel</span>
                 </button>
               </div>
             </form>
@@ -194,11 +203,24 @@ export default function Home() {
                 <h3 className="test-title">{test.name}</h3>
                 <p className="test-info">Year: {test.year}</p>
                 <p className="test-info">Date: {test.date}</p>
-                <Link href={userName.trim() ? `/play?testid=${test.id}` : '#'} onClick={() => handleStartTest(test.id)}>
-                  <button className="btn btn-secondary" disabled={!userName.trim()}>
-                    <i className="fas fa-play"></i> Start Test
+                <div className="test-buttons">
+                  <button 
+                    onClick={() => handleStartTest(test.id)} 
+                    className="btn btn-secondary"
+                    title="Start Test"
+                  >
+                    <i className="fas fa-play"></i>
+                    <span className="btn-text">Start Test</span>
                   </button>
-                </Link>
+                  <button 
+                    onClick={() => handleInstructions(test.id)} 
+                    className="btn btn-info"
+                    title="Test Instructions"
+                  >
+                    <i className="fas fa-info-circle"></i>
+                    <span className="btn-text">Instructions</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>

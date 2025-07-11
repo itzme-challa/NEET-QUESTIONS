@@ -2,12 +2,15 @@
   "PHYSICS": [
     {
       "questionNumber": "Question 1",
-      "image": "https://static.pw.live/.../image1.png",
+      "image": "https://via.placeholder.com/300",
       "correctOption": "C"
-    },
-    
+    }
   ],
   "CHEMISTRY": [
-    
+    {
+      "questionNumber": "Question 2",
+      "image": "https://via.placeholder.com/300",
+      "correctOption": "A"
+    }
   ]
 }

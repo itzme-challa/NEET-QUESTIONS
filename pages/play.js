@@ -35,7 +35,7 @@ export default function Play() {
   const [skippedQuestions, setSkippedQuestions] = useState(new Set());
   const [missedQuestions, setMissedQuestions] = useState(new Set());
   const [showSubmitPopup, setShowSubmitPopup] = useState(false);
-  const [showProfilePopup, setShowProfilePopup] = useState(false); // Added for profile popup
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
 
   useEffect(() => {
     // Get cached name
@@ -49,6 +49,7 @@ export default function Play() {
           const response = await fetch(`/data/${testid}.json`);
           if (!response.ok) throw new Error('Quiz data not found');
           const data = await response.json();
+          console.log('Quiz data:', data); // Debug log
           setQuizData(data);
         } catch (error) {
           console.error('Error fetching quiz:', error);
@@ -129,13 +130,18 @@ export default function Play() {
   };
 
   const handleFlag = async () => {
+    if (!flagReason.trim()) {
+      alert('Please enter a reason for flagging.');
+      return;
+    }
     if (flagReason.length > 50) {
-      alert('Flag reason must be under 50 characters');
+      alert('Flag reason must be under 50 characters.');
       return;
     }
     try {
       const question = allQuestions[currentQuestion];
-      const timestamp = new Date().toISOString();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-'); // Sanitize timestamp
+      console.log('Flagging question:', { testid, currentQuestion, timestamp, flagReason }); // Debug log
       await set(ref(database, `flags/${testid}/${currentQuestion}/${timestamp}`), {
         reason: flagReason,
         user: userName || 'Anonymous',
@@ -148,8 +154,10 @@ export default function Play() {
       });
       setFlagged({ ...flagged, [currentQuestion]: true });
       setFlagReason('');
+      alert('Flag submitted successfully.');
     } catch (error) {
       console.error('Error flagging question:', error);
+      alert('Failed to submit flag. Please try again.');
     }
   };
 
@@ -161,9 +169,9 @@ export default function Play() {
 
     let score = 0;
     const allQuestions = [
-      ...(quizData.PHYSICS || []),
-      ...(quizData.CHEMISTRY || []),
-      ...(quizData.MATHS || [])
+      ...(quizData?.PHYSICS || []),
+      ...(quizData?.CHEMISTRY || []),
+      ...(quizData?.MATHS || [])
     ];
 
     allQuestions.forEach((q, index) => {
@@ -182,6 +190,7 @@ export default function Play() {
       });
     } catch (error) {
       console.error('Error saving results:', error);
+      alert('Failed to save results. Please try again.');
     }
   };
 
@@ -310,6 +319,45 @@ export default function Play() {
         </div>
       )}
 
+      {showIndex && (
+        <div className="index-popup">
+          <div className="index-popup-content">
+            <h3 className="index-popup-title">Question Index</h3>
+            <div className="question-index">
+              {allQuestions.length > 0 ? (
+                allQuestions.map((q, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setCurrentQuestion(index);
+                      setShowIndex(false);
+                    }}
+                    className={`index-btn ${
+                      index === currentQuestion ? 'index-btn-active' :
+                      answers[index] ? 'index-btn-answered' :
+                      missedQuestions.has(index) ? 'index-btn-missed' :
+                      skippedQuestions.has(index) ? 'index-btn-skipped' :
+                      'index-btn-not-visited'
+                    }`}
+                    title={q.questionNumber}
+                  >
+                    {index + 1}
+                  </button>
+                ))
+              ) : (
+                <p>No questions available</p>
+              )}
+            </div>
+            <button 
+              onClick={() => setShowIndex(false)}
+              className="btn btn-gray index-popup-close"
+            >
+              <i className="fas fa-times"></i> Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {showSubmitPopup && (
         <div className="submit-popup">
           <div className="submit-popup-content">
@@ -370,7 +418,7 @@ export default function Play() {
         <div className="question-container">
           <div className="header-controls">
             <button 
-              onClick={() => setShowIndex(!showIndex)}
+              onClick={() => setShowIndex(true)}
               className="btn btn-index"
             >
               <i className="fas fa-th"></i> Show Index

@@ -36,6 +36,7 @@ export default function Play() {
       const fetchQuiz = async () => {
         try {
           const response = await fetch(`/data/${testid}.json`);
+          if (!response.ok) throw new Error('Quiz data not found');
           const data = await response.json();
           setQuizData(data);
         } catch (error) {
@@ -121,28 +122,28 @@ export default function Play() {
     ...(quizData.MATHS || [])
   ] : [];
 
-  if (!quizData) return <div>Loading...</div>;
+  if (!quizData) return <div className="text-center text-gray-600 p-4">Loading quiz...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+    <div className="min-h-screen bg-gray-100 p-4 font-sans">
       <Head>
         <title>Quiz - {testid}</title>
       </Head>
 
       <div className="max-w-3xl mx-auto">
-        <div id="timer" className="text-2xl font-bold mb-4">{formatTime(timeLeft)}</div>
+        <div id="timer" className="text-2xl font-bold text-gray-800 mb-4">{formatTime(timeLeft)}</div>
         
-        <div className="question bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-lg shadow-custom p-6 mb-6 hover:shadow-custom-hover transition">
           <div className="flex justify-end gap-3 mb-4">
             <button 
               onClick={() => setShowIndex(!showIndex)}
-              className="flex items-center gap-2 bg-gray-100 border rounded-lg px-4 py-2 text-blue-600"
+              className="flex items-center gap-2 bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-primary font-medium shadow-custom hover:bg-gray-200 transition"
             >
               <i className="fas fa-th"></i> Show Index
             </button>
             <button 
               onClick={() => setFlagged({ ...flagged, [currentQuestion]: true })}
-              className="flex items-center justify-center w-10 h-10 bg-gray-100 border rounded-lg"
+              className="flex items-center justify-center w-10 h-10 bg-gray-100 border border-gray-300 rounded-lg shadow-custom hover:bg-gray-200 transition"
             >
               <i className="fas fa-flag text-gray-600"></i>
             </button>
@@ -156,11 +157,11 @@ export default function Play() {
                 onChange={(e) => setFlagReason(e.target.value)}
                 placeholder="Reason for flagging (max 50 chars)"
                 maxLength={50}
-                className="w-full p-2 border rounded"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <button 
                 onClick={handleFlag}
-                className="mt-2 bg-red-500 text-white px-4 py-2 rounded"
+                className="mt-2 bg-error text-white px-4 py-2 rounded-lg shadow-custom hover:bg-red-700 transition"
               >
                 Submit Flag
               </button>
@@ -173,7 +174,13 @@ export default function Play() {
                 <button
                   key={index}
                   onClick={() => setCurrentQuestion(index)}
-                  className={`p-2 rounded ${index === currentQuestion ? 'bg-blue-500 text-white' : answers[index] ? 'bg-green-200' : 'bg-gray-200'}`}
+                  className={`p-2 rounded-lg font-medium ${
+                    index === currentQuestion
+                      ? 'bg-primary text-white'
+                      : answers[index]
+                      ? 'bg-green-200 text-success'
+                      : 'bg-gray-200 text-gray-800'
+                  } hover:bg-gray-300 transition`}
                 >
                   {index + 1}
                 </button>
@@ -181,25 +188,25 @@ export default function Play() {
             </div>
           )}
 
-          <div className="flex items-center gap-6 bg-gray-50 border rounded-lg p-3 mb-6">
-            <span className="bg-indigo-100 text-indigo-800 px-4 py-2 rounded font-semibold">
+          <div className="flex items-center gap-6 bg-gradient-to-r from-gray-50 to-white border border-gray-300 rounded-lg p-3 mb-6 shadow-custom">
+            <span className="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-lg font-semibold">
               Question {currentQuestion + 1}
             </span>
-            <span className="bg-gray-200 px-4 py-2 rounded">
+            <span className="bg-gray-200 px-4 py-2 rounded-lg text-gray-800">
               {allQuestions[currentQuestion]?.questionNumber.includes('PHYSICS') ? 'Physics' : 
                allQuestions[currentQuestion]?.questionNumber.includes('CHEMISTRY') ? 'Chemistry' : 'Maths'}
             </span>
             <div className="flex gap-4">
-              <span className="bg-green-100 text-green-800 px-3 py-1 rounded">+4</span>
-              <span className="bg-red-100 text-red-800 px-3 py-1 rounded">-1</span>
+              <span className="bg-green-100 text-success px-3 py-1 rounded-lg font-semibold">+4</span>
+              <span className="bg-red-100 text-error px-3 py-1 rounded-lg font-semibold">-1</span>
             </div>
-            <span className="bg-blue-100 text-blue-800 px-4 py-2 rounded">MCQ</span>
+            <span className="bg-blue-100 text-primary px-4 py-2 rounded-lg font-semibold">MCQ</span>
           </div>
 
           {allQuestions[currentQuestion]?.image && (
             <img 
               src={allQuestions[currentQuestion].image} 
-              className="max-w-full h-auto rounded-lg shadow mb-4" 
+              className="max-w-full h-auto rounded-lg shadow-custom-hover mx-auto mb-4" 
               alt="Question"
             />
           )}
@@ -208,8 +215,8 @@ export default function Play() {
             {['A', 'B', 'C', 'D'].map((option) => (
               <label 
                 key={option} 
-                className={`p-3 border rounded-lg cursor-pointer ${
-                  answers[currentQuestion] === option ? 'bg-blue-100 border-blue-500' : 'bg-gray-100'
+                className={`p-3 border border-gray-300 rounded-lg cursor-pointer bg-gray-100 hover:bg-gray-200 transition ${
+                  answers[currentQuestion] === option ? 'bg-blue-100 border-primary' : ''
                 }`}
               >
                 <input
@@ -218,32 +225,32 @@ export default function Play() {
                   value={option}
                   checked={answers[currentQuestion] === option}
                   onChange={() => handleAnswer(currentQuestion, option)}
-                  className="mr-2"
+                  className="mr-2 accent-primary"
                 />
                 {option}
               </label>
             ))}
           </div>
 
-          <div className="flex justify-center gap-3 mt-6">
+          <div className="flex justify-center gap-3 mt-6 flex-wrap">
             {currentQuestion > 0 && (
               <button 
                 onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                className="bg-gray-500 text-white px-4 py-2 rounded"
+                className="bg-gray-500 text-white px-4 py-2 rounded-lg shadow-custom hover:bg-gray-600 transition"
               >
                 Previous
               </button>
             )}
             <button 
               onClick={() => setCurrentQuestion(currentQuestion + 1)}
-              className="bg-orange-500 text-white px-4 py-2 rounded"
+              className="bg-warning text-white px-4 py-2 rounded-lg shadow-custom hover:bg-orange-600 transition"
               disabled={currentQuestion === allQuestions.length - 1}
             >
               Skip
             </button>
             <button 
               onClick={() => setCurrentQuestion(currentQuestion + 1)}
-              className="bg-green-500 text-white px-4 py-2 rounded"
+              className="bg-secondary text-white px-4 py-2 rounded-lg shadow-custom hover:bg-green-600 transition"
               disabled={currentQuestion === allQuestions.length - 1}
             >
               Save & Next
@@ -251,7 +258,7 @@ export default function Play() {
             {currentQuestion === allQuestions.length - 1 && (
               <button 
                 onClick={handleSubmit}
-                className="bg-blue-500 text-white px-4 py-2 rounded"
+                className="bg-primary text-white px-4 py-2 rounded-lg shadow-custom hover:bg-blue-700 transition"
               >
                 Submit Test
               </button>
@@ -260,12 +267,12 @@ export default function Play() {
         </div>
 
         {score !== null && (
-          <div className="bg-white p-6 rounded-lg shadow text-center">
-            <h2 className="text-2xl font-bold mb-4">Quiz Completed!</h2>
-            <p className="text-xl">Your Score: {score}</p>
+          <div className="bg-white p-6 rounded-lg shadow-custom text-center hover:shadow-custom-hover transition">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Quiz Completed!</h2>
+            <p className="text-xl text-gray-800">Your Score: {score}</p>
             <button 
               onClick={() => router.push('/')}
-              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+              className="mt-4 bg-primary text-white px-6 py-3 rounded-lg shadow-custom hover:bg-blue-700 transition"
             >
               Back to Home
             </button>

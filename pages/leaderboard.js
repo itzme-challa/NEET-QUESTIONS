@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { getDatabase, ref, get } from 'firebase/database';
 import { initializeApp } from 'firebase/app';
 import Head from 'next/head';
+import Link from 'next/link';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -24,6 +25,9 @@ export default function Leaderboard() {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const [tempName, setTempName] = useState('');
+  const [testDetails, setTestDetails] = useState({ name: '', date: '' });
 
   useEffect(() => {
     setUserName(localStorage.getItem('quizUserName') || '');
@@ -42,6 +46,7 @@ export default function Leaderboard() {
           const results = snapshot.val();
           const leaderboard = Object.entries(results)
             .map(([user, data]) => ({
+              userName: user,
               name: data.name,
               score: data.score,
               percentage: ((data.score / 720) * 100).toFixed(2),
@@ -57,7 +62,30 @@ export default function Leaderboard() {
           setLoading(false);
         }
       };
-      fetchLeaderboard();
+
+      const fetchTestDetails = async () => {
+        try {
+          const testsRef = ref(database, `tests`);
+          const snapshot = await get(testsRef);
+          const testData = snapshot.val();
+          let testName = '';
+          let testDate = '';
+          for (const year in testData) {
+            if (testData[year][testid]) {
+              testName = testData[year][testid].name;
+              testDate = testData[year][testid].date;
+              break;
+            }
+          }
+          setTestDetails({ name: testName, date: testDate });
+        } catch (error) {
+          console.error('Error fetching test details:', error);
+        }
+      };
+
+      Promise.all([fetchLeaderboard(), fetchTestDetails()]).then(() => {
+        setLoading(false);
+      });
     }
   }, [testid]);
 
@@ -76,9 +104,6 @@ export default function Leaderboard() {
       alert('Please enter a valid name.');
     }
   };
-
-  const [showProfilePopup, setShowProfilePopup] = useState(false);
-  const [tempName, setTempName] = useState('');
 
   return (
     <div className="container">
@@ -136,7 +161,11 @@ export default function Leaderboard() {
       )}
 
       <div className="max-container">
-        <h2 className="page-title">Leaderboard - Test {testid}</h2>
+        <h2 className="page-title">Leaderboard - {testDetails.name}</h2>
+        <div className="test-info-header">
+          <p>Test: {testDetails.name}</p>
+          <p>Test Date: {testDetails.date}</p>
+        </div>
         {loading ? (
           <div className="loading">Loading leaderboard...</div>
         ) : leaderboardData.length === 0 ? (
@@ -157,7 +186,11 @@ export default function Leaderboard() {
                 {leaderboardData.map((entry, index) => (
                   <tr key={index}>
                     <td>{index + 1}</td>
-                    <td>{entry.name}</td>
+                    <td>
+                      <Link href={`/results?testid=${testid}&userName=${entry.userName}`} passHref>
+                        <span className="leaderboard-name">{entry.name}</span>
+                      </Link>
+                    </td>
                     <td>{entry.score}</td>
                     <td>{entry.percentage}%</td>
                     <td>{new Date(entry.date).toLocaleString()}</td>
